@@ -63,8 +63,9 @@ open_energy_gateway.ino (main)
 1. **Arduino IDE**: Primary development environment
 2. **Board**: ESP32 Node32S, partition scheme for SPIFFS
 3. **Libraries**: WiFiManager, ArduinoJson, WebSocketsServer (Markus Sattler)
-4. **SPIFFS Tools**: Use create_spiffs.bat and upload_spiffs.bat
-5. **Debug**: Serial 9600 baud, conditional compilation for production
+4. **Custom Libraries**: AmpXModbus from https://github.com/Johannf78/AmpXModbus
+5. **SPIFFS Tools**: Use create_spiffs.bat and upload_spiffs.bat (future option)
+6. **Debug**: Serial 9600 baud, conditional compilation for production
 
 ### Code Quality Standards
 - **Function Placement**: Match domain-specific .ino files

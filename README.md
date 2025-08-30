@@ -108,12 +108,16 @@ The following libraries are required:
 ```
 
 ### Custom Libraries (Required)
-The project requires custom AmpX Modbus libraries:
+The project requires custom AmpX Modbus libraries available at:
+**Repository**: [https://github.com/Johannf78/AmpXModbus](https://github.com/Johannf78/AmpXModbus)
+
 - **For RS485**: `ampx_modbus_rs485.h` 
 - **For TCP/IP**: `ampx_modbus_tcpip.h`
 
-These should be installed in your Arduino libraries folder:
-`Documents/Arduino/libraries/`
+**Installation**:
+1. Clone or download the AmpXModbus repository
+2. Copy the library folders to your Arduino libraries directory:
+   `Documents/Arduino/libraries/`
 
 ## 🔧 Configuration
 

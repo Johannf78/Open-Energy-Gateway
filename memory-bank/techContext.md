@@ -69,9 +69,10 @@ IPAddress meter_ip(192, 168, 1, 55);
 ```
 
 ### Custom Libraries
+- **Repository**: [AmpXModbus](https://github.com/Johannf78/AmpXModbus)
 - **RS485 Variant**: `ampx_modbus_rs485.h` (custom AmpX library)
 - **TCP/IP Variant**: `ampx_modbus_tcpip.h` (custom AmpX library)
-- Location: `Documents/Arduino/libraries/` folder
+- **Installation**: Clone repository and copy to `Documents/Arduino/libraries/` folder
 
 ## Data Structures
 
