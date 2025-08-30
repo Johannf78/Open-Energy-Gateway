@@ -1,0 +1,94 @@
+# AmpX Open Energy Gateway - Cursor Rules
+
+## Project Intelligence
+
+### Core Architecture Patterns
+- **Modular .ino Structure**: Main file coordinates 9 separate function files by domain
+- **Hardware Abstraction**: Conditional compilation (#if MODBUS_TYPE) for RS485 vs TCP/IP variants
+- **JSON-Centric Data**: DynamicJsonDocument serves as central data store for all components
+- **Non-Blocking Timing**: millis() based intervals, never use delay() in main loop
+
+### Critical File Relationships
+```
+open_energy_gateway.ino (main)
+├── functions.ino (NVS utilities)
+├── functions_modbus.ino (register processing)
+├── functions_web.ino (HTTP + WebSocket)
+├── functions_wifi.ino (WiFiManager)
+├── functions_ethernet.ino (W5500 TCP/IP)
+├── functions_meter.ino (register definitions)
+├── functions_api.ino (AmpX Portal uploads)
+├── functions_ntp.ino (time sync)
+└── functions_ota.ino (disabled for size)
+```
+
+### Memory Management Rules
+- Use `DynamicJsonDocument JsonDoc(2048)` as primary data store
+- Enable/disable features via `#define DEBUG 1` for size optimization
+- OTA disabled to fit in ESP32 memory constraints
+- SPIFFS for web assets, use tools/ scripts for deployment
+
+### Data Processing Pipeline
+1. **Modbus Read**: Raw 16-bit registers from meters
+2. **Type Convert**: Based on dataType (1=int32, 2=int64, 3=float)
+3. **JSON Store**: Update global JsonDoc with processed values
+4. **WebSocket Broadcast**: Real-time updates every 3 seconds
+5. **API Upload**: Formatted JSON to AmpX Portal every 30 seconds
+
+### Hardware Configuration Patterns
+```cpp
+// Always check MODBUS_TYPE before hardware-specific code
+#if MODBUS_TYPE == MODBUS_TYPE_RS485
+    // MAX485 pins: DE=4, RE=4, RX=16, TX=17
+#else
+    // W5500 Ethernet: SCS=5, hardware SPI
+#endif
+
+// Status LEDs: POWER=12, METER=14, WIFI=27, INTERNET=26, SERVER=25
+```
+
+### Web Interface Architecture
+- **WebSocket Port 81**: Real-time data updates, no polling needed
+- **HTTP Port 80**: Static pages with runtime string replacement
+- **Page Structure**: index.html (dashboard), settings.html, admin.html
+- **Data Binding**: Replace template strings (m1_serial_number) with actual values
+
+### API Integration Patterns
+- **Dual Endpoints**: Local development vs live production server
+- **JSON Format**: gateway_id, meter_id, serial_number, timestamp, values{}
+- **Error Handling**: HTTP status checking with LED feedback
+- **Timing**: 30-second intervals, non-blocking upload
+
+### Development Workflow
+1. **Arduino IDE**: Primary development environment
+2. **Board**: ESP32 Node32S, partition scheme for SPIFFS
+3. **Libraries**: WiFiManager, ArduinoJson, WebSocketsServer (Markus Sattler)
+4. **SPIFFS Tools**: Use create_spiffs.bat and upload_spiffs.bat
+5. **Debug**: Serial 9600 baud, conditional compilation for production
+
+### Code Quality Standards
+- **Function Placement**: Match domain-specific .ino files
+- **Memory Safety**: Check JSON document size before adding data
+- **Error Recovery**: Always implement reconnection logic for network failures
+- **Status Feedback**: Update LEDs for all system state changes
+- **Timing**: Use const unsigned long for all intervals
+
+### Known Constraints
+- **Active Meters**: Currently limited to 4 (m1-m4), not full 32 capacity
+- **Hardcoded Values**: AMPX_GATEWAY_ID, server URLs need web admin interface
+- **Memory Limits**: Careful with string operations, prefer static allocation
+- **Network Recovery**: WiFiManager handles WiFi, manual Ethernet reconnection
+
+### Extension Points
+- **Register Definitions**: meter_registers.h for new meter types
+- **Web Pages**: Add to data/ folder and update SPIFFS
+- **API Endpoints**: Modify functions_api.ino for new services
+- **Hardware Variants**: Extend conditional compilation pattern
+
+### Performance Considerations
+- **Real-Time**: 3-second meter reading, immediate WebSocket update
+- **API Batching**: 30-second uploads, could batch multiple meters
+- **Memory**: 2048-byte JSON document limit, monitor usage
+- **Stability**: 24-hour reboot cycle, but not currently enabled
+
+This is a mature, production-ready industrial IoT project with excellent architecture for ESP32 platform constraints.
