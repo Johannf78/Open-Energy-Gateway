@@ -1,4 +1,4 @@
-# AmpX Energy Gateway
+# Open Energy Gateway
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Platform: ESP32](https://img.shields.io/badge/Platform-ESP32-blue.svg)](https://espressif.com/en/products/socs/esp32)
