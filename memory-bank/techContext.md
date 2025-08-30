@@ -108,9 +108,10 @@ const char* ampxportal_server_live = "https://portal.ampx.app/api/v2/";
 ## Memory Management
 
 ### File System
-- **SPIFFS**: Web assets (HTML, CSS, JS)
-- **Tools**: `create_spiffs.bat`, `upload_spiffs.bat`, `spiffsgen.py`
-- **Files**: `index.html`, `settings.html`, `admin.html`, `meter_registers_meatrol.json`
+- **Current**: HTML templates in header files (`webpage.h`, `web_settings.h`, `web_admin.h`)
+- **Future SPIFFS Option**: Infrastructure ready with tools and data folder
+- **Tools Available**: `create_spiffs.bat`, `upload_spiffs.bat`, `spiffsgen.py`
+- **Web Assets Ready**: `index.html`, `settings.html`, `admin.html`, `meter_registers_meatrol.json`
 
 ### Storage Optimization
 - OTA functionality disabled to save space
@@ -147,7 +148,7 @@ const unsigned long REBOOT_INTERVAL = 86400000;         // 24 hours
 
 ## Development Tools
 
-### SPIFFS Management
+### Future SPIFFS Tools (Not Currently Used)
 - `spiffsgen.py`: Generate SPIFFS image from data folder
 - `create_spiffs.bat`: Windows batch script for SPIFFS creation
 - `upload_spiffs.bat`: Upload SPIFFS to ESP32

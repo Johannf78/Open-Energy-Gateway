@@ -37,7 +37,7 @@ Create a comprehensive ESP32-based energy monitoring gateway that communicates w
 - Arduino IDE development environment
 - Memory optimization for ESP32 platform
 - Modular code structure with separate .ino files
-- SPIFFS filesystem for web assets
+- Web interface via header files (SPIFFS option available for future)
 - Debug output control for production builds
 
 ## Success Metrics

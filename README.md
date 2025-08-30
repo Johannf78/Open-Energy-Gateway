@@ -1,4 +1,4 @@
-# Open Energy Gateway
+# AmpX Open Energy Gateway
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Platform: ESP32](https://img.shields.io/badge/Platform-ESP32-blue.svg)](https://espressif.com/en/products/socs/esp32)
@@ -12,7 +12,7 @@ A comprehensive ESP32-based energy monitoring gateway that communicates with Mea
 - **Multi-Protocol Support**: Compatible with both Modbus RS485 and Modbus TCP/IP communication
 - **Multi-Meter Support**: Monitor up to 32 energy meters simultaneously
 - **Real-Time Web Interface**: Live data display with WebSocket updates
-- **API Integration**: Automatic data upload to AmpX Portal every 5 minutes
+- **API Integration**: Automatic data upload to AmpX Portal every 30 seconds
 - **Auto-Discovery**: Automatic detection of connected meters
 - **Dual Hardware Variants**: Separate builds for RS485 and TCP/IP configurations
 
@@ -25,7 +25,7 @@ A comprehensive ESP32-based energy monitoring gateway that communicates with Mea
 
 ### Data Management
 - **Real-Time Monitoring**: 3-second update intervals for web interface
-- **Scheduled Uploads**: 5-minute intervals for API data transmission
+- **Scheduled Uploads**: 30-second intervals for API data transmission
 - **JSON Data Format**: Structured data exchange and storage
 - **Meter Identification**: Unique serial number tracking for each meter
 
@@ -46,7 +46,7 @@ A comprehensive ESP32-based energy monitoring gateway that communicates with Mea
 ### Base Components
 - **ESP32 Wroom 32U** microcontroller
 - **Power Supply**: 3.3V regulated power
-- **Status LEDs**: 4x LEDs for system monitoring
+- **Status LEDs**: 5x LEDs for system monitoring (Power, Meter, WiFi, Internet, Server)
 
 ### RS485 Configuration
 - **MAX485 Interface Module**
@@ -70,17 +70,17 @@ A comprehensive ESP32-based energy monitoring gateway that communicates with Mea
 
 1. **Clone the Repository**
    ```bash
-   git clone https://github.com/Johannf78/AmpXModbus.git
-   cd AmpXModbus
+   git clone https://github.com/Johannf78/Open-Energy-Gateway.git
+   cd Open-Energy-Gateway
    ```
 
 2. **Open the Project**
-   - **Arduino IDE** (recommended): Open `AmpXModbus/ampx_open_energy_gateway/ampx_open_energy_gateway.ino`
+   - **Arduino IDE** (recommended): Open `src/open_energy_gateway/open_energy_gateway.ino`
    - Alternative - PlatformIO: Open the project folder
 
 3. **Configure Hardware Type**
    
-   In `ampx_open_energy_gateway.ino`, set the communication type:
+   In `open_energy_gateway.ino`, set the communication type:
    ```cpp
    #define MODBUS_TYPE MODBUS_TYPE_RS485  // For RS485 version
    // OR
@@ -96,22 +96,32 @@ A comprehensive ESP32-based energy monitoring gateway that communicates with Mea
 
 The following libraries are required:
 ```cpp
-#include <WiFi.h>              // ESP32 WiFi
-#include <WebServer.h>         // Web server functionality
+#include <WiFi.h>              // ESP32 built-in WiFi
+#include <WebServer.h>         // ESP32 built-in web server
 #include <WebSocketsServer.h>  // Real-time updates (by Markus Sattler)
-#include <ArduinoJson.h>       // JSON processing
-#include <HTTPClient.h>        // API communication
+#include <ArduinoJson.h>       // JSON processing (by Benoit Blanchon)
+#include <HTTPClient.h>        // ESP32 built-in HTTP client
 #include <WiFiManager.h>       // WiFi configuration (by tzapu)
-#include <Preferences.h>       // Persistent storage
+#include <Preferences.h>       // ESP32 built-in NVS storage
+#include <HardwareSerial.h>    // ESP32 built-in serial communication
+#include <time.h>              // ESP32 built-in time functions
 ```
+
+### Custom Libraries (Required)
+The project requires custom AmpX Modbus libraries:
+- **For RS485**: `ampx_modbus_rs485.h` 
+- **For TCP/IP**: `ampx_modbus_tcpip.h`
+
+These should be installed in your Arduino libraries folder:
+`Documents/Arduino/libraries/`
 
 ## 🔧 Configuration
 
 ### WiFi Setup
 On first boot, the device creates a WiFi access point:
-- **SSID**: `AmpX-Gateway-Setup`
-- **Password**: `ampxsetup`
-- Connect and configure your WiFi credentials
+- **SSID**: `AmpX-Energy-Gateway-AP`
+- **Password**: None (open network)
+- Connect and configure your WiFi credentials through the captive portal
 
 ### Meter Configuration
 Meters are automatically discovered during startup. The system supports:
@@ -122,9 +132,11 @@ Meters are automatically discovered during startup. The system supports:
 - **Stop Bits**: 1
 
 ### API Configuration
-Update the API endpoint in the code:
+The system supports dual API endpoints (configurable in code):
 ```cpp
-const char* apiEndpoint = "https://app.ampx.co/wp-json/ampx-energy/v1/log";
+const char* ampxportal_server_local = "http://192.168.2.32:8080/api/v2/";
+const char* ampxportal_server_live = "https://portal.ampx.app/api/v2/";
+#define USE_LOCAL_SERVER true  // Set to false for production
 ```
 
 ## 💻 Usage
@@ -143,19 +155,20 @@ The system collects and transmits:
 - **Status Information**: Connection and error states
 
 ### API Integration
-Data is automatically uploaded to the AmpX Portal every 5 minutes in JSON format:
+Data is automatically uploaded to the AmpX Portal every 30 seconds in JSON format:
 ```json
 {
+  "gateway_id": "100001",
+  "meter_id": "1",
+  "serial_number": "12345678",
   "timestamp": "2024-01-15T10:30:00Z",
-  "meters": [
-    {
-      "serial": "12345678",
-      "energy": 1234.56,
-      "power": 5.67,
-      "voltage": 230.1,
-      "current": 24.6
-    }
-  ]
+  "values": {
+    "serial": "12345678",
+    "voltage_L1": "230.1",
+    "current_L1": "24.6",
+    "active_power_tot": "5.67",
+    "active_energy_imported_tot": "1234.56"
+  }
 }
 ```
 
@@ -163,17 +176,34 @@ Data is automatically uploaded to the AmpX Portal every 5 minutes in JSON format
 
 ### Project Structure
 ```
-AmpXModbus/
-├── AmpXModbus/
-│   └── ampx_open_energy_gateway/
-│       ├── ampx_open_energy_gateway.ino  # Main application
-│       ├── ampx_functions.ino            # Core Modbus functions
-│       ├── ampx_functions_web.ino        # Web interface
-│       ├── meter_registers.h             # Meter register definitions
+Open-Energy-Gateway/
+├── src/
+│   └── open_energy_gateway/
+│       ├── open_energy_gateway.ino       # Main application
+│       ├── functions.ino                 # NVS utilities
+│       ├── functions_modbus.ino          # Modbus communication
+│       ├── functions_web.ino             # Web interface & WebSocket
+│       ├── functions_wifi.ino            # WiFi management
+│       ├── functions_ethernet.ino        # Ethernet initialization
+│       ├── functions_meter.ino           # Meter register definitions
+│       ├── functions_api.ino             # API communication
+│       ├── functions_ntp.ino             # Time synchronization
+│       ├── functions_ota.ino             # OTA updates (disabled)
+│       ├── meter_registers.h             # Register definitions
 │       ├── webpage.h                     # HTML templates
 │       ├── web_admin.h                   # Admin interface
-│       └── web_settings.h                # Settings page
+│       ├── web_settings.h                # Settings page
+│       ├── data/                         # Web assets (future SPIFFS option)
+│       │   ├── index.html
+│       │   ├── settings.html
+│       │   ├── admin.html
+│       │   └── meter_registers_meatrol.json
+│       └── tools/                        # SPIFFS tools (future use)
+│           ├── create_spiffs.bat
+│           ├── upload_spiffs.bat
+│           └── spiffsgen.py
 ├── memory-bank/                          # Project documentation
+├── Documentation/                        # User documentation
 └── README.md
 ```
 
@@ -186,6 +216,33 @@ Enable debug output by defining:
 ```cpp
 #define DEBUG 1
 ```
+
+### Web Interface Implementation
+Currently, the web interface is implemented using header files containing HTML templates:
+
+- **webpage.h**: Main dashboard HTML template
+- **web_settings.h**: Settings page HTML template  
+- **web_admin.h**: Admin page HTML template
+
+The templates use string replacement for dynamic content (meter serial numbers, values, etc.).
+
+### Future SPIFFS Option
+The project includes infrastructure for future SPIFFS implementation:
+
+1. **SPIFFS Tools Available** (not currently used):
+   ```bash
+   cd src/open_energy_gateway/tools
+   create_spiffs.bat  # Future: Create SPIFFS image
+   upload_spiffs.bat  # Future: Upload to ESP32
+   ```
+
+2. **Web Assets Ready** in `data/` folder for future SPIFFS deployment
+
+### Current Limitations
+- **Active Meters**: Currently configured for 4 meters (expandable to 32)
+- **Hardcoded Settings**: Gateway ID and server URLs require code modification
+- **OTA Updates**: Disabled to conserve memory
+- **Admin Interface**: Structure exists but functionality incomplete
 
 ## 🔍 Troubleshooting
 
@@ -208,10 +265,11 @@ Enable debug output by defining:
 - Monitor serial output for error messages
 
 ### Status LED Indicators
-- **Power LED**: System power status
-- **Meter LED**: Meter communication status
-- **WiFi LED**: WiFi connection status
-- **Internet LED**: API connectivity status
+- **LED 1 (Power - Pin 12)**: System power status
+- **LED 2 (Meter - Pin 14)**: Meter communication status  
+- **LED 3 (WiFi - Pin 27)**: WiFi connection status
+- **LED 4 (Internet - Pin 26)**: Internet connectivity status
+- **LED 5 (Server - Pin 25)**: API server communication status
 
 ## 🤝 Contributing
 
@@ -243,7 +301,7 @@ This project is designed for industrial and commercial energy monitoring applica
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/Johannf78/AmpXModbus/issues)
+- **Issues**: [GitHub Issues](https://github.com/Johannf78/Open-Energy-Gateway/issues)
 - **Documentation**: See `memory-bank/` folder for detailed technical documentation
 - **Hardware Support**: Compatible with Meatrol Brand energy meters
 

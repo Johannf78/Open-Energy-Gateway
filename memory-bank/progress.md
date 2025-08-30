@@ -20,7 +20,7 @@
 - [x] **Type Conversion System**: Proper handling of int32, int64, and float data types
 - [x] **JSON Data Pipeline**: Unified data model with `DynamicJsonDocument`
 - [x] **Non-Volatile Storage**: Preferences system for persistent settings
-- [x] **SPIFFS File System**: Web assets stored in flash memory
+- [x] **Web Interface**: HTML templates in header files (SPIFFS infrastructure ready for future)
 
 ### User Interface
 - [x] **Real-Time Dashboard**: Live meter readings with 3-second updates

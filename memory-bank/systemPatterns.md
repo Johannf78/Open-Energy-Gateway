@@ -93,10 +93,11 @@ LED_5_SERVER    // Successful API communication
 - Key-value pairs: `m1_name`, `m2_name`, etc.
 - Persistent across reboots
 
-### SPIFFS File System
-- Web assets stored in flash memory
-- Reduces program memory usage
-- Batch tools for SPIFFS creation and upload
+### Web Interface Storage
+- **Current Implementation**: HTML templates in header files
+- **Future SPIFFS Option**: Infrastructure ready for deployment
+- **Template System**: String replacement for dynamic content
+- **Memory Efficiency**: Static allocation in program memory
 
 ## Error Handling Patterns
 
