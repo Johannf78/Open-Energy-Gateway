@@ -258,7 +258,7 @@ void setup() {
   initWiFi(); //Program will not continue unless WiFi is connected..
 
   //Do Over the air update for firmware updates
-  initOTA();
+  //initOTA();
 
   // Initialize NTP time synchronization (must be after WiFi)
   initNTP();
@@ -280,8 +280,8 @@ void setup() {
 
     //JF: New fuction to handle both RS485 and TCPIP connections to meters.
     handlePowerMeter(i);
-    
-    postToAmpXPortal2(i); //Also post to the remote server as soon as the device starts up.
+    //Also post to the remote server as soon as the device starts up.
+    postToAmpXPortal2(i); 
   }
   //Update the webpage through the websocket with the meter data.
   handleWebSocket();

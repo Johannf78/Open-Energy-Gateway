@@ -6,12 +6,12 @@
 */
 
 //Define the status indicating LEDs pins
-//                        //C3  //WROOM
-#define LED_1_POWER     2 //2   //12 //Indicates Power is on 
-#define LED_2_METER     3 //3   //14 //Indicates Meter is connected via Modbus
-#define LED_3_WIFI      4 //4   //27 //Indicates WiFi is connected
-#define LED_4_INTERNET  5 //5   //26 //Indicates Internet is connected, this is the green LED
-#define LED_5_SERVER    6 //6   //25 //Indicates succesfull communication with the Server
+//                        //XIAO//WROOM
+#define LED_1_POWER     12 //2   //12 //Indicates Power is on 
+#define LED_2_METER     14 //3   //14 //Indicates Meter is connected via Modbus
+#define LED_3_WIFI      27 //4   //27 //Indicates WiFi is connected
+#define LED_4_INTERNET  26 //5   //26 //Indicates Internet is connected, this is the green LED
+#define LED_5_SERVER    25 //6   //25 //Indicates succesfull communication with the Server
 
 
 void setup() {
