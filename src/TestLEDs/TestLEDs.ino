@@ -24,7 +24,25 @@ void setup() {
 
   Serial.begin(9600); // Initialize serial communication
   delay(2000); //Wait for the serial port te become available.
-  
+  Serial.println("");
+  Serial.println("");
+
+  Serial.print("LED_1_POWER: ");
+  Serial.println(LED_1_POWER);
+
+  Serial.print("LED_2_METER: ");
+  Serial.println(LED_2_METER);
+
+  Serial.print("LED_3_WIFI: ");
+  Serial.println(LED_3_WIFI);
+
+  Serial.print("LED_4_INTERNET: ");
+  Serial.println(LED_4_INTERNET);
+
+  Serial.print("LED_5_SERVER: ");
+  Serial.println(LED_5_SERVER);
+  Serial.println("");
+
   Serial.print("Flash Chip Size: ");
   Serial.println(ESP.getFlashChipSize()); // Get flash size in bytes
   
@@ -51,15 +69,15 @@ void loop() {
   digitalWrite(LED_5_SERVER, HIGH);
   delay(200);
 
-  digitalWrite(LED_1_POWER, LOW);
+  //digitalWrite(LED_1_POWER, LOW);
   delay(200);
-  digitalWrite(LED_2_METER, LOW);
+  //digitalWrite(LED_2_METER, LOW);
   delay(200);
-  digitalWrite(LED_3_WIFI, LOW);
+  //digitalWrite(LED_3_WIFI, LOW);
   delay(200);
-  digitalWrite(LED_4_INTERNET, LOW);
+  //digitalWrite(LED_4_INTERNET, LOW);
   delay(200);
-  digitalWrite(LED_5_SERVER, LOW);
+  //digitalWrite(LED_5_SERVER, LOW);
   delay(200);
 
 
