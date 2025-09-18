@@ -1446,37 +1446,15 @@
 			(uuid "878dce8e-32a0-4d46-8963-55d2c4e89011")
 		)
 		(embedded_fonts no)
-		(model "D:/KiCad7/share/kicad/3dmodels/Module_MCU_ESP32_WROOM32_38PINS.3dshapes/Module_MCU_ESP32_WROOM32_38PINS.step"
+		(model "${KICAD9_3RD_PARTY}/Module_MCU_ESP32_WROOM32_38PINS.3dshapes/Module_MCU_ESP32_WROOM32_38PINS.step"
 			(offset
-				(xyz 12.7 -22.8 9)
+				(xyz 12.7 -22.8 2)
 			)
 			(scale
 				(xyz 0.975 1 1.015)
 			)
 			(rotate
-				(xyz -90 0 0)
-			)
-		)
-		(model "D:/KiCad7/share/kicad/3dmodels/Module_MCU_ESP32_WROOM32_38PINS.3dshapes/PinSocket_1x19_P2.54mm_Vertical.step"
-			(offset
-				(xyz 0 0 0)
-			)
-			(scale
-				(xyz 1 1 1)
-			)
-			(rotate
-				(xyz 0 0 0)
-			)
-		)
-		(model "D:/KiCad7/share/kicad/3dmodels/Module_MCU_ESP32_WROOM32_38PINS.3dshapes/PinSocket_1x19_P2.54mm_Vertical.step"
-			(offset
-				(xyz 25.4 0 0)
-			)
-			(scale
-				(xyz 1 1 1)
-			)
-			(rotate
-				(xyz 0 0 0)
+				(xyz -90 -0 -0)
 			)
 		)
 	)
@@ -1704,7 +1682,7 @@
 			(uuid "d149dc35-b2e8-443a-a870-cf29cc9e2760")
 		)
 		(embedded_fonts no)
-		(model "${KISYS3DMOD}/Module_Ethernet_LAN_W5500_Lite.3dshapes/Module_Ethernet_LAN_W5500_Lite.step"
+		(model "D:/OneDrive/JF Data/UserData/Documents/KiCad/9.0/3dmodels/Module_Ethernet_LAN_W5500_Lite.3dshapes/Module_Ethernet_LAN_W5500_Lite.step"
 			(offset
 				(xyz 21.65 18.5 4.1)
 			)
