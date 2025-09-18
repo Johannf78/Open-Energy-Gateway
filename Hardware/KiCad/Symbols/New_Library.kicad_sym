@@ -15,8 +15,8 @@
 				(hide yes)
 			)
 		)
-		(property "Value" ""
-			(at 0 0 0)
+		(property "Value" "W5500-Lite"
+			(at 11.5 2.54 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -32,7 +32,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" ""
+		(property "Datasheet" "https://www.wiznet.io/product-item/w5500/"
 			(at 0 0 0)
 			(effects
 				(font
@@ -41,7 +41,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "W5500 SPI Ethernet Module with RJ45 Connector"
 			(at 0 0 0)
 			(effects
 				(font
