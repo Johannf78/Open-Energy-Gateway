@@ -1,4 +1,11 @@
-26312990222572218
+26318265047087696
+AmpX-Footprint-Library.pretty
+Simple LED Module
+
+
+0
+16
+12
 AmpX-Footprint-Library.pretty
 Test
 
@@ -59667,13 +59674,6 @@ One digit LED 7 segment SA39-11 SC39-11 SA39-12 SC39-12
 0
 10
 10
-ESP32_NODEMCU
-MODULE_ESP32_NODEMCU
-
-
-0
-38
-38
 Ferrite_THT
 LairdTech_28C0236-0JW-10
 Ferrite, vertical, LairdTech 28C0236-0JW-10, https://assets.lairdtech.com/home/brandworld/files/28C0236-0JW-10.pdf, JW Miller core https://www.bourns.com/products/magnetic-products/j.w.-miller-through-hole-ferrite-beads-emi-filters
@@ -69243,6 +69243,27 @@ module pcb
 0
 7
 7
+Module_Ethernet_LAN_W5500_Lite.3dshapes
+Module_Ethernet_LAN_W5500_Lite
+Module_Ethernet_LAN_W5500_Lite
+Module Ethernet LAN W5500 Lite
+0
+12
+12
+Module_MCU_ESP32_WROOM32_38PINS
+Module_MCU_ESP32_WROOM32_38PINS
+Espressif ESP32-S2-Saola-1 Development Kit: https://docs.espressif.com/projects/esp-idf/en/latest/esp32s2/hw-reference/esp32s2/user-guide-saola-1-v1.2.html
+esp32-s2 devkit
+0
+38
+38
+Module_MCU_ESP32_WROOM32_38PINS
+Module_MCU_ESP32_WROOM32_38PINS_HEADERPINS
+Espressif ESP32-S2-Saola-1 Development Kit: https://docs.espressif.com/projects/esp-idf/en/latest/esp32s2/hw-reference/esp32s2/user-guide-saola-1-v1.2.html
+esp32-s2 devkit
+0
+38
+38
 Motors
 Vybronics_VZ30C1T8219732L
 Vibration motor, 2.3-3.2V, 14000rpm, 0.7G, https://www.vybronics.com/wp-content/uploads/datasheet-files/Vybronics-VZ30C1T8219732L-datasheet.pdf
