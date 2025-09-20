@@ -28,29 +28,7 @@ void setupMeterRegisters() {
     debugln(""); // Add a newline at the end
   }
 
-
-void handleChangeMetersName() {
-    String m1_name = server.arg("m1_name");
-    preferences.putString("m1_name", m1_name);
-    Serial.println("m1_name: " + m1_name);
-  
-    String m2_name = server.arg("m2_name");
-    preferences.putString("m2_name", m2_name);
-    Serial.println("m2_name: " + m2_name);
-  
-    String m3_name = server.arg("m3_name");
-    preferences.putString("m3_name", m3_name);
-    Serial.println("m3_name: " + m3_name);
-  
-    String m4_name = server.arg("m4_name");
-    preferences.putString("m4_name", m4_name);
-    Serial.println("m4_name: " + m4_name);
-  
-  
-    server.send(200, "text/html", "Updated successfully. <br>Back to:<a href='/'>Home</a> | <a href='/settings'>Settings</a>");
-  }
-  
-  
+ 
   //Detect the number of meters connected to the gateway.
   void detectNumberOfMeters(){
     debugln("detectNumberOfMeters...");

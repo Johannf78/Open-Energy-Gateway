@@ -6,6 +6,7 @@ void initServer() {
   server.on("/settings", handleSettings);
   server.on("/admin", handleAdmin);
   server.on("/update_meters_name", HTTP_POST, handleChangeMetersName);
+  server.on("/update_gateway_id", HTTP_POST, handleUpdateGatewayId);  // Add this line
   server.begin();
   //Initialise the websockets on port 81
   webSocket.begin();
@@ -47,7 +48,7 @@ void handleSettings()
   //Use javascript to hide settings for meters not present.
   page.replace("numberOfMetersValue", String(numberOfMeters));
   page.replace("m_connected_meters_num", String(numberOfMeters));
-  page.replace("m_gateway_id", String(AMPX_GATEWAY_ID));
+  page.replace("m_gateway_id", String(GATEWAY_ID));
 
   String m1_name = preferences.getString("m1_name");
   Serial.println("m1_name_value: " + m1_name);
@@ -81,6 +82,11 @@ void handleAdmin()
   //Handle the admin page. Change the gateway ID, Server and API key, and other settings only ment for admin.
   //ToDo: Not sure if this is needed, as it can just be hard coded... Lets see...
   String page = webpage_admin;
+
+  //Replace the gateway ID placeholder with the actual value
+  page.replace("m_gateway_id", String(GATEWAY_ID));
+
+  //send the page to the client
   server.send(200, "text/html", page);
 }
 
@@ -97,3 +103,88 @@ void handleWebSocket() {
   //serializeJsonPretty(JsonDoc, Serial);
 }
 
+void handleChangeMetersName() {
+  String m1_name = server.arg("m1_name");
+  preferences.putString("m1_name", m1_name);
+  Serial.println("m1_name: " + m1_name);
+
+  String m2_name = server.arg("m2_name");
+  preferences.putString("m2_name", m2_name);
+  Serial.println("m2_name: " + m2_name);
+
+  String m3_name = server.arg("m3_name");
+  preferences.putString("m3_name", m3_name);
+  Serial.println("m3_name: " + m3_name);
+
+  String m4_name = server.arg("m4_name");
+  preferences.putString("m4_name", m4_name);
+  Serial.println("m4_name: " + m4_name);
+
+  //Send success response
+  String successPage = R"(
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Meter Names Updated</title>
+      <meta name='viewport' content='width=device-width, initial-scale=1'>
+      <style>
+        body { background-color: #EEEEEE; font-family: Arial, sans-serif; }
+        main { margin: auto; border: 3px solid black; padding: 20px; }
+        .success { color: green; font-weight: bold; }
+      </style>
+    </head>
+    <body>
+      <main>
+        <h1>Meter Names Updated Successfully</h1>
+        <p class="success">Gateway ID has been updated to: )" + String(GATEWAY_ID) + R"(</p>
+        <p><a href="/settings">Back to Settings</a> | <a href="/">Home</a></p>
+      </main>
+    </body>
+    </html>
+  )";
+
+  server.send(200, "text/html", successPage);
+}
+
+//Handle the gateway ID update form submission
+void handleUpdateGatewayId() {
+  if (server.hasArg("gateway_id")) {
+    String gatewayIdStr = server.arg("gateway_id");
+    int newGatewayId = gatewayIdStr.toInt();
+    
+    //Validate the input (should be a positive integer)
+    if (newGatewayId > 0) {
+      saveGatewayId(newGatewayId);
+      
+      //Send success response
+      String successPage = R"(
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Gateway ID Updated</title>
+          <meta name='viewport' content='width=device-width, initial-scale=1'>
+          <style>
+            body { background-color: #EEEEEE; font-family: Arial, sans-serif; }
+            main { margin: auto; border: 3px solid black; padding: 20px; }
+            .success { color: green; font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <main>
+            <h1>Gateway ID Updated Successfully</h1>
+            <p class="success">Gateway ID has been updated to: )" + String(GATEWAY_ID) + R"(</p>
+            <p><a href="/admin">Back to Admin</a> | <a href="/">Home</a></p>
+          </main>
+        </body>
+        </html>
+      )";
+      server.send(200, "text/html", successPage);
+    } else {
+      //Invalid input
+      server.send(400, "text/plain", "Invalid Gateway ID. Must be a positive integer.");
+    }
+  } else {
+    //No gateway_id parameter
+    server.send(400, "text/plain", "Missing gateway_id parameter");
+  }
+}

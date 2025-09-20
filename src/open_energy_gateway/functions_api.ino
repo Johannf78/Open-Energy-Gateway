@@ -36,7 +36,7 @@ void postToAmpXPortal2(int meterNumber = 1) {
   
     // Start building the JSON manually for Docker API format
     String httpRequestData = "{";
-    httpRequestData += "\"gateway_id\":\"" + String(AMPX_GATEWAY_ID) + "\",";
+    httpRequestData += "\"gateway_id\":\"" + String(GATEWAY_ID) + "\",";
     httpRequestData += "\"meter_id\":\"" + String(meterNumber) + "\",";
     httpRequestData += "\"serial_number\":\"" + serialNumber + "\",";
     httpRequestData += "\"timestamp\":\"" + timestamp + "\",";

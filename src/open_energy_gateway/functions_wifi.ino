@@ -35,7 +35,7 @@ void initWiFi() {
   if (!wifiManager.autoConnect("AmpX-Energy-Gateway-AP", "")) {
     debugln("Failed to connect and hit timeout...");
     //reset and try again, or maybe put it to deep sleep
-    ESP.restart();
+    //ESP.restart();
     delay(1000);
     //TODO: JF: Fix endless loop if no signal...
   }

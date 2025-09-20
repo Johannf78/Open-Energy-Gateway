@@ -9,6 +9,12 @@
 - **Board Package**: ESP32 by Espressif Systems
 - **Board Manager URL**: `https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json`
 
+### Power Supply Requirements
+- **Development**: Direct PC USB connection required (avoid USB hubs)
+- **WiFi Operations**: Peak current draw 200-300mA during connection attempts
+- **Production**: Consider external power supply for industrial deployments
+- **Stability**: USB hubs can cause voltage drops and power supply noise
+
 ### Build Configuration
 - **Partition Scheme**: "Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)" or "Huge APP (3MB No OTA/1MB SPIFFS)"
 - **Serial Baud Rate**: 9600

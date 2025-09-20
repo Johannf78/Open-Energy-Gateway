@@ -1,7 +1,24 @@
 # Active Context - AmpX Open Energy Gateway
 
 ## Current Focus
-**Documentation Complete**: Comprehensive codebase analysis and documentation updates completed for the AmpX Open Energy Gateway project. Ready for future development work.
+**Power Supply Issue Resolved**: Successfully identified and resolved ESP32 reset issue during WiFi connection attempts. Root cause was insufficient power from USB hub - resolved by connecting directly to PC USB port. Project now operational and ready for development work.
+
+## Recent Issue Resolution
+
+### Power Supply Problem (December 2024)
+**Issue**: ESP32 device was resetting during WiFi connection attempts, showing garbled characters in serial output followed by restart.
+
+**Root Cause**: Insufficient power supply from USB hub during high-power WiFi operations.
+
+**Solution**: Connected ESP32 directly to PC USB port instead of USB hub.
+
+**Technical Details**:
+- WiFi connection attempts draw 200-300mA peak current
+- USB hubs often have power limitations and voltage drops
+- Direct PC USB ports provide better voltage regulation and stability
+- Power supply noise from hubs can cause ESP32 instability
+
+**Key Learning**: Always test ESP32 projects with direct USB connection first. USB hubs should only be used for low-power peripherals.
 
 ## Recent Analysis Findings
 

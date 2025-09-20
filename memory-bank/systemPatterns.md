@@ -106,6 +106,12 @@ LED_5_SERVER    // Successful API communication
 - WiFi reconnection with WiFiManager fallback
 - Graceful degradation when meters are offline
 
+### Power Supply Management
+- **Development**: Direct USB connection to avoid power supply issues
+- **WiFi Power Spikes**: Monitor for voltage drops during high-current operations
+- **Production**: External power supply recommended for industrial deployments
+- **Diagnostic**: Garbled serial output indicates power supply instability
+
 ### Timeout Handling
 - NTP synchronization timeout (20 seconds)
 - Meter communication timeouts

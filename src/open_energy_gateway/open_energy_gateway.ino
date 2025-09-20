@@ -42,7 +42,8 @@ Go to Tools > Partition Scheme and select "Minimal SPIFFS (1.9MB APP with OTA/19
 //Time library for NTP synchronization
 #include <time.h>
 
-//Install the one by Vlodomyr Shymanskyy, https://github.com/vshymanskyy/Preferences
+//Search for Preferences, Install the one by Vlodomyr Shymanskyy, https://github.com/vshymanskyy/Preferences
+//Tested and working with version 2.1.0
 //NVS  Non-Volatile Storage (Local Permanent Storage)
 #include <Preferences.h>
 
@@ -73,8 +74,12 @@ Go to Tools > Partition Scheme and select "Minimal SPIFFS (1.9MB APP with OTA/19
 //Unique Gateway ID for each gateway manufactured. To be used when adding it to a the portal under a specific user.
 //This is set when manufactured and will be unique for each gateway.
 //Format: 100001 increment.
-//TODO: JF 2025-05-05 This needs to be moved to the permanent settings and web page with admin settings created.
-#define AMPX_GATEWAY_ID 100001
+
+//Default value - can be changed via admin web interface
+#define DEFAULT_GATEWAY_ID 100001
+
+//Global variable to store the current gateway ID (loaded from NVS)
+int GATEWAY_ID = DEFAULT_GATEWAY_ID;
 
 
 
@@ -219,6 +224,9 @@ void detectNumberOfMeters();
 void handleWebSocket();
 void initNTP();
 String getCurrentTimestamp();
+void loadGatewayId();
+void saveGatewayId(int newGatewayId);
+void handleUpdateGatewayId();
 
 void setup() {
   // initialize LED status pins as outputs.
@@ -240,8 +248,8 @@ void setup() {
   debugln("Serial port ready. Begin setup...");
   
   // Debuging information
-  debug("AMPX_GATEWAY_ID: ");
-  debugln(AMPX_GATEWAY_ID);
+  debug("GATEWAY_ID: ");
+  debugln(GATEWAY_ID);
 
   //Depending on the Modbus type set, initialise either RS485 or TCPIP
   #if MODBUS_TYPE == MODBUS_TYPE_RS485
@@ -265,6 +273,9 @@ void setup() {
 
   // Initialize NVS  Non-Volatile Storage (Local Permanent Storage)
   initNvs();  
+
+  // Load gateway ID from NVS storage
+  loadGatewayId();
 
   //Initialise the local web server.
   initServer();
