@@ -14,6 +14,7 @@
 - [x] **Web Server**: HTTP server with multiple endpoints (/, /settings, /admin)
 - [x] **WebSocket Integration**: Real-time data updates to web clients
 - [x] **NTP Synchronization**: Accurate timestamp generation for data logging
+- [x] **mDNS Service**: .local domain access with hostname `energy-gateway-{GATEWAY_ID}.local`
 
 ### Data Management
 - [x] **Meter Register Definitions**: JSON-based register mapping for Meatrol meters
@@ -64,6 +65,7 @@
 - **Hardcoded Settings**: Some configuration values require code changes
 - **Memory Usage**: OTA functionality disabled due to size constraints
 - **Admin Interface**: Admin page structure exists but functionality incomplete
+- **Windows mDNS**: .local domain resolution not working on Windows (use IP address as workaround)
 
 ### Technical Debt
 - **String Operations**: Some inefficient string concatenation in API functions
@@ -78,6 +80,7 @@
 2. **Complete Admin Interface**: Implement gateway configuration functionality
 3. **Dynamic Configuration**: Move hardcoded values to web-configurable settings
 4. **Enhanced Error Handling**: Improve fault tolerance and recovery mechanisms
+5. **Windows mDNS Resolution**: Troubleshoot and fix .local domain access on Windows
 
 ### Medium Priority
 1. **Memory Optimization**: Further reduce footprint to enable OTA

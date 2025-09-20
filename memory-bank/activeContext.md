@@ -1,9 +1,32 @@
 # Active Context - AmpX Open Energy Gateway
 
 ## Current Focus
-**Power Supply Issue Resolved**: Successfully identified and resolved ESP32 reset issue during WiFi connection attempts. Root cause was insufficient power from USB hub - resolved by connecting directly to PC USB port. Project now operational and ready for development work.
+**mDNS Implementation Completed**: Successfully implemented mDNS (Multicast DNS) functionality for .local domain access. ESP32 now advertises itself as `energy-gateway-{GATEWAY_ID}.local` on the local network. Implementation includes HTTP and WebSocket service registration. Windows mDNS resolution still needs troubleshooting.
 
 ## Recent Issue Resolution
+
+### mDNS Implementation (December 2024)
+**Objective**: Enable .local domain access for ESP32 gateway to improve user experience and eliminate need to remember IP addresses.
+
+**Implementation Details**:
+- Added `#include <ESPmDNS.h>` to main .ino file
+- Created `initmDNS()` function in `functions_wifi.ino`
+- Hostname format: `energy-gateway-{GATEWAY_ID}.local`
+- Services registered: HTTP (port 80) and WebSocket (port 81)
+- Removed `MDNS.update()` call from loop() (not needed in ESP32 Arduino core 3.3.0)
+
+**Current Status**:
+- ✅ ESP32 compiles and uploads successfully
+- ✅ mDNS service starts correctly (confirmed via serial output)
+- ✅ Hostname: `energy-gateway-100004.local` (using Gateway ID 100004)
+- ✅ ESP32 accessible via IP: `192.168.2.145`
+- ❌ Windows mDNS resolution not working (ERR_NAME_NOT_RESOLVED)
+
+**Windows mDNS Troubleshooting**:
+- Installed Apple Bonjour Print Services
+- Bonjour Service running and set to Automatic startup
+- Ping to .local domain fails: "Ping request could not find host"
+- Workaround: Use IP address for web access
 
 ### Power Supply Problem (December 2024)
 **Issue**: ESP32 device was resetting during WiFi connection attempts, showing garbled characters in serial output followed by restart.

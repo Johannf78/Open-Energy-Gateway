@@ -35,6 +35,12 @@ Go to Tools > Partition Scheme and select "Minimal SPIFFS (1.9MB APP with OTA/19
 //Install the library by tzapu, https://github.com/tzapu/WiFiManager, https://www.youtube.com/watch?v=Errh7LEEug0
 #include <WiFiManager.h> //This is used to dymanically configure the wifi connection .
 
+
+//ESP32 Multicast DNS (mDNS) library for ESP32.
+//Built into the ESP32 Arduino core, so you don't need to install it separately from the Library Manager
+//https://github.com/espressif/arduino-esp32/tree/master/libraries/ESPmDNS
+#include <ESPmDNS.h>
+
 //Arduion Over the Air update functionality, commented out for now to try and save space
 //#include <ArduinoOTA.h>
 //#include <Update.h>
@@ -203,16 +209,13 @@ const char* api_key = "c0526f06893d1063800d3bb966927711"; //your_API_KEY
 */
 
 //AmpX Energy Portal, Remote energy logging
-//TODO This needs to be saved in persistent memory and moved to the web admin settings page.
-//const char* ampxportal_server_local = "http://192.168.2.32:8080/api/";
 const char* ampxportal_server_local = "http://192.168.2.32:8080/api/v2/";
 const char* ampxportal_server_live = "https://portal.ampx.app/api/v2/";
 //"https://ampx.app/api/v2/"; //old "https://portal.ampx.app/api/v2/"; //old "https://app.ampx.co/api/v2/";
 
 
 // Which API to use local or live? - set to true for local development, false for live
-//TODO: 2025-08-26 This needs to be moved to the preferences and web admin settings page.
-#define USE_LOCAL_SERVER true
+#define USE_LOCAL_SERVER false
 
 
 //Function prototypes, it needs to be here because it is used in the setup function.
@@ -227,6 +230,7 @@ String getCurrentTimestamp();
 void loadGatewayId();
 void saveGatewayId(int newGatewayId);
 void handleUpdateGatewayId();
+void initmDNS();
 
 void setup() {
   // initialize LED status pins as outputs.
@@ -247,6 +251,12 @@ void setup() {
   delay(1200); //Wait some more for the serial port to become ready...
   debugln("Serial port ready. Begin setup...");
   
+  // Initialize NVS  Non-Volatile Storage (Local Permanent Storage)
+  initNvs();  
+
+  // Load gateway ID from NVS storage
+  loadGatewayId();
+  
   // Debuging information
   debug("GATEWAY_ID: ");
   debugln(GATEWAY_ID);
@@ -265,17 +275,14 @@ void setup() {
   // Initialize WiFi
   initWiFi(); //Program will not continue unless WiFi is connected..
 
+  // Initialize mDNS for .local domain access
+  initmDNS();
+
   //Do Over the air update for firmware updates
   //initOTA();
 
   // Initialize NTP time synchronization (must be after WiFi)
   initNTP();
-
-  // Initialize NVS  Non-Volatile Storage (Local Permanent Storage)
-  initNvs();  
-
-  // Load gateway ID from NVS storage
-  loadGatewayId();
 
   //Initialise the local web server.
   initServer();
