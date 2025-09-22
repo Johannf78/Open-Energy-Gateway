@@ -51,3 +51,7 @@ temp/
 
 # Arduino library symlinks
 libraries/
+
+fp-info-cache
+fp-lib-table
+sym-lib-table
