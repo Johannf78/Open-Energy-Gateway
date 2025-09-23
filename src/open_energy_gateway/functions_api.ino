@@ -66,9 +66,14 @@ void postToAmpXPortal2(int meterNumber = 1) {
     // Debug: Print the JSON payload and URL
     debugln("[DEBUG] JSON payload to be sent:");
     debugln(httpRequestData);
+
+    String url = "";
+    if (USE_LOCAL_SERVER) {
+      url = String(ampxportal_server_local);
+    } else {
+      url = String(ampxportal_server_live);
+    }
     debugln("[DEBUG] Target URL:");
-    String url = String(ampxportal_server_live);
-    //String url = String(ampxportal_server_local);
     debugln("URL: " + url);
   
     if (WiFi.status() == WL_CONNECTED) {

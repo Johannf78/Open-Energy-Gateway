@@ -24,7 +24,13 @@ Select "node32s" under the boards.
 //OTA Update has been disabled to reduce file size.
 Go to Tools > Partition Scheme and select "Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)" or "Huge APP (3MB No OTA/1MB SPIFFS)" if you don't need OTA.
 
-
+ESP Board to be selected in Arduino IDE: 
+for ESP32-WROOM-32U - DUBEUYEW
+  node32S           
+  Partition: 4MB
+for ESP32-WROVER-IE-N8R8-DEVKITC-VE Espressif
+  ESP32 Dev module
+  Partition: 8MB
 */
 //Required to communicate with the RS485 Controller.
 #include <HardwareSerial.h>
@@ -57,6 +63,7 @@ Go to Tools > Partition Scheme and select "Minimal SPIFFS (1.9MB APP with OTA/19
 #include <WebServer.h>
 
 //Search for Arduino Websockets, install the one by Markus Sattler
+//Is the ESP Async WebServer@3.8.1 not maybe a better option - JF
 #include <WebSocketsServer.h>
 
 //Search for ArduinoJson, install the one by Benoit Blanchon
@@ -215,7 +222,7 @@ const char* ampxportal_server_live = "https://portal.ampx.app/api/v2/";
 
 
 // Which API to use local or live? - set to true for local development, false for live
-#define USE_LOCAL_SERVER false
+#define USE_LOCAL_SERVER true
 
 
 //Function prototypes, it needs to be here because it is used in the setup function.

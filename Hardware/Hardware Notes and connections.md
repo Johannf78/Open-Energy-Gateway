@@ -34,6 +34,15 @@
 - **Voltage**: 3.3V/5V compatible
 - **Termination**: 120Ω resistor required
 
+## PCB Dimensions
+### Bottom board
+- **Width**: 33mm
+- **Height**: 86 mm
+### Top board
+- **Width**: 32 mm
+- **Height**: 42 mm
+
+
 ## Connection Notes
 
 - All GPIO assignments match the Open Energy Gateway firmware
