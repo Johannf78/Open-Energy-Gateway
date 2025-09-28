@@ -34,6 +34,11 @@
 - **Voltage**: 3.3V/5V compatible
 - **Termination**: 120Ω resistor required
 
+## Enclosure
+Din rail 2 U enclosure.
+- **Manufacturer**: Campdenbos
+- **Model**:    CNMB_2_2
+
 ## PCB Dimensions
 ### Bottom board
 - **Width**: 33mm
