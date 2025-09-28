@@ -36,7 +36,7 @@
 
 ## Enclosure
 Din rail 2 U enclosure.
-- **Manufacturer**: Campdenbos
+- **Manufacturer**: Campdenboss
 - **Model**:    CNMB_2_2
 
 ## PCB Dimensions
