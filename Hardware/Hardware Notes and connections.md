@@ -42,11 +42,19 @@ Din rail 2 U enclosure.
 ## PCB Dimensions
 ### Bottom board
 - **Width**: 33mm
-- **Height**: 86 mm
+- **Height**: 86.5 mm
 ### Top board
 - **Width**: 32 mm
-- **Height**: 42 mm
-
+- **Height**: 42.5 mm
+### Top board LED Locations
+Measure from the edge of the bottom of the bord to the edge of the bottom of the KED
+- **LED1**: 5.5 mm
+- **LED2**: 10.5 mm
+- **LED3**: 15.5 mm
+- **LED4**: 20.5 mm
+- **LED5**: 25.5 mm
+Left alignment, measure from the left side of the board to the left side of the LED
+- **LEFT EDGE**: 6.5 mm
 
 ## Connection Notes
 
