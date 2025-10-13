@@ -20,9 +20,14 @@ void handleRoot() {
   //the String webpage has been defined in the included file webpage.h
 
   //Replace the string m1_serial_number with the actual serial number, done here as it does not update regularly like values.
+  /*
   webpage.replace("m1_serial_number", m1_serial_number);
   webpage.replace("m2_serial_number", m2_serial_number);
   webpage.replace("m3_serial_number", m3_serial_number);
+  webpage.replace("m4_serial_number", m4_serial_number);
+  */
+
+  //This must be a server side replacement, as the javascript reacts based on this value.
   webpage.replace("numberOfMetersValue", String(numberOfMeters));
 
   /*
@@ -45,32 +50,31 @@ void handleRoot() {
 void handleSettings()
 {
   String page = webpage_settings;
-  //Use javascript to hide settings for meters not present.
+
+  // Only replace numberOfMetersValue (needed for JavaScript)
   page.replace("numberOfMetersValue", String(numberOfMeters));
-  page.replace("m_connected_meters_num", String(numberOfMeters));
-  page.replace("m_gateway_id", String(GATEWAY_ID));
 
-  String m1_name = preferences.getString("m1_name");
-  Serial.println("m1_name_value: " + m1_name);
-  page.replace("m1_name_value", m1_name);
+  // Add static values to JsonDoc for WebSocket transmission
+  JsonDoc["m_gateway_id"] = String(GATEWAY_ID);
+  JsonDoc["m_connected_meters_num"] = String(numberOfMeters);
+  
+  // Add meter names to JsonDoc
+  JsonDoc["m1_name"] = preferences.getString("m1_name");
+  JsonDoc["m2_name"] = preferences.getString("m2_name");
+  JsonDoc["m3_name"] = preferences.getString("m3_name");
+  JsonDoc["m4_name"] = preferences.getString("m4_name");
+  
+  // Add serial numbers to JsonDoc (already done in functions_meter.ino)
+  JsonDoc["m1_serial_number"] = m1_serial_number;
+  JsonDoc["m2_serial_number"] = m2_serial_number;
+  JsonDoc["m3_serial_number"] = m3_serial_number;
+  JsonDoc["m4_serial_number"] = m4_serial_number;
 
-  String m2_name = preferences.getString("m2_name");
-  Serial.println("m2_name_value: " + m2_name);
-  page.replace("m2_name_value", m2_name);
-
-    //Replace the string m1_serial_number with the actual serial number, done here as it does not update regularly like values.
-  page.replace("m1_serial_number", m1_serial_number);
-  page.replace("m2_serial_number", m2_serial_number);
-  page.replace("m3_serial_number", m3_serial_number);
-  page.replace("m4_serial_number", m4_serial_number);
-
+  // Add WiFi RSSI to JsonDoc
   int rssi = WiFi.RSSI();
-  // -100 - -30dbm to 0 - 100%
   int percentage = (int)((float)(rssi + 100) * 1.4286);
-  if (percentage < 0)
-    percentage = 0;
-  else if (percentage > 100)
-    percentage = 100;
+  if (percentage < 0) percentage = 0;
+  else if (percentage > 100) percentage = 100;
   JsonDoc["m_wifi_rssi"] = String(rssi) + "dBm (" + String(percentage) + "%)";
 
   server.send(200, "text/html", page);

@@ -12,7 +12,9 @@
 - [x] **WiFi Management**: WiFiManager integration for easy network setup
 - [x] **Modbus Communication**: Support for both RS485 and TCP/IP protocols
 - [x] **Web Server**: HTTP server with multiple endpoints (/, /settings, /admin)
-- [x] **WebSocket Integration**: Real-time data updates to web clients
+- [x] **WebSocket Architecture**: Comprehensive real-time updates for all dynamic content
+- [x] **Connection Status Indicators**: Real-time connection status and last update timestamps
+- [x] **WebSocket Error Handling**: Robust reconnection logic with retry limits
 - [x] **NTP Synchronization**: Accurate timestamp generation for data logging
 - [x] **mDNS Service**: .local domain access with hostname `energy-gateway-{GATEWAY_ID}.local`
 
@@ -24,9 +26,11 @@
 - [x] **Web Interface**: HTML templates in header files (SPIFFS infrastructure ready for future)
 
 ### User Interface
-- [x] **Real-Time Dashboard**: Live meter readings with 3-second updates
-- [x] **Settings Interface**: Meter naming and configuration
+- [x] **Real-Time Dashboard**: Live meter readings with WebSocket-based 3-second updates
+- [x] **Settings Interface**: WebSocket-powered meter naming and configuration
 - [x] **Admin Interface**: Gateway configuration page structure
+- [x] **Connection Status Display**: Real-time WebSocket connection status indicators
+- [x] **Last Update Timestamps**: Automatic timestamp updates on all pages
 - [x] **Status Indicators**: 5 LEDs for comprehensive system health monitoring
 - [x] **Mobile Responsive**: Clean table-based layout for mobile devices
 
@@ -68,6 +72,9 @@
 - **Windows mDNS**: .local domain resolution not working on Windows (use IP address as workaround)
 
 ### Technical Debt
+- **Code Duplication**: Hardcoded meter sections (4 meters) need dynamic generation for scaling
+- **Global Variables**: `m1_serial_number` through `m4_serial_number` pattern needs array-based approach
+- **HTML Templates**: Static meter sections in `webpage.h` and `web_settings.h` need template generation
 - **String Operations**: Some inefficient string concatenation in API functions
 - **Error Recovery**: Basic retry logic, could be enhanced
 - **Configuration Management**: Settings require web admin interface completion
@@ -76,11 +83,13 @@
 ## 🎯 Immediate Development Opportunities
 
 ### High Priority
-1. **Scale Meter Support**: Increase from 4 to 32 active meters
-2. **Complete Admin Interface**: Implement gateway configuration functionality
-3. **Dynamic Configuration**: Move hardcoded values to web-configurable settings
-4. **Enhanced Error Handling**: Improve fault tolerance and recovery mechanisms
-5. **Windows mDNS Resolution**: Troubleshoot and fix .local domain access on Windows
+1. **Scale Meter Support**: Implement dynamic meter support using WebSocket foundation (eliminate hardcoded 4-meter limit)
+2. **Dynamic HTML Generation**: Convert static meter sections to template-based generation
+3. **Array-Based Meter Management**: Replace global variables with scalable data structures
+4. **Complete Admin Interface**: Implement gateway configuration functionality
+5. **Dynamic Configuration**: Move hardcoded values to web-configurable settings
+6. **Enhanced Error Handling**: Improve fault tolerance and recovery mechanisms
+7. **Windows mDNS Resolution**: Troubleshoot and fix .local domain access on Windows
 
 ### Medium Priority
 1. **Memory Optimization**: Further reduce footprint to enable OTA

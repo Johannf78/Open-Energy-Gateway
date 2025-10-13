@@ -50,14 +50,14 @@ String webpage = R"(
 
   <br/>
   <div id='meter1'>
-    <h3>Meter: 1, Serial number: m1_serial_number<span id='m1_name'>test<span></h3>
+    <h3>Meter: 1, Serial number: <span id='m1_serial_number'></span>, Meter name: <span id='m1_name'></span></h3>
     <table>
     <tr>
       <th>Entity</th>
       <th>L1</th>
-      <th>L2</<th>
-      <th>L3</<th>
-      <th>Avg/Max</<th>
+      <th>L2</th>
+      <th>L3</th>
+      <th>Avg/Max</th>
     </tr>
     <tr>
       <td class='text-align-left'>Voltage</td>
@@ -92,14 +92,14 @@ String webpage = R"(
 
   <br/>
   <div id='meter2'>
-    <h3>Meter: 2, Serial number: m2_serial_number<span id='m2_name'><span></h3>
+    <h3>Meter: 2, Serial number: <span id='m2_serial_number'></span>, Meter name: <span id='m2_name'></span></h3>
     <table>
     <tr>
       <th>Entity</th>
       <th>L1</th>
-      <th>L2</<th>
-      <th>L3</<th>
-      <th>Avg/Max</<th>
+      <th>L2</th>
+      <th>L3</th>
+      <th>Avg/Max</th>
     </tr>
     <tr>
       <td class='text-align-left'>Voltage</td>
@@ -134,14 +134,14 @@ String webpage = R"(
 
   <br/>
   <div id='meter3'>
-    <h3>Meter: 3, Serial number: m3_serial_number<span id='m3_name'><span></h3>
+    <h3>Meter: 3, Serial number: <span id='m3_serial_number'></span>, Meter name: <span id='m3_name'></span></h3>
     <table>
     <tr>
       <th>Entity</th>
       <th>L1</th>
-      <th>L2</<th>
-      <th>L3</<th>
-      <th>Avg/Max</<th>
+      <th>L2</th>
+      <th>L3</th>
+      <th>Avg/Max</th>
     </tr>
     <tr>
       <td class='text-align-left'>Voltage</td>
@@ -177,14 +177,14 @@ String webpage = R"(
 
   <br/>
   <div id='meter4'>
-    <h3>Meter: 4, Serial number: m4_serial_number<span id='m4_name'><span></h3>
+    <h3>Meter: 4, Serial number: <span id='m4_serial_number'></span>, Meter name: <span id='m4_name'></span></h3>
     <table>
     <tr>
       <th>Entity</th>
       <th>L1</th>
-      <th>L2</<th>
-      <th>L3</<th>
-      <th>Avg/Max</<th>
+      <th>L2</th>
+      <th>L3</th>
+      <th>Avg/Max</th>
     </tr>
     <tr>
       <td class='text-align-left'>Voltage</td>
@@ -217,6 +217,9 @@ String webpage = R"(
     </table>
   </div>
 
+<p>Connection status: <span id="connection_status" style="color: gray;">Connecting...</span></p>
+<p>Last update: <span id="last_update">--:--:--</span></p>
+
 <p>Values updates every 3 seconds.</p>
 <p><a href="/settings">Settings </a></p>
 
@@ -224,15 +227,21 @@ String webpage = R"(
 </main>
 <footer>
 <br/><br/>
-<span><a href='www.ampx.co/' target'_blank'>www.ampx.co</a></span>
+<span><a href='https://ampx.co/' target='_blank'>https://ampx.co</a></span>
 </footer>
 </body>
-<script>
+<script type="text/javascript">
+
+  // Initialize the socket variable to be used in the connectToWebSocket function
   var socket;
+  var reconnectAttempts = 0;
+  var maxReconnectAttempts = 10;
+
   function init(){
     //This variable is updated by the Arduino code before sending the HTML
     var numberOfMeters = numberOfMetersValue; // Define the number of meters as an integer
   
+
       // Hide the div with id 'meter2', 'meter3', and 'meter4' based on the numberOfMeters
       // Also hide the summary table rows
     if (numberOfMeters == 1) {
@@ -255,19 +264,69 @@ String webpage = R"(
         document.getElementById('meter4').style.display = 'none';
     }
 
-    socket = new WebSocket('ws://' + window.location.hostname + ':81/');
-    socket.onmessage = function(event) {
-      processCommand(event);
-    };
+    connectToWebSocket();
 
   }
+
+
+
+  function connectToWebSocket(){
+  
+    socket = new WebSocket('ws://' + window.location.hostname + ':81/');
+    
+    socket.onopen = function() {
+      console.log('WebSocket connected');
+      reconnectAttempts = 0; // Reset counter on successful connection
+      document.getElementById('connection_status').textContent = 'Connected';
+      document.getElementById('connection_status').style.color = 'green';
+    };
+
+    socket.onmessage = function(event) {
+      //for debugging purposes, log the message to the console
+      console.log('WebSocket message received');
+      //console.log(event.data);
+
+      processCommand(event);
+
+      //Update the last update time
+      var now = new Date();
+      document.getElementById('last_update').textContent = now.toLocaleTimeString();
+    };
+
+    
+    socket.onerror = function(error) {
+      console.log('WebSocket error');
+    };
+
+    socket.onclose = function(event) {
+      console.log('WebSocket closed');
+
+      document.getElementById('connection_status').textContent = 'Disconnected';
+      document.getElementById('connection_status').style.color = 'red';
+
+      // Try to reconnect to the WebSocket after 5 seconds
+      if (reconnectAttempts < maxReconnectAttempts) {
+      reconnectAttempts++;
+      console.log('Reconnecting... attempt ' + reconnectAttempts);
+      setTimeout(connectToWebSocket, 5000);
+    } else {
+      console.log('Max reconnection attempts reached');
+      // Optionally show error message to user
+    }
+    };
+  };
+  
+
   function processCommand(event){
     var data = JSON.parse(event.data);
     
     if (data) {
       for (let key in data) {
         let value = data[key];
-        
+
+        //for debugging purposes, log the key and value to the console
+        //console.log('Key:', key, 'Value:', value);
+
         if (key.includes('voltage'))
           value += ' V';
         else if (key.includes('current'))
@@ -277,10 +336,19 @@ String webpage = R"(
         else if (key.includes('energy'))
           value += ' kWh';
       else if (key.includes('name'))
-          value = ', Name: ' + value;
+          value =  value; // Just use the value directly
+      // Note: serial numbers don't need units, so no special handling
+           
            
         //console.log("Key:", key, "Value:", value);
-        document.getElementById(key).innerHTML = value;
+
+        //Use the key to find the element and update the innerHTML
+        let element = document.getElementById(key);
+        if (element) {
+          element.textContent = value;
+        }
+        
+
         
       }
     }

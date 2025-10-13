@@ -5,7 +5,7 @@ void initWiFi() {
   debugln("Inside initWiFi function. Top of function");
   
   //Create hostname string and convert to C-style string
-  String hostname = "Energy-Gateway-" + String(GATEWAY_ID);
+  String hostname = "energy-gateway-" + String(GATEWAY_ID);
   WiFi.setHostname(hostname.c_str());
 
   // Connect to the Wi-Fi network, this is now handeled by the WiFi Mangager library...

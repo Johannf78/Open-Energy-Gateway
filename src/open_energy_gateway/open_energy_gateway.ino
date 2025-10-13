@@ -1,3 +1,13 @@
+//There will be two variants of this gateway, one working with Modbus over RS485 and the other
+//working with mobus over TCP/IP, this is setup here and used depeding on what is needed.
+#define MODBUS_TYPE_RS485 1
+#define MODBUS_TYPE_TCPIP 2
+//Set the required Modbus type variant here to either RS485 or TCPIP
+//In other words, change this depending on if the board is for RS485 or for TCPIP
+#define MODBUS_TYPE MODBUS_TYPE_RS485
+
+//NB, Also remember to change the API server from local to live if needed...
+
 /*
 The following .ino files should be in the same directory as this main .ino file (AmpX-Energy-Gateway.ino).
   ampx_functions.ino
@@ -77,9 +87,9 @@ for ESP32-WROVER-IE-N8R8-DEVKITC-VE Espressif
 //#include "SPIFFS.h"
 
 //The HTML code for the webpages are stored in a seperate file, this makes the code easier to read.
-#include "webpage.h"  //Moved to SPIFFS
-#include "web_settings.h" //Moved to SPIFFS
-#include "web_admin.h" //Moved to SPIFFS
+#include "webpage.h" 
+#include "web_settings.h" 
+#include "web_admin.h" 
 
 //Define the meter registers and datatypes here in json format.
 #include "meter_registers.h"
@@ -108,13 +118,7 @@ int GATEWAY_ID = DEFAULT_GATEWAY_ID;
   #define debugln(x)
 #endif
 
-//There will be two variants of this gateway, one working with Modbus over RS485 and the other
-//working with mobus over TCP/IP, this is setup here and used depeding on what is needed.
-#define MODBUS_TYPE_RS485 1
-#define MODBUS_TYPE_TCPIP 2
-//Set the required Modbus type variant here to either RS485 or TCPIP
-//In other words, change this depending on if the board is for RS485 or for TCPIP
-#define MODBUS_TYPE MODBUS_TYPE_TCPIP
+
 
 
 //Include AmpX custom written libraries for Modbus
@@ -206,6 +210,7 @@ JsonDocument MeterRegisterDefs;
 //Firmware URL to use to update the firmware via OTA
 const char* firmwareURL = "https://ampx.co/downloads/ampx_open_energy_gateway.ino.bin";
 bool readSerial = false;
+bool onBoot = true; //this is used to check if the device the first time it starts up, used in the loop to send read and send data immediately.
 
 
 //EMONCMS, Remote energy logging, https://JsonDocs.openenergymonitor.org/emoncms/index.html
@@ -255,7 +260,8 @@ void setup() {
   while (!Serial) {
     delay(10); // Wait for serial port to become ready.
   }
-  delay(1200); //Wait some more for the serial port to become ready...
+  delay(3200); //Wait some more for the serial port to become ready...
+                //1200 Ok, but increase if debugging and resetting by cycling the power.
   debugln("Serial port ready. Begin setup...");
   
   // Initialize NVS  Non-Volatile Storage (Local Permanent Storage)
@@ -285,9 +291,6 @@ void setup() {
   // Initialize mDNS for .local domain access
   initmDNS();
 
-  //Do Over the air update for firmware updates
-  //initOTA();
-
   // Initialize NTP time synchronization (must be after WiFi)
   initNTP();
 
@@ -300,17 +303,8 @@ void setup() {
   //Detect number of meters and set global variable, numberOfMeters.
   detectNumberOfMeters();
 
-  //Do the initial reading of the meters and update of the webpage, then repeat after 3 seconds in the loop.
-  for (int i = 1; i <= numberOfMeters; i++) {
-
-    //JF: New fuction to handle both RS485 and TCPIP connections to meters.
-    handlePowerMeter(i);
-    //Also post to the remote server as soon as the device starts up.
-    postToAmpXPortal2(i); 
-  }
-  //Update the webpage through the websocket with the meter data.
-  handleWebSocket();
-
+  //Do Over the air update for firmware updates
+  //initOTA();
 }
 
 void loop() {
@@ -322,7 +316,7 @@ void loop() {
   static unsigned long counter3 = 0;
   
   //Interval to test the meter connection and read the parameters, and update the local web page.
-  const unsigned long METER_CONNECTION_INTERVAL = 3000;    // 3 seconds
+  const unsigned long METER_CONNECTION_INTERVAL = 3000;    // 3 seconds for testing, 1 min = 60000 for production
   //Interval to post the meter data to the remote server
   const unsigned long REMOTE_SERVER_INTERVAL = 30000;    // 30 seconds
   //Interval to reboot the ESP32
@@ -331,11 +325,20 @@ void loop() {
   //Built-in Arduino function that returns the number of milliseconds since the Arduino board began running the current program.
   unsigned long now = millis();
 
-  //Test meter connection and read the parameters every 3 seconds
-  if (now - counter1 > METER_CONNECTION_INTERVAL) {
+  //Test meter connection and read the parameters every METER_CONNECTION_INTERVAL milliseconds
+  //If onBoot is true, read and send data immediately on boot.
+  if (onBoot == true || now - counter1 > METER_CONNECTION_INTERVAL) {
+    onBoot = false;
     //Test if the meter is still connected.
+    //modbus_test_connection() is defined in ampx_modbus_rs485.h or ampx_modbus_tcpip.h
+    // TODO: Implement this function
     if (modbus_test_connection()) {
-      debugln("Connection test successful! We are able to communicate with the meter with modbus over TCPIP!");
+      #if MODBUS_TYPE == MODBUS_TYPE_RS485
+        debugln("Connection test successful! We are able to communicate with the meter with modbus over RS485!");
+      #else
+        debugln("Connection test successful! We are able to communicate with the meter with modbus over TCPIP!");
+      #endif
+     
       //Turn on LED 2 to indicate successful connection to energy meter.
       digitalWrite(LED_2_METER, HIGH);
 

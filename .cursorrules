@@ -49,9 +49,11 @@ open_energy_gateway.ino (main)
 
 ### Web Interface Architecture
 - **WebSocket Port 81**: Real-time data updates, no polling needed
-- **HTTP Port 80**: Static pages with runtime string replacement
+- **HTTP Port 80**: Static pages with WebSocket-based dynamic content
 - **Page Structure**: index.html (dashboard), settings.html, admin.html
-- **Data Binding**: Replace template strings (m1_serial_number) with actual values
+- **Data Binding**: WebSocket JSON transmission with JavaScript DOM updates
+- **Connection Status**: Real-time connection indicators and last update timestamps
+- **Error Handling**: Robust WebSocket reconnection with retry limits
 
 ### API Integration Patterns
 - **Dual Endpoints**: Local development vs live production server
@@ -80,6 +82,12 @@ open_energy_gateway.ino (main)
 - **Memory Limits**: Careful with string operations, prefer static allocation
 - **Network Recovery**: WiFiManager handles WiFi, manual Ethernet reconnection
 
+### Scaling Limitations (Current 4-Meter Hardcoded)
+- **HTML Templates**: Static meter sections in webpage.h and web_settings.h
+- **Global Variables**: m1_serial_number through m4_serial_number pattern
+- **Server Code**: Hardcoded meter handling loops
+- **JavaScript**: Static meter references in WebSocket processing
+
 ### Extension Points
 - **Register Definitions**: meter_registers.h for new meter types
 - **Web Pages**: Add to data/ folder and update SPIFFS
@@ -99,4 +107,13 @@ This is a mature, production-ready industrial IoT project with excellent archite
 - ✅ README.md corrected for accuracy (timing, paths, SPIFFS status)
 - ✅ Git configuration added (.gitignore for Private folder)
 - ✅ Project intelligence documented for future development
-- 🎯 Ready for enhancement work: scale to 32 meters, complete admin interface, dynamic configuration
+- ✅ WebSocket architecture implemented (eliminated string mutation bug)
+- ✅ Connection status indicators and error handling added
+- 🎯 Ready for scaling work: convert hardcoded 4-meter limit to dynamic 10+ meter support
+
+### Recent Major Achievements (December 2024)
+- **WebSocket Architecture**: Complete migration from server-side string replacement to WebSocket JSON updates
+- **Critical Bug Fixes**: Eliminated string mutation bug that was causing page load failures
+- **Connection Status**: Added real-time WebSocket connection indicators and last update timestamps
+- **Error Handling**: Implemented robust WebSocket reconnection with retry limits
+- **Scaling Foundation**: WebSocket approach provides scalable foundation for 10+ meter support

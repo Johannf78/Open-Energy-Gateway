@@ -32,8 +32,14 @@ void setupMeterRegisters() {
   //Detect the number of meters connected to the gateway.
   void detectNumberOfMeters(){
     debugln("detectNumberOfMeters...");
-    debug("MODBUS_TYPE" );
-    debugln(MODBUS_TYPE);
+    debug("MODBUS_TYPE: " );
+    if (MODBUS_TYPE_RS485) {
+      debugln("MODBUS_TYPE_RS485");
+    }else{
+      debugln("MODBUS_TYPE_TCPIP");
+    }
+
+    
   
     #if MODBUS_TYPE == MODBUS_TYPE_RS485
     
@@ -46,9 +52,10 @@ void setupMeterRegisters() {
           //Serial.print("Serial Number: ");
           //Serial.println(combinedValue);
           //Update the number of meters if able to read its serial number
-          numberOfMeters = i;    
+          numberOfMeters = i;
+
         } else {
-        Serial.println("Error reading meter: " + String(i));
+          Serial.println("Error reading meter: " + String(i));
         }
       } 
   
@@ -61,10 +68,7 @@ void setupMeterRegisters() {
     #endif
     
     Serial.println("Number of meters detected: " + String(numberOfMeters)); 
-    if (numberOfMeters >= 1){
-      //Indicate that one or more meters were detected by turning on a LED.
-      digitalWrite(LED_2_METER, HIGH);
-    }
+
     Serial.println("");
   }
   
@@ -74,6 +78,12 @@ void setupMeterRegisters() {
     uint16_t registerData[4];
     String meterPrefix = "m" + String(meterNumber) + "_";
     
+     // Add serial number to JsonDoc
+    if (meterNumber == 1) JsonDoc["m1_serial_number"] = m1_serial_number;
+    else if (meterNumber == 2) JsonDoc["m2_serial_number"] = m2_serial_number;
+    else if (meterNumber == 3) JsonDoc["m3_serial_number"] = m3_serial_number;
+    else if (meterNumber == 4) JsonDoc["m4_serial_number"] = m4_serial_number;
+
     // Loop through all register definitions in the JSON document
     for (JsonPair kv : MeterRegisterDefs.as<JsonObject>()) {
       JsonArray registerDef = kv.value().as<JsonArray>();
@@ -120,12 +130,13 @@ void setupMeterRegisters() {
     }
   
     // Display the JSON Document for Meter
+    /*
     Serial.println("=== JSON Document for Meter " + String(meterNumber) + " ===");
     String jsonString;
     serializeJsonPretty(JsonDoc, jsonString);
     Serial.println(jsonString);
     Serial.println("=== JSON Size: " + String(JsonDoc.memoryUsage()) + " bytes ===");
     Serial.println();
-    
+    */
   }
   

@@ -1,0 +1,179 @@
+(footprint "Resistor_SMD_Digikey_RESC2012X70N"
+	(version 20241229)
+	(generator "pcbnew")
+	(generator_version "9.0")
+	(layer "F.Cu")
+	(property "Reference" "REF**"
+		(at -0.46 -1.27 0)
+		(layer "F.SilkS")
+		(uuid "e719cec7-1400-4310-bd68-1d773a4a897c")
+		(effects
+			(font
+				(size 0.393701 0.393701)
+				(thickness 0.098425)
+			)
+		)
+	)
+	(property "Value" "Resistor_SMD_Digikey_RESC2012X70N"
+		(at 1.29 1.27 0)
+		(layer "F.Fab")
+		(uuid "57b3ae09-933f-4178-bfee-d85b1fc59dfa")
+		(effects
+			(font
+				(size 0.393701 0.393701)
+				(thickness 0.098425)
+			)
+		)
+	)
+	(property "Datasheet" "https://industrial.panasonic.com/cdbs/www-data/pdf/RDO0000/RDO0000C334.pdf"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "1082f555-8179-4814-a53d-314cb4209f84")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "2a37384e-3015-4239-9845-572efef5382f")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr smd)
+	(fp_line
+		(start -0.1 -0.68)
+		(end 0.1 -0.68)
+		(stroke
+			(width 0.127)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "1e6931d8-99d2-43d5-92c2-1b47617bbfd6")
+	)
+	(fp_line
+		(start -0.1 0.68)
+		(end 0.1 0.68)
+		(stroke
+			(width 0.127)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "ff4a2cf2-5717-414e-a228-a74a414c3091")
+	)
+	(fp_line
+		(start -1.708 -0.94)
+		(end 1.708 -0.94)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "a8ba4b02-cf42-4935-8bd0-78ded2fb2622")
+	)
+	(fp_line
+		(start -1.708 0.94)
+		(end -1.708 -0.94)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "ad6d732e-c3e1-47e5-a9c7-a15e3ba5f670")
+	)
+	(fp_line
+		(start -1.708 0.94)
+		(end 1.708 0.94)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "9ca30be6-9d98-4999-b875-81feb46aced4")
+	)
+	(fp_line
+		(start 1.708 0.94)
+		(end 1.708 -0.94)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "3a5420a4-3c4d-4258-872a-2cbedcfa78c0")
+	)
+	(fp_line
+		(start -1.1 0.68)
+		(end -1.1 -0.68)
+		(stroke
+			(width 0.127)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "485e3e93-34fd-46b9-aee1-9df5df91b703")
+	)
+	(fp_line
+		(start 1.1 -0.68)
+		(end -1.1 -0.68)
+		(stroke
+			(width 0.127)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "aaeeb0dd-d6b2-48dc-84d6-ddf592fddfef")
+	)
+	(fp_line
+		(start 1.1 0.68)
+		(end -1.1 0.68)
+		(stroke
+			(width 0.127)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "5c6f2ae5-f5ee-40f8-b924-6e5f94d2dad4")
+	)
+	(fp_line
+		(start 1.1 0.68)
+		(end 1.1 -0.68)
+		(stroke
+			(width 0.127)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "bf664bcf-15f7-48bb-88ce-400cdddf8387")
+	)
+	(pad "1" smd rect
+		(at -0.94 0)
+		(size 1.04 1.38)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(solder_mask_margin 0.102)
+		(uuid "3e79030d-2a54-4d8a-b82b-fc436b9f8423")
+	)
+	(pad "2" smd rect
+		(at 0.94 0)
+		(size 1.04 1.38)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(solder_mask_margin 0.102)
+		(uuid "fb146839-b8fb-4658-ad8d-63fb65c2af1b")
+	)
+	(embedded_fonts no)
+	(model "${KICAD9_3RD_PARTY}/RESISTOR_ERJ-T06J221V.step"
+		(offset
+			(xyz 0 0 0)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 0)
+		)
+	)
+)

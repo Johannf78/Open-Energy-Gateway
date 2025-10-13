@@ -1,7 +1,32 @@
 # Active Context - AmpX Open Energy Gateway
 
 ## Current Focus
-**mDNS Implementation Completed**: Successfully implemented mDNS (Multicast DNS) functionality for .local domain access. ESP32 now advertises itself as `energy-gateway-{GATEWAY_ID}.local` on the local network. Implementation includes HTTP and WebSocket service registration. Windows mDNS resolution still needs troubleshooting.
+**WebSocket Architecture Implementation Completed**: Successfully implemented comprehensive WebSocket-based real-time updates across all web interfaces. System now uses WebSocket for all dynamic content updates instead of server-side string replacement. Critical string mutation bug eliminated. Foundation established for scaling to 10+ meters.
+
+## Recent Major Achievements
+
+### WebSocket Architecture Implementation (December 2024)
+**Objective**: Replace server-side string replacement with WebSocket-based real-time updates for better performance and scalability.
+
+**Implementation Details**:
+- Converted main dashboard (`webpage.h`) to WebSocket updates for all meter data
+- Converted settings page (`web_settings.h`) to WebSocket updates for dynamic content
+- Eliminated critical string mutation bug that was causing page load failures
+- Added connection status indicators and last update timestamps
+- Implemented proper WebSocket error handling and reconnection logic
+
+**Critical Bug Fixes**:
+- **String Mutation Bug**: Fixed global String objects being permanently altered by replace() calls
+- **HTML Syntax Errors**: Corrected malformed tags and broken links in templates
+- **WebSocket Reconnection**: Fixed scope issues with reconnection counter
+- **Connection Status**: Added real-time connection status feedback
+
+**Current Status**:
+- ✅ WebSocket real-time updates working perfectly
+- ✅ Connection status indicators functional
+- ✅ All dynamic content updates via WebSocket
+- ✅ String mutation bug completely eliminated
+- ✅ Foundation ready for 10+ meter scaling
 
 ## Recent Issue Resolution
 
@@ -137,8 +162,23 @@ Modbus Registers → Type Conversion → JSON Storage → WebSocket Broadcast
 
 ## Next Development Opportunities
 
+### Immediate Priority: Scaling to 10+ Meters
+**Current Foundation**: WebSocket architecture provides scalable foundation for expanding meter support.
+
+**Identified Code Duplication Areas**:
+1. **HTML Templates**: 4 hardcoded meter sections in `webpage.h` and `web_settings.h`
+2. **Global Variables**: `m1_serial_number` through `m4_serial_number` pattern
+3. **Server Code**: Meter handling loops with hardcoded meter numbers
+4. **JavaScript**: WebSocket processing with hardcoded meter references
+
+**Scaling Strategy**:
+- Convert hardcoded meter sections to dynamic generation
+- Implement array-based meter management
+- Create template-based HTML generation
+- Update WebSocket processing for variable meter count
+
 ### High Priority Features
-1. **Scale to 32 Meters**: Increase from current 4-meter limit
+1. **Scale to 10+ Meters**: Implement dynamic meter support using current WebSocket foundation
 2. **Complete Admin Interface**: Implement web-based configuration
 3. **Dynamic Settings**: Move hardcoded gateway ID and server URLs
 4. **Enhanced Error Recovery**: Improve fault tolerance patterns

@@ -59,6 +59,9 @@ Global `DynamicJsonDocument` serves as central data store:
 - 3-second interval meter reading
 - Immediate JSON broadcast to connected clients
 - No polling required from web interface
+- Comprehensive error handling with automatic reconnection
+- Connection status indicators for user feedback
+- All dynamic content updates via WebSocket (no server-side string replacement)
 
 ### API Upload Pattern
 - 30-second interval for remote server uploads
@@ -95,9 +98,10 @@ LED_5_SERVER    // Successful API communication
 
 ### Web Interface Storage
 - **Current Implementation**: HTML templates in header files
-- **Future SPIFFS Option**: Infrastructure ready for deployment
-- **Template System**: String replacement for dynamic content
+- **WebSocket Architecture**: All dynamic content updates via WebSocket JSON transmission
+- **Template System**: Static HTML with JavaScript-based DOM updates
 - **Memory Efficiency**: Static allocation in program memory
+- **Future SPIFFS Option**: Infrastructure ready for deployment
 
 ## Error Handling Patterns
 
@@ -142,3 +146,18 @@ static unsigned long counter3 = 0;  // Reboot timer (24h)
 - Unique `AMPX_GATEWAY_ID` for device identification
 - Serial number tracking for individual meters
 - Structured data format for audit trails
+
+## Scaling Patterns
+
+### Current Limitations (4-Meter Hardcoded)
+- **HTML Templates**: Static meter sections in `webpage.h` and `web_settings.h`
+- **Global Variables**: `m1_serial_number` through `m4_serial_number` pattern
+- **Server Code**: Hardcoded meter handling loops
+- **JavaScript**: Static meter references in WebSocket processing
+
+### Scaling Strategy for 10+ Meters
+- **Dynamic HTML Generation**: Template-based meter section creation
+- **Array-Based Data**: Replace global variables with meter arrays
+- **Loop-Based Processing**: Dynamic meter handling in server and client code
+- **WebSocket Scalability**: JSON-based updates support unlimited meters
+- **Memory Management**: Efficient data structures for large meter counts
