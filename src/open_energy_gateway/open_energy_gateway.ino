@@ -87,7 +87,7 @@ for ESP32-WROVER-IE-N8R8-DEVKITC-VE Espressif
 //#include "SPIFFS.h"
 
 //The HTML code for the webpages are stored in a seperate file, this makes the code easier to read.
-#include "webpage.h" 
+#include "web_home.h" 
 #include "web_settings.h" 
 #include "web_admin.h" 
 

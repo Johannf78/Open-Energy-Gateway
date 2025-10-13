@@ -21,14 +21,14 @@ void handleRoot() {
 
   //Replace the string m1_serial_number with the actual serial number, done here as it does not update regularly like values.
   /*
-  webpage.replace("m1_serial_number", m1_serial_number);
-  webpage.replace("m2_serial_number", m2_serial_number);
-  webpage.replace("m3_serial_number", m3_serial_number);
-  webpage.replace("m4_serial_number", m4_serial_number);
+  webpage_home.replace("m1_serial_number", m1_serial_number);
+  webpage_home.replace("m2_serial_number", m2_serial_number);
+  web_hwebpage_homeome.replace("m3_serial_number", m3_serial_number);
+  webpage_home.replace("m4_serial_number", m4_serial_number);
   */
 
   //This must be a server side replacement, as the javascript reacts based on this value.
-  webpage.replace("numberOfMetersValue", String(numberOfMeters));
+  webpage_home.replace("numberOfMetersValue", String(numberOfMeters));
 
   /*
   for (int i = 1; i <= maxNumberOfMeters; i++)
@@ -43,7 +43,7 @@ void handleRoot() {
   JsonDoc["m3_name"] = preferences.getString("m3_name");
   JsonDoc["m4_name"] = preferences.getString("m4_name");
 
-  server.send(200, "text/html", webpage);
+  server.send(200, "text/html", webpage_home);
 }
 
 //Handle the settings webpage
