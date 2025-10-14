@@ -4,6 +4,47 @@ String webpage_home = R"(
 
   <h1>AmpX Open Energy Gateway</h1>
 
+  <div class="container-div">
+  <h2>Meter List</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Serial Number</th>
+          <th>Name</th>
+          <th>View</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr id="meter-list-row-1">
+          <td>1</td>
+          <td id="meter_list_m1_serial_number">Loading...</td>
+          <td id="meter_list_m1_name">Loading...</td>
+          <td><a href="#" class="view-button">View</a></td>
+        </tr>
+        <tr id="meter-list-row-2">
+          <td>2</td>
+          <td id="meter_list_m2_serial_number">Loading...</td>
+          <td id="meter_list_m2_name">Loading...</td>
+          <td><a href="#" class="view-button">View</a></td>
+        </tr>
+        <tr id="meter-list-row-3">
+          <td>3</td>
+          <td id="meter_list_m3_serial_number">Loading...</td>
+          <td id="meter_list_m3_name">Loading...</td>
+          <td><a href="#" class="view-button">View</a></td>
+        </tr>
+        <tr id="meter-list-row-4">
+          <td>4</td>
+          <td id="meter_list_m4_serial_number">Loading...</td>
+          <td id="meter_list_m4_name">Loading...</td>
+          <td><a href="#" class="view-button">View</a></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  
+<div class="container-div">
   <h2>Energy Consumption Summary</h2>
   <table>
   <tr>
@@ -27,9 +68,7 @@ String webpage_home = R"(
     <td id='m4_active_energy_imported_tot_summary'>0 kWh</td>
   </tr>
   </table>
-  
-  var_meter_list
-
+  </div>
 
   <br/>
   <div id='meter1'>
@@ -226,40 +265,21 @@ String webpage_home = R"(
     var numberOfMeters = numberOfMetersValue; // Define the number of meters as an integer
   
 
-      // Hide the div with id 'meter2', 'meter3', and 'meter4' based on the numberOfMeters
-      // Also hide the summary table rows
-      /*
-    if (numberOfMeters == 1) {
-        document.getElementById('meter2_summary').style.display = 'none';
-        document.getElementById('meter3_summary').style.display = 'none';
-        document.getElementById('meter4_summary').style.display = 'none';
-
-        document.getElementById('meter2').style.display = 'none';
-        document.getElementById('meter3').style.display = 'none';
-        document.getElementById('meter4').style.display = 'none';
-    } else if (numberOfMeters == 2) {
-        document.getElementById('meter3_summary').style.display = 'none';
-        document.getElementById('meter4_summary').style.display = 'none';
-
-        document.getElementById('meter3').style.display = 'none';
-        document.getElementById('meter4').style.display = 'none';
-    } else if (numberOfMeters == 3) {
-        document.getElementById('meter4_summary').style.display = 'none';
-
-        document.getElementById('meter4').style.display = 'none';
-    }
-    */
     // Hide all meter divs and summary rows beyond numberOfMeters
+    // Only show the meter divs and summary rows that are needed
     for (let i = 1; i <= maxNumberOfMeters; i++) {
       let summaryRow = document.getElementById('meter' + i + '_summary');
       let meterDiv = document.getElementById('meter' + i);
+      let meterListRow = document.getElementById('meter-list-row-' + i);
       
       if (i > numberOfMeters) {
         if (summaryRow) summaryRow.style.display = 'none';
         if (meterDiv) meterDiv.style.display = 'none';
+        if (meterListRow) meterListRow.style.display = 'none';
       } else {
         if (summaryRow) summaryRow.style.display = '';
         if (meterDiv) meterDiv.style.display = '';
+        if (meterListRow) meterListRow.style.display = '';
       }
     }
 
@@ -347,6 +367,22 @@ String webpage_home = R"(
           element.textContent = value;
         }
         
+      // Handle meter list table mapping (new functionality)
+      if (key.includes('serial_number')) {
+        let meterNum = key.match(/m(\d+)_serial_number/)[1];
+        let meterListElement = document.getElementById('meter_list_' + key);
+        if (meterListElement) {
+          meterListElement.textContent = value;
+        }
+      }
+      
+      if (key.includes('_name') && !key.includes('summary')) {
+        let meterNum = key.match(/m(\d+)_name/)[1];
+        let meterListElement = document.getElementById('meter_list_' + key);
+        if (meterListElement) {
+          meterListElement.textContent = value;
+        }
+      }
 
         
       }
