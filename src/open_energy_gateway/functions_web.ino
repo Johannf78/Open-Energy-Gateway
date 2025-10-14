@@ -38,12 +38,27 @@ void handleRoot() {
     JsonDoc[meterPrefix + "name"] = preferences.getString(meterPrefix + "name");
   }
   */
+  /*
   JsonDoc["m1_name"] = preferences.getString("m1_name");
   JsonDoc["m2_name"] = preferences.getString("m2_name");
   JsonDoc["m3_name"] = preferences.getString("m3_name");
   JsonDoc["m4_name"] = preferences.getString("m4_name");
+  */
+  for (int i =1; i <= MAX_NUMBER_OF_METERS; i++){
+    String keyName = "m" + String(i) + "_name";
+    JsonDoc[keyName] = preferences.getString(keyName.c_str());
+  }
 
-  server.send(200, "text/html", webpage_home);
+  for (int i = 1; i <= maxNumberOfMeters; i++)
+  {
+    String meterList = "<ul>";
+    String keyName = "m" + String(i) + "_name";
+    meterList += "<li>Meter " + String(i) + ": " + preferences.getString(keyName.c_str()) + "</li>";
+    meterList += "</ul>";
+    webpage_home.replace("var_meter_list", meterList);
+  }
+
+  server.send(200, "text/html", web_inc_header + webpage_home);
 }
 
 //Handle the settings webpage
@@ -77,7 +92,7 @@ void handleSettings()
   else if (percentage > 100) percentage = 100;
   JsonDoc["m_wifi_rssi"] = String(rssi) + "dBm (" + String(percentage) + "%)";
 
-  server.send(200, "text/html", page);
+  server.send(200, "text/html",  web_inc_header + page);
 }
 
 //Handle the admin webpage
@@ -147,7 +162,7 @@ void handleChangeMetersName() {
     </html>
   )";
 
-  server.send(200, "text/html", successPage);
+  server.send(200, "text/html", web_inc_header + successPage);
 }
 
 //Handle the gateway ID update form submission
@@ -182,7 +197,7 @@ void handleUpdateGatewayId() {
         </body>
         </html>
       )";
-      server.send(200, "text/html", successPage);
+      server.send(200, "text/html", web_inc_header + successPage);
     } else {
       //Invalid input
       server.send(400, "text/plain", "Invalid Gateway ID. Must be a positive integer.");

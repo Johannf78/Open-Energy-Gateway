@@ -27,13 +27,18 @@ void postToAmpXPortal2(int meterNumber = 1) {
     */
     
     // Determine serial number for this meter
-    String serialNumber;
+    String serialNumber = "";
+    /*
     if (meterNumber == 1) serialNumber = m1_serial_number;
     else if (meterNumber == 2) serialNumber = m2_serial_number;
     else if (meterNumber == 3) serialNumber = m3_serial_number;
     else if (meterNumber == 4) serialNumber = m4_serial_number;
     else serialNumber = "";
-  
+    */
+    if (meterNumber >= 1 && meterNumber <= MAX_NUMBER_OF_METERS) {
+      serialNumber = meterSerialNumbers[meterNumber - 1];
+    }
+    
     // Start building the JSON manually for Docker API format
     String httpRequestData = "{";
     httpRequestData += "\"gateway_id\":\"" + String(GATEWAY_ID) + "\",";

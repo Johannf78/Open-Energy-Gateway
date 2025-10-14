@@ -79,10 +79,14 @@ void setupMeterRegisters() {
     String meterPrefix = "m" + String(meterNumber) + "_";
     
      // Add serial number to JsonDoc
+     /*
     if (meterNumber == 1) JsonDoc["m1_serial_number"] = m1_serial_number;
     else if (meterNumber == 2) JsonDoc["m2_serial_number"] = m2_serial_number;
     else if (meterNumber == 3) JsonDoc["m3_serial_number"] = m3_serial_number;
     else if (meterNumber == 4) JsonDoc["m4_serial_number"] = m4_serial_number;
+    */
+    JsonDoc[meterPrefix + "serial_number"] = meterSerialNumbers[meterNumber - 1];
+
 
     // Loop through all register definitions in the JSON document
     for (JsonPair kv : MeterRegisterDefs.as<JsonObject>()) {
@@ -111,10 +115,13 @@ void setupMeterRegisters() {
         // Special handling for serial number
         if (registerNumber == 70) {
           uint32_t serialNum = combineRegistersToInt32(registerData[0], registerData[1]);
+          /*
           if (meterNumber == 1) m1_serial_number = String(serialNum);
           else if (meterNumber == 2) m2_serial_number = String(serialNum);
           else if (meterNumber == 3) m3_serial_number = String(serialNum);
           else if (meterNumber == 4) m4_serial_number = String(serialNum);
+          */
+          meterSerialNumbers[meterNumber - 1] = String(serialNum);
         } else {
           // Normal handling for other registers
           processRegisters(registerData, numRegisters, dataType, friendlyName, meterPrefix + jsonKey);

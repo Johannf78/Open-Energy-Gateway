@@ -90,6 +90,7 @@ for ESP32-WROVER-IE-N8R8-DEVKITC-VE Espressif
 #include "web_home.h" 
 #include "web_settings.h" 
 #include "web_admin.h" 
+#include "web_inc_header.h" 
 
 //Define the meter registers and datatypes here in json format.
 #include "meter_registers.h"
@@ -189,14 +190,18 @@ WebSocketsServer webSocket = WebSocketsServer(81);
 
 
 //TODO: Improve this code use an array and do not use strings.
+/*
 String m1_serial_number = "";  // Meter one serial number
 String m2_serial_number = "";
 String m3_serial_number = "";
 String m4_serial_number = "";  
-
+*/
 
 int numberOfMeters = 0;  // Number of meters connected, this will automatically be updated based on the number of meters detected
-int maxNumberOfMeters = 4;
+const int maxNumberOfMeters = 4;
+String meterSerialNumbers[maxNumberOfMeters];
+
+
 
 
 //The JsonDocument is used to send data to the websocket....
