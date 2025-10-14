@@ -7,6 +7,7 @@
 - **Hardware Abstraction**: Conditional compilation (#if MODBUS_TYPE) for RS485 vs TCP/IP variants
 - **JSON-Centric Data**: DynamicJsonDocument serves as central data store for all components
 - **Non-Blocking Timing**: millis() based intervals, never use delay() in main loop
+- **Array-Based Meters**: Dynamic loops with `meterSerialNumbers[]` array for scalability (Oct 2024)
 
 ### Critical File Relationships
 ```
@@ -77,16 +78,23 @@ open_energy_gateway.ino (main)
 - **Timing**: Use const unsigned long for all intervals
 
 ### Known Constraints
-- **Active Meters**: Currently limited to 4 (m1-m4), not full 32 capacity
-- **Hardcoded Values**: AMPX_GATEWAY_ID, server URLs need web admin interface
+- **Active Meters**: Currently limited to 4 meters, expandable to 10+ with simple config changes
+- **Gateway ID**: Can be changed via admin web interface (stored in NVS)
 - **Memory Limits**: Careful with string operations, prefer static allocation
 - **Network Recovery**: WiFiManager handles WiFi, manual Ethernet reconnection
 
-### Scaling Limitations (Current 4-Meter Hardcoded)
-- **HTML Templates**: Static meter sections in webpage.h and web_settings.h
-- **Global Variables**: m1_serial_number through m4_serial_number pattern
-- **Server Code**: Hardcoded meter handling loops
-- **JavaScript**: Static meter references in WebSocket processing
+### Array-Based Architecture (October 2024 Refactoring)
+- **Global Variables**: `String meterSerialNumbers[maxNumberOfMeters]` array replaces individual variables
+- **Backend Code**: All functions use loops with `maxNumberOfMeters` constant
+- **Server Code**: Dynamic loops in handleRoot(), handleSettings(), handleChangeMetersName()
+- **API Code**: Array-based serial number access in postToAmpXPortal2()
+- **Frontend**: JavaScript uses `var maxNumberOfMeters = 4` for dynamic hiding/showing
+- **Scalability**: Change one constant to support more meters (backend ready for 10+)
+
+### Remaining HTML Constraints for Scaling Beyond 4 Meters
+- **HTML Templates**: Static meter sections in web_home.h and web_settings.h (4 hardcoded divs)
+- **To Scale to 10**: Add 6 more meter HTML sections, update two constants (C++ and JS)
+- **Backend**: Already fully dynamic and scalable - no code changes needed
 
 ### Extension Points
 - **Register Definitions**: meter_registers.h for new meter types
@@ -102,18 +110,25 @@ open_energy_gateway.ino (main)
 
 This is a mature, production-ready industrial IoT project with excellent architecture for ESP32 platform constraints.
 
-### Analysis Session Complete
-- ✅ Memory bank documentation created (6 core files)
-- ✅ README.md corrected for accuracy (timing, paths, SPIFFS status)
-- ✅ Git configuration added (.gitignore for Private folder)
-- ✅ Project intelligence documented for future development
-- ✅ WebSocket architecture implemented (eliminated string mutation bug)
-- ✅ Connection status indicators and error handling added
-- 🎯 Ready for scaling work: convert hardcoded 4-meter limit to dynamic 10+ meter support
+### Development Sessions Completed
 
-### Recent Major Achievements (December 2024)
-- **WebSocket Architecture**: Complete migration from server-side string replacement to WebSocket JSON updates
-- **Critical Bug Fixes**: Eliminated string mutation bug that was causing page load failures
-- **Connection Status**: Added real-time WebSocket connection indicators and last update timestamps
-- **Error Handling**: Implemented robust WebSocket reconnection with retry limits
-- **Scaling Foundation**: WebSocket approach provides scalable foundation for 10+ meter support
+#### Session 1: WebSocket Architecture (December 2024)
+- ✅ Complete migration from server-side string replacement to WebSocket JSON updates
+- ✅ Eliminated string mutation bug that was causing page load failures
+- ✅ Added real-time WebSocket connection indicators and last update timestamps
+- ✅ Implemented robust WebSocket reconnection with retry limits
+- ✅ Scaling foundation established for 10+ meter support
+
+#### Session 2: Array-Based Refactoring (October 2024)
+- ✅ Converted from hardcoded m1_serial_number variables to meterSerialNumbers[] array
+- ✅ Refactored all backend functions to use dynamic loops (functions_meter.ino, functions_api.ino, functions_web.ino)
+- ✅ Updated JavaScript to use loops instead of hardcoded if-else chains
+- ✅ Maintained 100% backward compatibility with existing 4-meter systems
+- ✅ **Tested and verified**: Compiles and runs successfully on ESP32
+- ✅ **Backend fully scalable**: Only HTML templates need expansion for 10+ meters
+
+### Current Status
+- **Production Ready**: Array-based architecture tested and working
+- **Scaling Path Clear**: Change 2 constants + add HTML divs = 10 meter support
+- **Clean Codebase**: No hardcoded meter-specific variables in backend
+- **Next Phase**: Expand HTML templates when 10-meter support is needed
