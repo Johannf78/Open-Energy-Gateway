@@ -219,6 +219,7 @@ String webpage_home = R"(
   var socket;
   var reconnectAttempts = 0;
   var maxReconnectAttempts = 10;
+  var maxNumberOfMeters = 4;
 
   function init(){
     //This variable is updated by the Arduino code before sending the HTML
@@ -227,6 +228,7 @@ String webpage_home = R"(
 
       // Hide the div with id 'meter2', 'meter3', and 'meter4' based on the numberOfMeters
       // Also hide the summary table rows
+      /*
     if (numberOfMeters == 1) {
         document.getElementById('meter2_summary').style.display = 'none';
         document.getElementById('meter3_summary').style.display = 'none';
@@ -245,6 +247,20 @@ String webpage_home = R"(
         document.getElementById('meter4_summary').style.display = 'none';
 
         document.getElementById('meter4').style.display = 'none';
+    }
+    */
+    // Hide all meter divs and summary rows beyond numberOfMeters
+    for (let i = 1; i <= maxNumberOfMeters; i++) {
+      let summaryRow = document.getElementById('meter' + i + '_summary');
+      let meterDiv = document.getElementById('meter' + i);
+      
+      if (i > numberOfMeters) {
+        if (summaryRow) summaryRow.style.display = 'none';
+        if (meterDiv) meterDiv.style.display = 'none';
+      } else {
+        if (summaryRow) summaryRow.style.display = '';
+        if (meterDiv) meterDiv.style.display = '';
+      }
     }
 
     connectToWebSocket();

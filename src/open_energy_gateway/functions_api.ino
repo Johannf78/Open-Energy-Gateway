@@ -35,7 +35,7 @@ void postToAmpXPortal2(int meterNumber = 1) {
     else if (meterNumber == 4) serialNumber = m4_serial_number;
     else serialNumber = "";
     */
-    if (meterNumber >= 1 && meterNumber <= MAX_NUMBER_OF_METERS) {
+    if (meterNumber >= 1 && meterNumber <= maxNumberOfMeters ) {
       serialNumber = meterSerialNumbers[meterNumber - 1];
     }
     

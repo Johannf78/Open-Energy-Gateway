@@ -44,11 +44,12 @@ void handleRoot() {
   JsonDoc["m3_name"] = preferences.getString("m3_name");
   JsonDoc["m4_name"] = preferences.getString("m4_name");
   */
-  for (int i =1; i <= MAX_NUMBER_OF_METERS; i++){
+  for (int i =1; i <= maxNumberOfMeters ; i++){
     String keyName = "m" + String(i) + "_name";
     JsonDoc[keyName] = preferences.getString(keyName.c_str());
   }
 
+  /*
   for (int i = 1; i <= maxNumberOfMeters; i++)
   {
     String meterList = "<ul>";
@@ -57,6 +58,7 @@ void handleRoot() {
     meterList += "</ul>";
     webpage_home.replace("var_meter_list", meterList);
   }
+  */
 
   server.send(200, "text/html", web_inc_header + webpage_home);
 }
@@ -74,16 +76,28 @@ void handleSettings()
   JsonDoc["m_connected_meters_num"] = String(numberOfMeters);
   
   // Add meter names to JsonDoc
+  /*
   JsonDoc["m1_name"] = preferences.getString("m1_name");
   JsonDoc["m2_name"] = preferences.getString("m2_name");
   JsonDoc["m3_name"] = preferences.getString("m3_name");
   JsonDoc["m4_name"] = preferences.getString("m4_name");
-  
+  */
+  for (int i = 1; i <= maxNumberOfMeters; i++) {
+    String keyName = "m" + String(i) + "_name";
+    JsonDoc[keyName] = preferences.getString(keyName.c_str());
+  }
+
   // Add serial numbers to JsonDoc (already done in functions_meter.ino)
+  /*
   JsonDoc["m1_serial_number"] = m1_serial_number;
   JsonDoc["m2_serial_number"] = m2_serial_number;
   JsonDoc["m3_serial_number"] = m3_serial_number;
   JsonDoc["m4_serial_number"] = m4_serial_number;
+  */
+  for (int i = 1; i <= maxNumberOfMeters; i++) {
+    String keyName = "m" + String(i) + "_serial_number";
+    JsonDoc[keyName] = meterSerialNumbers[i - 1];
+  }
 
   // Add WiFi RSSI to JsonDoc
   int rssi = WiFi.RSSI();
@@ -123,6 +137,7 @@ void handleWebSocket() {
 }
 
 void handleChangeMetersName() {
+  /*
   String m1_name = server.arg("m1_name");
   preferences.putString("m1_name", m1_name);
   Serial.println("m1_name: " + m1_name);
@@ -138,6 +153,15 @@ void handleChangeMetersName() {
   String m4_name = server.arg("m4_name");
   preferences.putString("m4_name", m4_name);
   Serial.println("m4_name: " + m4_name);
+  */
+  for (int i = 1; i <= numberOfMeters; i++) {
+    String keyName = "m" + String(i) + "_name";
+    if (server.hasArg(keyName)) {
+      String meterName = server.arg(keyName);
+      preferences.putString(keyName.c_str(), meterName);
+      Serial.println(keyName + ": " + meterName);
+    }
+  }
 
   //Send success response
   String successPage = R"(
