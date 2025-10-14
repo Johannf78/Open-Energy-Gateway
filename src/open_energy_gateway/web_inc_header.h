@@ -14,7 +14,7 @@ String web_inc_header = R"(
     table {
       border-collapse: collapse; 
       width: 100%;
-      max-width: 1400px;
+      max-width: 700px;
       margin: 10px 0;
     }
     table th {
