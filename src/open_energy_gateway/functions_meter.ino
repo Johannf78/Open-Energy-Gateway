@@ -127,9 +127,11 @@ void setupMeterRegisters() {
           processRegisters(registerData, numRegisters, dataType, friendlyName, meterPrefix + jsonKey);
         
           // Special case for energy imported total, add a duplicate for summary field
+          /*
           if (registerNumber == 2512) {
             processRegisters(registerData, numRegisters, dataType, friendlyName, meterPrefix + jsonKey + "_summary");
           }
+          */
         }
       } else {
         Serial.println("Error reading register " + String(registerNumber));

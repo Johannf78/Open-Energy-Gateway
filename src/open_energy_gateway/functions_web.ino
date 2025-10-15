@@ -5,6 +5,7 @@ void initServer() {
   // server.on("/update", HTTP_POST, handleUpdate);
   server.on("/settings", handleSettings);
   server.on("/admin", handleAdmin);
+  server.on("/meters", handleMeters);
   server.on("/update_meters_name", HTTP_POST, handleChangeMetersName);
   server.on("/update_gateway_id", HTTP_POST, handleUpdateGatewayId);  // Add this line
   server.begin();
@@ -121,6 +122,34 @@ void handleAdmin()
 
   //send the page to the client
   server.send(200, "text/html", page);
+}
+
+//Handle the meters webpage - shows details for a single meter
+void handleMeters() {
+  // Get the meter ID from query string
+  String meterIdStr = server.arg("id");
+  int meterId = meterIdStr.toInt();
+  
+  // Validate meter ID
+  if (meterId < 1 || meterId > maxNumberOfMeters) {
+    server.send(404, "text/plain", "Invalid meter ID");
+    return;
+  }
+  
+  String html = web_inc_header + webpage_meters;
+  
+  // Replace METER_NUMBER placeholders with actual meter number
+  html.replace("METER_NUMBER", String(meterId));
+  
+  // Load meter name and serial number to JsonDoc for WebSocket
+  String meterPrefix = "m" + String(meterId) + "_";
+  String keyName = meterPrefix + "name";
+  JsonDoc[keyName] = preferences.getString(keyName.c_str());
+  
+  String serialKeyName = meterPrefix + "serial_number";
+  JsonDoc[serialKeyName] = meterSerialNumbers[meterId - 1];
+  
+  server.send(200, "text/html", html);
 }
 
 void handleWebSocket() {

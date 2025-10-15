@@ -1,7 +1,19 @@
 //Raw string literal quotation, webpage HTML...
 String webpage_settings = R"(
 
-  <h1>AmpX Open Energy Gateway - Settings</h1>
+<!-- Main Content -->
+<main class="main-content">
+  
+  <!-- Header -->
+  <header class="header">
+    <h1>Settings</h1>
+  </header>
+
+  <!-- Content -->
+  <div class="content">
+
+
+
   <br>
   <h2>Information/Status</h2>
   <ul>
@@ -51,12 +63,18 @@ String webpage_settings = R"(
   <br>
   <p><a href="/">Home </a></p>
 
-</main>
+
+
+  </div> <!-- End of content -->
+  </main>
+</div> <!-- End of app-container -->
+
 <footer>
 <br/><br/>
 <span><a href='https://ampx.co/' target='_blank'>https://ampx.co</a></span>
 </footer>
 </body>
+
 <script type="text/javascript">
   
   var socket;

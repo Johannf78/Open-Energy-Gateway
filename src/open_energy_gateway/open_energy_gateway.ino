@@ -90,6 +90,7 @@ for ESP32-WROVER-IE-N8R8-DEVKITC-VE Espressif
 #include "web_home.h" 
 #include "web_settings.h" 
 #include "web_admin.h" 
+#include "web_meters.h" 
 #include "web_inc_header.h" 
 
 //Define the meter registers and datatypes here in json format.

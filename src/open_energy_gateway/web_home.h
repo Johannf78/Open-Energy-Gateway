@@ -2,9 +2,20 @@
 
 String webpage_home = R"(
 
-  <h1>AmpX Open Energy Gateway</h1>
+<!-- Main Content -->
+<main class="main-content">
+  
+  <!-- Header -->
+  <header class="header">
+    <h1>Home</h1>
+  </header>
 
-  <div class="container-div">
+  <!-- Content -->
+  <div class="content">
+
+  
+
+  <div class="card">
   <h2>Meter List</h2>
     <table>
       <thead>
@@ -20,224 +31,112 @@ String webpage_home = R"(
           <td>1</td>
           <td id="meter_list_m1_serial_number">Loading...</td>
           <td id="meter_list_m1_name">Loading...</td>
-          <td><a href="#" class="view-button">View</a></td>
+          <td><a href="/meters?id=1" class="view-button">View</a></td>
         </tr>
         <tr id="meter-list-row-2">
           <td>2</td>
           <td id="meter_list_m2_serial_number">Loading...</td>
           <td id="meter_list_m2_name">Loading...</td>
-          <td><a href="#" class="view-button">View</a></td>
+          <td><a href="/meters?id=2" class="view-button">View</a></td>
         </tr>
         <tr id="meter-list-row-3">
           <td>3</td>
           <td id="meter_list_m3_serial_number">Loading...</td>
           <td id="meter_list_m3_name">Loading...</td>
-          <td><a href="#" class="view-button">View</a></td>
+          <td><a href="/meters?id=3" class="view-button">View</a></td>
         </tr>
         <tr id="meter-list-row-4">
           <td>4</td>
           <td id="meter_list_m4_serial_number">Loading...</td>
           <td id="meter_list_m4_name">Loading...</td>
-          <td><a href="#" class="view-button">View</a></td>
+          <td><a href="/meters?id=4" class="view-button">View</a></td>
         </tr>
       </tbody>
     </table>
   </div>
   
-<div class="container-div">
-  <h2>Energy Consumption Summary</h2>
+<div class="card">
+  <h2>Energy Consumption Summary (Active energy imported)</h2>
   <table>
   <tr>
     <th>Meter</th>
-    <th>Total active energy imported</th>
+    <th>L1</th>
+    <th>L2</th>
+    <th>L3</th>
+    <th>Total</th>
   </tr>
-  <tr id='meter1_summary'>
+  <tr id='m1_active_energy_imported'>
     <td>1</td>
-    <td id='m1_active_energy_imported_tot_summary'>0 kWh</td>
+    <td id='m1_active_energy_imported_L1'>0 kWh</td>
+    <td id='m1_active_energy_imported_L2'>0 kWh</td>
+    <td id='m1_active_energy_imported_L3'>0 kWh</td>
+    <td id='m1_active_energy_imported_tot'>0 kWh</td>
   </tr>
-  <tr id='meter2_summary'>
+  <tr id='m2_active_energy_imported'>
     <td>2</td>
-    <td id='m2_active_energy_imported_tot_summary'>0 kWh</td>
+    <td id='m2_active_energy_imported_L1'>0 kWh</td>
+    <td id='m2_active_energy_imported_L2'>0 kWh</td>
+    <td id='m2_active_energy_imported_L3'>0 kWh</td>
+    <td id='m2_active_energy_imported_tot'>0 kWh</td>
   </tr>
-  <tr id='meter3_summary'>
+  <tr id='m3_active_energy_imported'>
     <td>3</td>
-    <td id='m3_active_energy_imported_tot_summary'>0 kWh</td>
-  </tr>
-  <tr id='meter4_summary'>
+    <td id='m3_active_energy_imported_L1'>0 kWh</td>
+    <td id='m3_active_energy_imported_L2'>0 kWh</td>
+    <td id='m3_active_energy_imported_L3'>0 kWh</td>
+    <td id='m3_active_energy_imported_tot'>0 kWh</td>
+  </tr>  
+  <tr id='m4_active_energy_imported'>
     <td>4</td>
-    <td id='m4_active_energy_imported_tot_summary'>0 kWh</td>
+    <td id='m4_active_energy_imported_L1'>0 kWh</td>
+    <td id='m4_active_energy_imported_L2'>0 kWh</td>
+    <td id='m4_active_energy_imported_L3'>0 kWh</td>
+    <td id='m4_active_energy_imported_tot'>0 kWh</td>
   </tr>
   </table>
   </div>
 
-  <br/>
-  <div id='meter1'>
-    <h3>Meter: 1, Serial number: <span id='m1_serial_number'></span>, Meter name: <span id='m1_name'></span></h3>
+  <div class="card">
+    <h2>Power Consumption Summary (Active power)</h2>
     <table>
     <tr>
-      <th>Entity</th>
+      <th>Meter</th>
       <th>L1</th>
       <th>L2</th>
       <th>L3</th>
-      <th>Avg/Max</th>
+      <th>Total</th>
     </tr>
-    <tr>
-      <td class='text-align-left'>Voltage</td>
-      <td id='m1_voltage_L1'>0.00 V</td>
-      <td id='m1_voltage_L2'>0.00 V</td>
-      <td id='m1_voltage_L3'>0.00 V</td>
-      <td></td>
-    </tr>
-    <tr>
-      <td class='text-align-left'>Current</td>
-      <td id='m1_current_L1'>0.00 A</td>
-      <td id='m1_current_L2'>0.00 A</td>
-      <td id='m1_current_L3'>0.00 A</td>
-      <td id='m1_current_avg'>0.00 A</td>
-    </tr>
-    <tr>
-      <td class='text-align-left'>Active Power</td>
+    <tr id='m1_active_power'>
+      <td>1</td>
       <td id='m1_active_power_L1'>0.00 KW</td>
       <td id='m1_active_power_L2'>0.00 KW</td>
       <td id='m1_active_power_L3'>0.00 KW</td>
       <td id='m1_active_power_tot'>0.00 KW</td>
     </tr>
-    <tr>
-      <td class='text-align-left'>Active Energy Imported</td>
-      <td id='m1_active_energy_imported_L1'>0 kWh</td>
-      <td id='m1_active_energy_imported_L2'>0 kWh</td>
-      <td id='m1_active_energy_imported_L3'>0 kWh</td>
-      <td id='m1_active_energy_imported_tot'>0 kWh</td>
-    </tr>
-    </table>
-  </div>
-
-  <br/>
-  <div id='meter2'>
-    <h3>Meter: 2, Serial number: <span id='m2_serial_number'></span>, Meter name: <span id='m2_name'></span></h3>
-    <table>
-    <tr>
-      <th>Entity</th>
-      <th>L1</th>
-      <th>L2</th>
-      <th>L3</th>
-      <th>Avg/Max</th>
-    </tr>
-    <tr>
-      <td class='text-align-left'>Voltage</td>
-      <td id='m2_voltage_L1'>0.00 V</td>
-      <td id='m2_voltage_L2'>0.00 V</td>
-      <td id='m2_voltage_L3'>0.00 V</td>
-      <td></td>
-    </tr>
-    <tr>
-      <td class='text-align-left'>Current</td>
-      <td id='m2_current_L1'>0.00 A</td>
-      <td id='m2_current_L2'>0.00 A</td>
-      <td id='m2_current_L3'>0.00 A</td>
-      <td id='m2_current_avg'>0.00 A</td>
-    </tr>
-    <tr>
-      <td class='text-align-left'>Active Power</td>
+    <tr id='m2_active_power'>
+      <td>2</td>
       <td id='m2_active_power_L1'>0.00 KW</td>
       <td id='m2_active_power_L2'>0.00 KW</td>
       <td id='m2_active_power_L3'>0.00 KW</td>
       <td id='m2_active_power_tot'>0.00 KW</td>
-    </tr>
-    <tr>
-      <td class='text-align-left'>Active Energy Imported</td>
-      <td id='m2_active_energy_imported_L1'>0 kWh</td>
-      <td id='m2_active_energy_imported_L2'>0 kWh</td>
-      <td id='m2_active_energy_imported_L3'>0 kWh</td>
-      <td id='m2_active_energy_imported_tot'>0 kWh</td>
-    </tr>
-    </table>
-  </div>
-
-  <br/>
-  <div id='meter3'>
-    <h3>Meter: 3, Serial number: <span id='m3_serial_number'></span>, Meter name: <span id='m3_name'></span></h3>
-    <table>
-    <tr>
-      <th>Entity</th>
-      <th>L1</th>
-      <th>L2</th>
-      <th>L3</th>
-      <th>Avg/Max</th>
-    </tr>
-    <tr>
-      <td class='text-align-left'>Voltage</td>
-      <td id='m3_voltage_L1'>0.00 V</td>
-      <td id='m3_voltage_L2'>0.00 V</td>
-      <td id='m3_voltage_L3'>0.00 V</td>
-      <td></td>
-    </tr>
-    <tr>
-      <td class='text-align-left'>Current</td>
-      <td id='m3_current_L1'>0.00 A</td>
-      <td id='m3_current_L2'>0.00 A</td>
-      <td id='m3_current_L3'>0.00 A</td>
-      <td id='m3_current_avg'>0.00 A</td>
-    </tr>
-    <tr>
-      <td class='text-align-left'>Active Power</td>
+    </tr>    
+    <tr id='3_active_power'>
+      <td>3</td>
       <td id='m3_active_power_L1'>0.00 KW</td>
       <td id='m3_active_power_L2'>0.00 KW</td>
       <td id='m3_active_power_L3'>0.00 KW</td>
       <td id='m3_active_power_tot'>0.00 KW</td>
     </tr>
-    <tr>
-      <td class='text-align-left'>Active Energy Imported</td>
-      <td id='m3_active_energy_imported_L1'>0 kWh</td>
-      <td id='m3_active_energy_imported_L2'>0 kWh</td>
-      <td id='m3_active_energy_imported_L3'>0 kWh</td>
-      <td id='m3_active_energy_imported_tot'>0 kWh</td>
-    </tr>
-    </table>
-  </div>
-
-
-  <br/>
-  <div id='meter4'>
-    <h3>Meter: 4, Serial number: <span id='m4_serial_number'></span>, Meter name: <span id='m4_name'></span></h3>
-    <table>
-    <tr>
-      <th>Entity</th>
-      <th>L1</th>
-      <th>L2</th>
-      <th>L3</th>
-      <th>Avg/Max</th>
-    </tr>
-    <tr>
-      <td class='text-align-left'>Voltage</td>
-      <td id='m4_voltage_L1'>0.00 V</td>
-      <td id='m4_voltage_L2'>0.00 V</td>
-      <td id='m4_voltage_L3'>0.00 V</td>
-      <td></td>
-    </tr>
-    <tr>
-      <td class='text-align-left'>Current</td>
-      <td id='m4_current_L1'>0.00 A</td>
-      <td id='m4_current_L2'>0.00 A</td>
-      <td id='m4_current_L3'>0.00 A</td>
-      <td id='m4_current_avg'>0.00 A</td>
-    </tr>
-    <tr>
-      <td class='text-align-left'>Active Power</td>
+    <tr id='4_active_power'>
+      <td>4</td>
       <td id='m4_active_power_L1'>0.00 KW</td>
       <td id='m4_active_power_L2'>0.00 KW</td>
       <td id='m4_active_power_L3'>0.00 KW</td>
       <td id='m4_active_power_tot'>0.00 KW</td>
-    </tr>
-    <tr>
-      <td class='text-align-left'>Active Energy Imported</td>
-      <td id='m4_active_energy_imported_L1'>0 kWh</td>
-      <td id='m4_active_energy_imported_L2'>0 kWh</td>
-      <td id='m4_active_energy_imported_L3'>0 kWh</td>
-      <td id='m4_active_energy_imported_tot'>0 kWh</td>
-    </tr>
+    </tr>    
     </table>
   </div>
+
 
 <p>Connection status: <span id="connection_status" style="color: gray;">Connecting...</span></p>
 <p>Last update: <span id="last_update">--:--:--</span></p>
@@ -246,7 +145,12 @@ String webpage_home = R"(
 <p><a href="/settings">Settings </a></p>
 
 
-</main>
+
+
+    </div> <!-- End of content -->
+  </main>
+</div> <!-- End of app-container -->
+
 <footer>
 <br/><br/>
 <span><a href='https://ampx.co/' target='_blank'>https://ampx.co</a></span>
@@ -268,17 +172,17 @@ String webpage_home = R"(
     // Hide all meter divs and summary rows beyond numberOfMeters
     // Only show the meter divs and summary rows that are needed
     for (let i = 1; i <= maxNumberOfMeters; i++) {
-      let summaryRow = document.getElementById('meter' + i + '_summary');
-      let meterDiv = document.getElementById('meter' + i);
-      let meterListRow = document.getElementById('meter-list-row-' + i);
+      const energySummaryRow = document.getElementById('m' + i + '_active_energy_imported');
+      const powerSummaryRow  = document.getElementById('m' + i + '_active_power');
+      const meterListRow = document.getElementById('meter-list-row-' + i);
       
       if (i > numberOfMeters) {
-        if (summaryRow) summaryRow.style.display = 'none';
-        if (meterDiv) meterDiv.style.display = 'none';
+        if (energySummaryRow) energySummaryRow.style.display = 'none';
+        if (powerSummaryRow)  powerSummaryRow.style.display  = 'none';
         if (meterListRow) meterListRow.style.display = 'none';
       } else {
-        if (summaryRow) summaryRow.style.display = '';
-        if (meterDiv) meterDiv.style.display = '';
+        if (energySummaryRow) energySummaryRow.style.display = '';
+        if (powerSummaryRow)  powerSummaryRow.style.display  = '';
         if (meterListRow) meterListRow.style.display = '';
       }
     }
