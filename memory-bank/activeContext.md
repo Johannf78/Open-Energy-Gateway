@@ -1,9 +1,35 @@
 # Active Context - AmpX Open Energy Gateway
 
 ## Current Focus
-**WebSocket Architecture Implementation Completed**: Successfully implemented comprehensive WebSocket-based real-time updates across all web interfaces. System now uses WebSocket for all dynamic content updates instead of server-side string replacement. Critical string mutation bug eliminated. Foundation established for scaling to 10+ meters.
+**UI Redesign and Meters Page Implementation Completed (October 2024)**: Successfully redesigned the web interface with modern sidebar layout, added summary tables for Energy and Power consumption, and implemented a dedicated Meters page for detailed single-meter views. Home page simplified to show only summary data with navigation to detailed meter views.
 
 ## Recent Major Achievements
+
+### UI Redesign and Meters Page (October 2024)
+**Objective**: Modernize the web interface with a professional sidebar layout, add comprehensive summary tables, and create a dedicated meters detail page.
+
+**Implementation Details**:
+- Redesigned layout with left sidebar navigation and flexbox main content area
+- Added "Energy Consumption Summary" table with L1, L2, L3, and Total columns
+- Added "Power Consumption Summary" table with same column structure
+- Created `/meters?id=N` page for detailed single-meter views
+- Removed individual meter detail sections from home page (cleaner UI)
+- Fixed CSS issues: converted className to class, removed conflicting span color rule
+- Implemented proper show/hide logic for dynamic meter counts
+
+**Technical Implementation**:
+- **web_inc_header.h**: Added flexbox layout CSS (.app-container, .main-content, .header, .content)
+- **web_home.h**: Summary tables only, View buttons link to /meters?id=N
+- **web_meters.h**: New page with generic IDs (meter_voltage_L1, etc.)
+- **functions_web.ino**: Added handleMeters() with query string parsing
+- **JavaScript**: WebSocket data filtering by meter prefix (m1_, m2_, etc.)
+
+**Current Status**:
+- ✅ Modern sidebar layout with Home, Meters, Settings navigation
+- ✅ Energy and Power summary tables on home page
+- ✅ Individual meter details accessible via /meters?id=N
+- ✅ All pages use WebSocket for real-time updates
+- ✅ Responsive design with proper CSS styling
 
 ### WebSocket Architecture Implementation (December 2024)
 **Objective**: Replace server-side string replacement with WebSocket-based real-time updates for better performance and scalability.
