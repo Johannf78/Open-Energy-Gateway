@@ -27,6 +27,10 @@
 
 ### User Interface
 - [x] **Real-Time Dashboard**: Live meter readings with WebSocket-based 3-second updates
+- [x] **Modern Sidebar Layout**: Professional left sidebar navigation with flexbox design
+- [x] **Energy Summary Table**: L1, L2, L3, Total columns for active energy imported
+- [x] **Power Summary Table**: L1, L2, L3, Total columns for active power
+- [x] **Meters Detail Page**: Single meter view accessible via /meters?id=N query string
 - [x] **Settings Interface**: WebSocket-powered meter naming and configuration
 - [x] **Admin Interface**: Gateway configuration page structure
 - [x] **Connection Status Display**: Real-time WebSocket connection status indicators
