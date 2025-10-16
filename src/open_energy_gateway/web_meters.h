@@ -58,10 +58,12 @@ String webpage_meters = R"(
     </table>
   </div>
   
-  <p>Connection status: <span id="connection_status" style="color: gray;">Connecting...</span></p>
-  <p>Last update: <span id="last_update">--:--:--</span></p>
-  
-  <p><a href="/">← Back to Home</a></p>
+  <div class="card">
+    <p>Connection status: <span id="connection_status" style="color: gray;">Connecting...</span></p>
+    <p>Last update: <span id="last_update">--:--:--</span></p>
+    <br>
+    <p>Values updates every 3 seconds.</p>  
+  </div>
 
     </div> <!-- End of content -->
   </main>

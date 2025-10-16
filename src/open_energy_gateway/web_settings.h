@@ -57,11 +57,12 @@ String webpage_settings = R"(
     <input type='submit' value='update'></p>
   </form>
 
-  <p>Connection status: <span id="connection_status" style="color: gray;">Connecting...</span></p>
-  <p>Last update: <span id="last_update">--:--:--</span></p>
-
-  <br>
-  <p><a href="/">Home </a></p>
+  <div class="card">
+    <p>Connection status: <span id="connection_status" style="color: gray;">Connecting...</span></p>
+    <p>Last update: <span id="last_update">--:--:--</span></p>
+    <br>
+    <p>Values updates every 3 seconds.</p>  
+  </div>
 
 
 
