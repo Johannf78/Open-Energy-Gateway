@@ -11,811 +11,6 @@
 		(company "Ampx Europe")
 	)
 	(lib_symbols
-		(symbol "AmpX_Library_1:LED_GREEN_CMD15-21VGD_TR8"
-			(pin_names
-				(offset 0.254)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(property "Reference" "LED"
-				(at 5.08 -4.445 0)
-				(effects
-					(font
-						(size 1.524 1.524)
-					)
-				)
-			)
-			(property "Value" "CMD15-21VGD/TR8"
-				(at 5.08 -7.62 0)
-				(effects
-					(font
-						(size 1.524 1.524)
-					)
-				)
-			)
-			(property "Footprint" "AmpX-Footprint-Library.pretty:LED_GREEN_CMD15-21_VCC"
-				(at 0 6.858 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-						(italic yes)
-					)
-					(hide yes)
-				)
-			)
-			(property "Datasheet" "CMD15-21VGD/TR8"
-				(at 0 -10.414 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-						(italic yes)
-					)
-					(hide yes)
-				)
-			)
-			(property "Description" ""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_keywords" "CMD15-21VGD/TR8"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_fp_filters" "LED_CMD15-21_VCC LED_CMD15-21_VCC-M LED_CMD15-21_VCC-L"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(symbol "LED_GREEN_CMD15-21VGD_TR8_1_1"
-				(polyline
-					(pts
-						(xy 2.54 0) (xy 3.4798 0)
-					)
-					(stroke
-						(width 0.2032)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 3.175 0) (xy 3.81 0)
-					)
-					(stroke
-						(width 0.2032)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 3.81 1.905) (xy 3.81 -1.905)
-					)
-					(stroke
-						(width 0.2032)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 3.81 -1.905) (xy 6.35 0)
-					)
-					(stroke
-						(width 0.2032)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 5.08 3.175) (xy 6.35 4.445)
-					)
-					(stroke
-						(width 0.2032)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 6.35 4.445) (xy 6.985 3.81)
-					)
-					(stroke
-						(width 0.2032)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 6.35 0) (xy 3.81 1.905)
-					)
-					(stroke
-						(width 0.2032)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 6.35 0) (xy 7.62 0)
-					)
-					(stroke
-						(width 0.2032)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 6.35 -1.905) (xy 6.35 1.905)
-					)
-					(stroke
-						(width 0.2032)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 6.985 3.81) (xy 8.255 5.08)
-					)
-					(stroke
-						(width 0.2032)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 6.985 2.54) (xy 8.255 3.81)
-					)
-					(stroke
-						(width 0.2032)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 7.62 5.08) (xy 8.255 4.445)
-					)
-					(stroke
-						(width 0.2032)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 8.255 5.08) (xy 7.62 5.08)
-					)
-					(stroke
-						(width 0.2032)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 8.255 4.445) (xy 8.255 5.08)
-					)
-					(stroke
-						(width 0.2032)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 8.255 3.81) (xy 8.89 3.175)
-					)
-					(stroke
-						(width 0.2032)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 8.89 3.175) (xy 10.16 4.445)
-					)
-					(stroke
-						(width 0.2032)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 9.525 4.445) (xy 10.16 3.81)
-					)
-					(stroke
-						(width 0.2032)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 10.16 4.445) (xy 9.525 4.445)
-					)
-					(stroke
-						(width 0.2032)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 10.16 3.81) (xy 10.16 4.445)
-					)
-					(stroke
-						(width 0.2032)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(pin unspecified line
-					(at 0 0 0)
-					(length 2.54)
-					(name ""
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin unspecified line
-					(at 10.16 0 180)
-					(length 2.54)
-					(name ""
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(symbol "LED_GREEN_CMD15-21VGD_TR8_1_2"
-				(polyline
-					(pts
-						(xy -5.08 8.255) (xy -5.08 7.62)
-					)
-					(stroke
-						(width 0.2032)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -5.08 7.62) (xy -4.445 8.255)
-					)
-					(stroke
-						(width 0.2032)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -4.445 10.16) (xy -4.445 9.525)
-					)
-					(stroke
-						(width 0.2032)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -4.445 9.525) (xy -3.81 10.16)
-					)
-					(stroke
-						(width 0.2032)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -4.445 8.255) (xy -5.08 8.255)
-					)
-					(stroke
-						(width 0.2032)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -4.445 6.35) (xy -3.81 6.985)
-					)
-					(stroke
-						(width 0.2032)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -3.81 10.16) (xy -4.445 10.16)
-					)
-					(stroke
-						(width 0.2032)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -3.81 8.255) (xy -3.175 8.89)
-					)
-					(stroke
-						(width 0.2032)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -3.81 6.985) (xy -5.08 8.255)
-					)
-					(stroke
-						(width 0.2032)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -3.175 8.89) (xy -4.445 10.16)
-					)
-					(stroke
-						(width 0.2032)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -3.175 5.08) (xy -4.445 6.35)
-					)
-					(stroke
-						(width 0.2032)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -2.54 6.985) (xy -3.81 8.255)
-					)
-					(stroke
-						(width 0.2032)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -1.905 3.81) (xy 1.905 3.81)
-					)
-					(stroke
-						(width 0.2032)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0 6.35) (xy -1.905 3.81)
-					)
-					(stroke
-						(width 0.2032)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0 6.35) (xy 0 7.62)
-					)
-					(stroke
-						(width 0.2032)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0 3.175) (xy 0 3.81)
-					)
-					(stroke
-						(width 0.2032)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0 2.54) (xy 0 3.4798)
-					)
-					(stroke
-						(width 0.2032)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 1.905 6.35) (xy -1.905 6.35)
-					)
-					(stroke
-						(width 0.2032)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 1.905 3.81) (xy 0 6.35)
-					)
-					(stroke
-						(width 0.2032)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(pin unspecified line
-					(at 0 10.16 270)
-					(length 2.54)
-					(name ""
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin unspecified line
-					(at 0 0 90)
-					(length 2.54)
-					(name ""
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
-		(symbol "AmpX_Library_1:Resistor SMD DigiKey ERJ-T06J221V"
-			(pin_names
-				(offset 1.016)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(property "Reference" "R"
-				(at -7.6244 2.5415 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify left bottom)
-				)
-			)
-			(property "Value" "Resistor SMD DigiKey ERJ-T06J221V"
-				(at -7.63 -5.0866 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify left bottom)
-				)
-			)
-			(property "Footprint" "AmpX-Footprint-Library.pretty:Resistor_SMD_Digikey_RESC2012X70N"
-				(at 0 7.112 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify bottom)
-					(hide yes)
-				)
-			)
-			(property "Datasheet" "https://www.digikey.de/de/products/detail/panasonic-electronic-components/ERJ-T06J221V/2340241"
-				(at 2.032 -11.684 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Description" ""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(symbol "Resistor SMD DigiKey ERJ-T06J221V_0_0"
-				(polyline
-					(pts
-						(xy -5.08 0) (xy -4.445 1.905)
-					)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -4.445 1.905) (xy -3.175 -1.905)
-					)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -3.175 -1.905) (xy -1.905 1.905)
-					)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -1.905 1.905) (xy -0.635 -1.905)
-					)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -0.635 -1.905) (xy 0.635 1.905)
-					)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0.635 1.905) (xy 1.905 -1.905)
-					)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 1.905 -1.905) (xy 3.175 1.905)
-					)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 3.175 1.905) (xy 4.445 -1.905)
-					)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 4.445 -1.905) (xy 5.08 0)
-					)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(pin passive line
-					(at -10.16 0 0)
-					(length 5.08)
-					(name "~"
-						(effects
-							(font
-								(size 1.016 1.016)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.016 1.016)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 10.16 0 180)
-					(length 5.08)
-					(name "~"
-						(effects
-							(font
-								(size 1.016 1.016)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1.016 1.016)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
 		(symbol "Connector:Conn_01x02_Pin"
 			(pin_names
 				(offset 1.016)
@@ -1255,333 +450,6 @@
 						)
 					)
 					(number "5"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
-		(symbol "Connector:Conn_01x06_Pin"
-			(pin_names
-				(offset 1.016)
-				(hide yes)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(property "Reference" "J"
-				(at 0 7.62 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "Conn_01x06_Pin"
-				(at 0 -10.16 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Datasheet" "~"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Description" "Generic connector, single row, 01x06, script generated"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_locked" ""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "ki_keywords" "connector"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_fp_filters" "Connector*:*_1x??_*"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(symbol "Conn_01x06_Pin_1_1"
-				(rectangle
-					(start 0.8636 5.207)
-					(end 0 4.953)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type outline)
-					)
-				)
-				(rectangle
-					(start 0.8636 2.667)
-					(end 0 2.413)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type outline)
-					)
-				)
-				(rectangle
-					(start 0.8636 0.127)
-					(end 0 -0.127)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type outline)
-					)
-				)
-				(rectangle
-					(start 0.8636 -2.413)
-					(end 0 -2.667)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type outline)
-					)
-				)
-				(rectangle
-					(start 0.8636 -4.953)
-					(end 0 -5.207)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type outline)
-					)
-				)
-				(rectangle
-					(start 0.8636 -7.493)
-					(end 0 -7.747)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type outline)
-					)
-				)
-				(polyline
-					(pts
-						(xy 1.27 5.08) (xy 0.8636 5.08)
-					)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 1.27 2.54) (xy 0.8636 2.54)
-					)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 1.27 0) (xy 0.8636 0)
-					)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 1.27 -2.54) (xy 0.8636 -2.54)
-					)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 1.27 -5.08) (xy 0.8636 -5.08)
-					)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 1.27 -7.62) (xy 0.8636 -7.62)
-					)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(pin passive line
-					(at 5.08 5.08 180)
-					(length 3.81)
-					(name "Pin_1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 5.08 2.54 180)
-					(length 3.81)
-					(name "Pin_2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 5.08 0 180)
-					(length 3.81)
-					(name "Pin_3"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "3"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 5.08 -2.54 180)
-					(length 3.81)
-					(name "Pin_4"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "4"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 5.08 -5.08 180)
-					(length 3.81)
-					(name "Pin_5"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "5"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 5.08 -7.62 180)
-					(length 3.81)
-					(name "Pin_6"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "6"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -3073,8 +1941,8 @@
 		)
 	)
 	(rectangle
-		(start 148.59 25.4)
-		(end 274.32 162.56)
+		(start 83.82 24.13)
+		(end 209.55 161.29)
 		(stroke
 			(width 0)
 			(type default)
@@ -3084,21 +1952,9 @@
 		)
 		(uuid 27dd04e4-24e2-4eb7-b48e-45a459178824)
 	)
-	(rectangle
-		(start 20.32 25.4)
-		(end 113.03 110.49)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(fill
-			(type none)
-		)
-		(uuid 2abd735e-ded0-466e-b29b-a9c2dfbf8ac7)
-	)
 	(text "Bottom PCB with RJ45 and ESP32\n"
 		(exclude_from_sim no)
-		(at 208.534 23.876 0)
+		(at 143.764 22.606 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3106,171 +1962,137 @@
 		)
 		(uuid "01456753-8fc3-4132-b4a6-9df790cba5d9")
 	)
-	(text "Front PCB with LEDs"
-		(exclude_from_sim no)
-		(at 52.07 23.114 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-		)
-		(uuid "2036a1ca-32cf-4020-8ded-a26fcdac0028")
-	)
 	(junction
-		(at 31.75 91.44)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "0241a0e5-dd25-444d-861b-0fb7ea17c933")
-	)
-	(junction
-		(at 242.57 74.93)
+		(at 177.8 73.66)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "18dc711e-3191-45bc-b5f0-c6f1981fc8f0")
 	)
 	(junction
-		(at 242.57 77.47)
+		(at 177.8 76.2)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "466d9a4a-77a7-4ef1-9066-7edb6259c9aa")
 	)
 	(junction
-		(at 31.75 76.2)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "544f2ca0-a16f-4c65-a0fe-ce3931e9da64")
-	)
-	(junction
-		(at 204.47 67.31)
+		(at 139.7 66.04)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "6dcfd5ee-0dcb-4c8e-9a61-836abe0dc3c1")
 	)
 	(junction
-		(at 201.93 38.1)
+		(at 137.16 36.83)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "a8130ec2-eaee-45c1-a99b-f77a5ee5d07a")
 	)
-	(junction
-		(at 31.75 62.23)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "ca047e96-dd73-4c2b-9178-247aaeda21f2")
-	)
-	(junction
-		(at 31.75 48.26)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "d412feb6-e2b5-46ef-a8a2-b1ab67a126d4")
-	)
 	(no_connect
-		(at 227.33 121.92)
+		(at 162.56 120.65)
 		(uuid "001d3715-5ab7-4f1a-b56e-f6d62a0898f9")
 	)
 	(no_connect
-		(at 224.79 127)
+		(at 160.02 125.73)
 		(uuid "027c233d-65aa-4911-aeab-aeb1923c7a8e")
 	)
 	(no_connect
-		(at 224.79 99.06)
+		(at 160.02 97.79)
 		(uuid "08520ada-f716-4c46-a114-a97131d6a88e")
 	)
 	(no_connect
-		(at 224.79 104.14)
+		(at 160.02 102.87)
 		(uuid "086ac6ec-21ae-40d0-bb46-9c4c269172b9")
 	)
 	(no_connect
-		(at 184.15 104.14)
+		(at 119.38 102.87)
 		(uuid "0b660d73-6ca3-4691-a04d-6eccc8584f33")
 	)
 	(no_connect
-		(at 224.79 106.68)
+		(at 160.02 105.41)
 		(uuid "15239ace-35a5-4923-b32a-dabc9304fac8")
 	)
 	(no_connect
-		(at 184.15 96.52)
+		(at 119.38 95.25)
 		(uuid "1efa63dc-ebc6-47b1-8dcd-99040d274581")
 	)
 	(no_connect
-		(at 184.15 129.54)
+		(at 119.38 128.27)
 		(uuid "223c4239-5450-4fbd-9f6d-cc09e24da0cb")
 	)
 	(no_connect
-		(at 184.15 132.08)
+		(at 119.38 130.81)
 		(uuid "3965d3cc-d4d6-4d06-b797-c2d519a31146")
 	)
 	(no_connect
-		(at 224.79 139.7)
+		(at 160.02 138.43)
 		(uuid "3ceae6f2-3543-42b7-ae62-dd8456bf93ff")
 	)
 	(no_connect
-		(at 184.15 99.06)
+		(at 119.38 97.79)
 		(uuid "49fedd1c-dc4f-466c-83dd-216b17d73f17")
 	)
 	(no_connect
-		(at 184.15 101.6)
+		(at 119.38 100.33)
 		(uuid "57f69380-889a-4345-bc11-0b7374eb4e34")
 	)
 	(no_connect
-		(at 189.23 59.69)
+		(at 124.46 58.42)
 		(uuid "680fced2-5e7f-4fe9-9b06-4bf688f6b141")
 	)
 	(no_connect
-		(at 189.23 54.61)
+		(at 124.46 53.34)
 		(uuid "81370686-7e49-41c1-b1eb-b5715fed3a47")
 	)
 	(no_connect
-		(at 184.15 137.16)
+		(at 119.38 135.89)
 		(uuid "968ca235-dd6d-4aed-8958-69e483066429")
 	)
 	(no_connect
-		(at 224.79 134.62)
+		(at 160.02 133.35)
 		(uuid "9ab7262a-2ad2-4f46-9b00-275b08cde024")
 	)
 	(no_connect
-		(at 227.33 119.38)
+		(at 162.56 118.11)
 		(uuid "aa997dfe-cfda-4d14-a2d6-bced9c02e615")
 	)
 	(no_connect
-		(at 227.33 124.46)
+		(at 162.56 123.19)
 		(uuid "b1d49aec-4549-4ad7-b0b4-7a57423eedde")
 	)
 	(no_connect
-		(at 184.15 134.62)
+		(at 119.38 133.35)
 		(uuid "be91b3fb-726b-4804-9391-8c49d623df54")
 	)
 	(no_connect
-		(at 224.79 101.6)
+		(at 160.02 100.33)
 		(uuid "c49d9473-1127-44b4-a08c-6349af5b0f84")
 	)
 	(no_connect
-		(at 184.15 109.22)
+		(at 119.38 107.95)
 		(uuid "d0923b2c-c5f9-4828-9dba-bae58dd787f1")
 	)
 	(no_connect
-		(at 184.15 106.68)
+		(at 119.38 105.41)
 		(uuid "dbc689ed-b256-498f-8682-9419209f3faa")
 	)
 	(no_connect
-		(at 184.15 111.76)
+		(at 119.38 110.49)
 		(uuid "e6b0da9f-bdd7-4a2a-bf14-f50c9016ca84")
 	)
 	(no_connect
-		(at 224.79 129.54)
+		(at 160.02 128.27)
 		(uuid "e8de354a-a254-4811-b3c3-916a8036d867")
 	)
 	(no_connect
-		(at 224.79 137.16)
+		(at 160.02 135.89)
 		(uuid "ed087527-e74c-44d4-906a-0b4da95278b4")
 	)
 	(no_connect
-		(at 224.79 132.08)
+		(at 160.02 130.81)
 		(uuid "f9192075-6e0d-40a7-b3fa-1f68e74ae861")
 	)
 	(wire
 		(pts
-			(xy 182.88 48.26) (xy 189.23 48.26)
+			(xy 118.11 46.99) (xy 124.46 46.99)
 		)
 		(stroke
 			(width 0)
@@ -3280,7 +2102,7 @@
 	)
 	(wire
 		(pts
-			(xy 227.33 93.98) (xy 224.79 93.98)
+			(xy 162.56 92.71) (xy 160.02 92.71)
 		)
 		(stroke
 			(width 0)
@@ -3290,17 +2112,7 @@
 	)
 	(wire
 		(pts
-			(xy 41.91 48.26) (xy 46.99 48.26)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "0dfcd745-e96c-4aac-aa18-617368089bbc")
-	)
-	(wire
-		(pts
-			(xy 175.26 116.84) (xy 184.15 116.84)
+			(xy 110.49 115.57) (xy 119.38 115.57)
 		)
 		(stroke
 			(width 0)
@@ -3310,37 +2122,7 @@
 	)
 	(wire
 		(pts
-			(xy 90.17 34.29) (xy 90.17 60.96)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "2372343a-eb83-4921-9961-70861e217937")
-	)
-	(wire
-		(pts
-			(xy 88.9 63.5) (xy 92.71 63.5)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "248ea433-e4a9-4814-b932-d8e3790b8d3f")
-	)
-	(wire
-		(pts
-			(xy 68.58 91.44) (xy 88.9 91.44)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "24e0ab77-9bce-4303-963d-9f2d0c6efdea")
-	)
-	(wire
-		(pts
-			(xy 227.33 109.22) (xy 224.79 109.22)
+			(xy 162.56 107.95) (xy 160.02 107.95)
 		)
 		(stroke
 			(width 0)
@@ -3350,27 +2132,7 @@
 	)
 	(wire
 		(pts
-			(xy 31.75 91.44) (xy 33.02 91.44)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "381c71b1-a17d-4424-935d-eafb4598736c")
-	)
-	(wire
-		(pts
-			(xy 67.31 76.2) (xy 87.63 76.2)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "3af9ce7d-0f0e-469e-9712-ab2eded65998")
-	)
-	(wire
-		(pts
-			(xy 182.88 43.18) (xy 189.23 43.18)
+			(xy 118.11 41.91) (xy 124.46 41.91)
 		)
 		(stroke
 			(width 0)
@@ -3380,27 +2142,7 @@
 	)
 	(wire
 		(pts
-			(xy 41.91 76.2) (xy 46.99 76.2)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "3efedc20-46af-4f6b-8519-19b04d4cad46")
-	)
-	(wire
-		(pts
-			(xy 31.75 62.23) (xy 31.75 76.2)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "40097249-16c6-4612-b2fb-7953b93fb41a")
-	)
-	(wire
-		(pts
-			(xy 204.47 67.31) (xy 204.47 73.66)
+			(xy 139.7 66.04) (xy 139.7 72.39)
 		)
 		(stroke
 			(width 0)
@@ -3410,17 +2152,7 @@
 	)
 	(wire
 		(pts
-			(xy 31.75 99.06) (xy 90.17 99.06)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "42376be9-923b-46df-88b5-686bb37fc430")
-	)
-	(wire
-		(pts
-			(xy 246.38 74.93) (xy 242.57 74.93)
+			(xy 181.61 73.66) (xy 177.8 73.66)
 		)
 		(stroke
 			(width 0)
@@ -3430,7 +2162,7 @@
 	)
 	(wire
 		(pts
-			(xy 182.88 45.72) (xy 189.23 45.72)
+			(xy 118.11 44.45) (xy 124.46 44.45)
 		)
 		(stroke
 			(width 0)
@@ -3440,17 +2172,7 @@
 	)
 	(wire
 		(pts
-			(xy 90.17 60.96) (xy 92.71 60.96)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "452df966-d32f-4d55-b3f9-a71f6067fa6a")
-	)
-	(wire
-		(pts
-			(xy 227.33 111.76) (xy 224.79 111.76)
+			(xy 162.56 110.49) (xy 160.02 110.49)
 		)
 		(stroke
 			(width 0)
@@ -3460,17 +2182,7 @@
 	)
 	(wire
 		(pts
-			(xy 87.63 62.23) (xy 87.63 66.04)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "46566d7d-6237-41f4-81a5-11c5cba6576d")
-	)
-	(wire
-		(pts
-			(xy 201.93 33.02) (xy 201.93 38.1)
+			(xy 137.16 31.75) (xy 137.16 36.83)
 		)
 		(stroke
 			(width 0)
@@ -3480,7 +2192,7 @@
 	)
 	(wire
 		(pts
-			(xy 246.38 77.47) (xy 242.57 77.47)
+			(xy 181.61 76.2) (xy 177.8 76.2)
 		)
 		(stroke
 			(width 0)
@@ -3490,17 +2202,7 @@
 	)
 	(wire
 		(pts
-			(xy 88.9 71.12) (xy 92.71 71.12)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "54054eaa-1c0b-4d6a-9603-bab5889e1423")
-	)
-	(wire
-		(pts
-			(xy 166.37 93.98) (xy 184.15 93.98)
+			(xy 101.6 92.71) (xy 119.38 92.71)
 		)
 		(stroke
 			(width 0)
@@ -3510,17 +2212,7 @@
 	)
 	(wire
 		(pts
-			(xy 31.75 91.44) (xy 31.75 99.06)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "5a2bde0d-de3f-4eab-9a64-28d12b3cd1f1")
-	)
-	(wire
-		(pts
-			(xy 163.83 76.2) (xy 168.91 76.2)
+			(xy 99.06 74.93) (xy 104.14 74.93)
 		)
 		(stroke
 			(width 0)
@@ -3530,17 +2222,7 @@
 	)
 	(wire
 		(pts
-			(xy 67.31 48.26) (xy 88.9 48.26)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "60003ec4-7144-4081-9420-a4f59eb2402b")
-	)
-	(wire
-		(pts
-			(xy 227.33 116.84) (xy 224.79 116.84)
+			(xy 162.56 115.57) (xy 160.02 115.57)
 		)
 		(stroke
 			(width 0)
@@ -3550,7 +2232,7 @@
 	)
 	(wire
 		(pts
-			(xy 182.88 50.8) (xy 189.23 50.8)
+			(xy 118.11 49.53) (xy 124.46 49.53)
 		)
 		(stroke
 			(width 0)
@@ -3560,7 +2242,7 @@
 	)
 	(wire
 		(pts
-			(xy 227.33 114.3) (xy 224.79 114.3)
+			(xy 162.56 113.03) (xy 160.02 113.03)
 		)
 		(stroke
 			(width 0)
@@ -3570,7 +2252,7 @@
 	)
 	(wire
 		(pts
-			(xy 201.93 67.31) (xy 204.47 67.31)
+			(xy 137.16 66.04) (xy 139.7 66.04)
 		)
 		(stroke
 			(width 0)
@@ -3580,7 +2262,7 @@
 	)
 	(wire
 		(pts
-			(xy 175.26 121.92) (xy 184.15 121.92)
+			(xy 110.49 120.65) (xy 119.38 120.65)
 		)
 		(stroke
 			(width 0)
@@ -3590,17 +2272,7 @@
 	)
 	(wire
 		(pts
-			(xy 88.9 91.44) (xy 88.9 71.12)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "69c6b8bd-2509-4028-9405-615c8e763465")
-	)
-	(wire
-		(pts
-			(xy 227.33 121.92) (xy 224.79 121.92)
+			(xy 162.56 120.65) (xy 160.02 120.65)
 		)
 		(stroke
 			(width 0)
@@ -3610,17 +2282,7 @@
 	)
 	(wire
 		(pts
-			(xy 87.63 66.04) (xy 92.71 66.04)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "6e3b7ed4-2026-4fce-bfe9-3a055e347689")
-	)
-	(wire
-		(pts
-			(xy 227.33 96.52) (xy 224.79 96.52)
+			(xy 162.56 95.25) (xy 160.02 95.25)
 		)
 		(stroke
 			(width 0)
@@ -3630,7 +2292,7 @@
 	)
 	(wire
 		(pts
-			(xy 227.33 119.38) (xy 224.79 119.38)
+			(xy 162.56 118.11) (xy 160.02 118.11)
 		)
 		(stroke
 			(width 0)
@@ -3640,17 +2302,7 @@
 	)
 	(wire
 		(pts
-			(xy 90.17 99.06) (xy 90.17 73.66)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "7a27220e-c96c-43a1-b3b2-f9832dc975a4")
-	)
-	(wire
-		(pts
-			(xy 163.83 81.28) (xy 168.91 81.28)
+			(xy 99.06 80.01) (xy 104.14 80.01)
 		)
 		(stroke
 			(width 0)
@@ -3660,17 +2312,7 @@
 	)
 	(wire
 		(pts
-			(xy 67.31 34.29) (xy 90.17 34.29)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "7cd4cd86-e926-45c7-befe-8471e80f38fb")
-	)
-	(wire
-		(pts
-			(xy 176.53 139.7) (xy 184.15 139.7)
+			(xy 111.76 138.43) (xy 119.38 138.43)
 		)
 		(stroke
 			(width 0)
@@ -3680,7 +2322,7 @@
 	)
 	(wire
 		(pts
-			(xy 163.83 78.74) (xy 168.91 78.74)
+			(xy 99.06 77.47) (xy 104.14 77.47)
 		)
 		(stroke
 			(width 0)
@@ -3690,7 +2332,7 @@
 	)
 	(wire
 		(pts
-			(xy 204.47 67.31) (xy 207.01 67.31)
+			(xy 139.7 66.04) (xy 142.24 66.04)
 		)
 		(stroke
 			(width 0)
@@ -3700,27 +2342,7 @@
 	)
 	(wire
 		(pts
-			(xy 31.75 76.2) (xy 31.75 91.44)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "93ae312a-5a15-41f3-800d-f6597e95a655")
-	)
-	(wire
-		(pts
-			(xy 87.63 76.2) (xy 87.63 68.58)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "97f04ee1-38eb-449a-a03d-ddb698effa36")
-	)
-	(wire
-		(pts
-			(xy 242.57 74.93) (xy 241.3 74.93)
+			(xy 177.8 73.66) (xy 176.53 73.66)
 		)
 		(stroke
 			(width 0)
@@ -3730,27 +2352,7 @@
 	)
 	(wire
 		(pts
-			(xy 41.91 62.23) (xy 46.99 62.23)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "abbe7f34-c407-45c8-b038-94b507775d3e")
-	)
-	(wire
-		(pts
-			(xy 31.75 34.29) (xy 31.75 48.26)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "b2477f03-119d-4795-af20-b35a02054cae")
-	)
-	(wire
-		(pts
-			(xy 175.26 124.46) (xy 184.15 124.46)
+			(xy 110.49 123.19) (xy 119.38 123.19)
 		)
 		(stroke
 			(width 0)
@@ -3760,7 +2362,7 @@
 	)
 	(wire
 		(pts
-			(xy 227.33 124.46) (xy 224.79 124.46)
+			(xy 162.56 123.19) (xy 160.02 123.19)
 		)
 		(stroke
 			(width 0)
@@ -3770,7 +2372,7 @@
 	)
 	(wire
 		(pts
-			(xy 242.57 77.47) (xy 241.3 77.47)
+			(xy 177.8 76.2) (xy 176.53 76.2)
 		)
 		(stroke
 			(width 0)
@@ -3780,27 +2382,7 @@
 	)
 	(wire
 		(pts
-			(xy 67.31 62.23) (xy 87.63 62.23)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "c80f7705-ff37-4664-83a2-dc4885eedb00")
-	)
-	(wire
-		(pts
-			(xy 88.9 48.26) (xy 88.9 63.5)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "c862527f-8180-4b26-b4a4-70d471951d11")
-	)
-	(wire
-		(pts
-			(xy 175.26 119.38) (xy 184.15 119.38)
+			(xy 110.49 118.11) (xy 119.38 118.11)
 		)
 		(stroke
 			(width 0)
@@ -3810,7 +2392,7 @@
 	)
 	(wire
 		(pts
-			(xy 175.26 127) (xy 184.15 127)
+			(xy 110.49 125.73) (xy 119.38 125.73)
 		)
 		(stroke
 			(width 0)
@@ -3820,17 +2402,7 @@
 	)
 	(wire
 		(pts
-			(xy 31.75 48.26) (xy 31.75 62.23)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "cf979bc2-6803-4116-b2d6-31aae981f663")
-	)
-	(wire
-		(pts
-			(xy 168.91 73.66) (xy 163.83 73.66)
+			(xy 104.14 72.39) (xy 99.06 72.39)
 		)
 		(stroke
 			(width 0)
@@ -3840,7 +2412,7 @@
 	)
 	(wire
 		(pts
-			(xy 175.26 114.3) (xy 184.15 114.3)
+			(xy 110.49 113.03) (xy 119.38 113.03)
 		)
 		(stroke
 			(width 0)
@@ -3850,17 +2422,7 @@
 	)
 	(wire
 		(pts
-			(xy 41.91 34.29) (xy 46.99 34.29)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "e31aeabf-f3eb-4e71-af1e-def400a7075c")
-	)
-	(wire
-		(pts
-			(xy 201.93 38.1) (xy 204.47 38.1)
+			(xy 137.16 36.83) (xy 139.7 36.83)
 		)
 		(stroke
 			(width 0)
@@ -3870,17 +2432,7 @@
 	)
 	(wire
 		(pts
-			(xy 43.18 91.44) (xy 48.26 91.44)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "e68001b2-d46a-4a28-a98e-c5e4bbd8f10d")
-	)
-	(wire
-		(pts
-			(xy 163.83 83.82) (xy 168.91 83.82)
+			(xy 99.06 82.55) (xy 104.14 82.55)
 		)
 		(stroke
 			(width 0)
@@ -3888,28 +2440,8 @@
 		)
 		(uuid "edc47ed6-dd9a-44b9-a3ff-219e4c9349fd")
 	)
-	(wire
-		(pts
-			(xy 90.17 73.66) (xy 92.71 73.66)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "fc8df680-b20d-4f59-92ab-a5c398848a73")
-	)
-	(wire
-		(pts
-			(xy 87.63 68.58) (xy 92.71 68.58)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "fef78d5d-e041-480e-9a2e-3ba92dd25229")
-	)
 	(label "WIFI"
-		(at 163.83 78.74 180)
+		(at 99.06 77.47 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3919,7 +2451,7 @@
 		(uuid "130a5604-a975-42a7-94dc-ebf1d647ca5a")
 	)
 	(label "SERVER"
-		(at 163.83 83.82 180)
+		(at 99.06 82.55 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3929,7 +2461,7 @@
 		(uuid "29483341-57d7-4477-861b-29bc17d9a858")
 	)
 	(label "GND"
-		(at 204.47 73.66 0)
+		(at 139.7 72.39 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3939,7 +2471,7 @@
 		(uuid "2e9ad9ab-110f-4d6f-9c2c-e016f40f182d")
 	)
 	(label "POWER"
-		(at 163.83 73.66 180)
+		(at 99.06 72.39 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3949,7 +2481,7 @@
 		(uuid "2f9704fe-954d-4632-8476-d825041fbbee")
 	)
 	(label "POWER"
-		(at 175.26 124.46 0)
+		(at 110.49 123.19 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3959,7 +2491,7 @@
 		(uuid "3050ddcd-791b-4459-bb20-51488899d7d7")
 	)
 	(label "WIFI"
-		(at 175.26 119.38 0)
+		(at 110.49 118.11 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3969,7 +2501,7 @@
 		(uuid "452cdadb-20b4-44bc-9116-c3c22c7eb3e1")
 	)
 	(label "CS"
-		(at 182.88 50.8 0)
+		(at 118.11 49.53 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3979,7 +2511,7 @@
 		(uuid "4ab805e7-2ffd-4f71-990a-45d772920886")
 	)
 	(label "+3.3V"
-		(at 201.93 33.02 0)
+		(at 137.16 31.75 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3989,7 +2521,7 @@
 		(uuid "4ac33473-2720-471d-bd9d-af3d64f2b9cd")
 	)
 	(label "CS"
-		(at 227.33 116.84 0)
+		(at 162.56 115.57 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3999,7 +2531,7 @@
 		(uuid "4bdd9a44-3fec-45a5-8285-ef0098781632")
 	)
 	(label "MISO"
-		(at 227.33 111.76 0)
+		(at 162.56 110.49 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -4009,7 +2541,7 @@
 		(uuid "60439542-c407-4c50-9849-67bd6fea4b96")
 	)
 	(label "MISO"
-		(at 182.88 45.72 0)
+		(at 118.11 44.45 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -4019,7 +2551,7 @@
 		(uuid "68725a70-d292-4009-83a9-d27cc24714f4")
 	)
 	(label "METER"
-		(at 163.83 76.2 180)
+		(at 99.06 74.93 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -4029,7 +2561,7 @@
 		(uuid "6f4668c9-be76-4ec4-aca8-37088326688c")
 	)
 	(label "SCLK"
-		(at 182.88 48.26 0)
+		(at 118.11 46.99 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -4039,7 +2571,7 @@
 		(uuid "75061c41-440e-4dac-b39c-3a331961bd3d")
 	)
 	(label "INTERNET"
-		(at 163.83 81.28 180)
+		(at 99.06 80.01 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -4049,7 +2581,7 @@
 		(uuid "7508bf38-d030-4963-b7c8-381e9ef06564")
 	)
 	(label "GND"
-		(at 227.33 93.98 0)
+		(at 162.56 92.71 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -4059,7 +2591,7 @@
 		(uuid "7b43a1b3-e651-449b-9770-d14ace4a2d91")
 	)
 	(label "SCLK"
-		(at 227.33 114.3 0)
+		(at 162.56 113.03 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -4069,7 +2601,7 @@
 		(uuid "8d8af6a5-a158-4569-b8aa-11697e3ac517")
 	)
 	(label "SERVER"
-		(at 175.26 114.3 0)
+		(at 110.49 113.03 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -4079,7 +2611,7 @@
 		(uuid "906bdaa7-7036-4852-9450-295c4903fdc8")
 	)
 	(label "MOSI"
-		(at 227.33 96.52 0)
+		(at 162.56 95.25 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -4089,7 +2621,7 @@
 		(uuid "90811817-0b6e-4a6f-9606-33667ee9780a")
 	)
 	(label "MOSI"
-		(at 182.88 43.18 0)
+		(at 118.11 41.91 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -4099,7 +2631,7 @@
 		(uuid "9866c6c4-243f-4b9f-8ad2-3350f3346a08")
 	)
 	(label "+5V"
-		(at 176.53 139.7 0)
+		(at 111.76 138.43 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -4109,7 +2641,7 @@
 		(uuid "a5ba9b82-632b-4c29-8575-0931dc303ebf")
 	)
 	(label "INTERNET"
-		(at 175.26 116.84 0)
+		(at 110.49 115.57 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -4119,7 +2651,7 @@
 		(uuid "a5d34010-bdc0-4302-9dce-ae579b72b9d9")
 	)
 	(label "GND"
-		(at 246.38 77.47 0)
+		(at 181.61 76.2 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -4129,7 +2661,7 @@
 		(uuid "bde2d21a-3580-4835-b1be-0bdab4b46a85")
 	)
 	(label "+5V"
-		(at 246.38 74.93 0)
+		(at 181.61 73.66 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -4139,7 +2671,7 @@
 		(uuid "c16271bf-518e-4931-bfef-612e640e7fb1")
 	)
 	(label "METER"
-		(at 175.26 121.92 0)
+		(at 110.49 120.65 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -4149,7 +2681,7 @@
 		(uuid "c1d0cf3d-37b1-4b2a-9826-1ce865548ef1")
 	)
 	(label "GND"
-		(at 175.26 127 0)
+		(at 110.49 125.73 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -4159,7 +2691,7 @@
 		(uuid "d0cf0a30-2d41-422a-b740-9d328837970e")
 	)
 	(label "GND"
-		(at 227.33 109.22 0)
+		(at 162.56 107.95 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -4170,7 +2702,7 @@
 	)
 	(symbol
 		(lib_id "ESP32-DEVKITC-32U:ESP32-DEVKITC-32U")
-		(at 204.47 116.84 0)
+		(at 139.7 115.57 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -4179,7 +2711,7 @@
 		(fields_autoplaced yes)
 		(uuid "0668f667-8b7a-499e-97c8-71aba20f87d7")
 		(property "Reference" "U3"
-			(at 204.47 86.36 0)
+			(at 139.7 85.09 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4187,7 +2719,7 @@
 			)
 		)
 		(property "Value" "ESP32-DEVKITC-32U"
-			(at 204.47 88.9 0)
+			(at 139.7 87.63 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4195,7 +2727,7 @@
 			)
 		)
 		(property "Footprint" "ESP32-DEVKITC-32U:MODULE_ESP32-DEVKITC-32U"
-			(at 204.47 116.84 0)
+			(at 139.7 115.57 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4205,7 +2737,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 204.47 116.84 0)
+			(at 139.7 115.57 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4214,7 +2746,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 204.47 116.84 0)
+			(at 139.7 115.57 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4223,7 +2755,7 @@
 			)
 		)
 		(property "MF" "Espressif Systems"
-			(at 204.47 116.84 0)
+			(at 139.7 115.57 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4233,7 +2765,7 @@
 			)
 		)
 		(property "MAXIMUM_PACKAGE_HEIGHT" "N/A"
-			(at 204.47 116.84 0)
+			(at 139.7 115.57 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4243,7 +2775,7 @@
 			)
 		)
 		(property "Package" "CUSTOM-38 ESPRESSIF"
-			(at 204.47 116.84 0)
+			(at 139.7 115.57 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4253,7 +2785,7 @@
 			)
 		)
 		(property "Price" "None"
-			(at 204.47 116.84 0)
+			(at 139.7 115.57 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4263,7 +2795,7 @@
 			)
 		)
 		(property "Check_prices" "https://www.snapeda.com/parts/ESP32-DEVKITC-32U/Espressif+Systems/view-part/?ref=eda"
-			(at 204.47 116.84 0)
+			(at 139.7 115.57 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4273,7 +2805,7 @@
 			)
 		)
 		(property "STANDARD" "Manufacturer Recommendations"
-			(at 204.47 116.84 0)
+			(at 139.7 115.57 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4283,7 +2815,7 @@
 			)
 		)
 		(property "PARTREV" "V4"
-			(at 204.47 116.84 0)
+			(at 139.7 115.57 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4293,7 +2825,7 @@
 			)
 		)
 		(property "SnapEDA_Link" "https://www.snapeda.com/parts/ESP32-DEVKITC-32U/Espressif+Systems/view-part/?ref=snap"
-			(at 204.47 116.84 0)
+			(at 139.7 115.57 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4303,7 +2835,7 @@
 			)
 		)
 		(property "MP" "ESP32-DEVKITC-32U"
-			(at 204.47 116.84 0)
+			(at 139.7 115.57 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4313,7 +2845,7 @@
 			)
 		)
 		(property "Description_1" "ESP32-WROOM-32UE series Transceiver; 802.11 b/g/n (Wi-Fi, WiFi, WLAN), Bluetooth® Smart Ready 4.x Dual Mode Evaluation Board"
-			(at 204.47 116.84 0)
+			(at 139.7 115.57 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4323,7 +2855,7 @@
 			)
 		)
 		(property "Availability" "In Stock"
-			(at 204.47 116.84 0)
+			(at 139.7 115.57 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4333,7 +2865,7 @@
 			)
 		)
 		(property "MANUFACTURER" "Espressif Systems"
-			(at 204.47 116.84 0)
+			(at 139.7 115.57 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4466,78 +2998,8 @@
 		)
 	)
 	(symbol
-		(lib_id "AmpX_Library_1:LED_GREEN_CMD15-21VGD_TR8")
-		(at 41.91 34.29 180)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "213954ad-3355-4399-a58b-69d04026ba44")
-		(property "Reference" "LED1"
-			(at 35.56 30.226 0)
-			(effects
-				(font
-					(size 1.524 1.524)
-				)
-			)
-		)
-		(property "Value" "CMD15-21VGD/TR8"
-			(at 35.56 30.48 0)
-			(effects
-				(font
-					(size 1.524 1.524)
-				)
-				(hide yes)
-			)
-		)
-		(property "Footprint" "AmpX-Footprint-Library.pretty:LED_GREEN_CMD15-21_VCC"
-			(at 41.91 41.148 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-					(italic yes)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "CMD15-21VGD/TR8"
-			(at 41.91 23.876 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-					(italic yes)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 41.91 34.29 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "3830cac8-488a-44db-80ba-6759a097cdf6")
-		)
-		(pin "2"
-			(uuid "86512ffc-24cd-425d-bf1b-fdeeae7c646b")
-		)
-		(instances
-			(project ""
-				(path "/548f25e8-745d-4cdd-aa0b-f57ad858b984"
-					(reference "LED1")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "power:PWR_FLAG")
-		(at 242.57 77.47 180)
+		(at 177.8 76.2 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -4546,7 +3008,7 @@
 		(fields_autoplaced yes)
 		(uuid "2397caa8-04b1-4b48-9c89-b3450d93bded")
 		(property "Reference" "#FLG02"
-			(at 242.57 79.375 0)
+			(at 177.8 78.105 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4555,7 +3017,7 @@
 			)
 		)
 		(property "Value" "PWR_FLAG"
-			(at 242.57 82.55 0)
+			(at 177.8 81.28 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4563,7 +3025,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 242.57 77.47 0)
+			(at 177.8 76.2 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4572,7 +3034,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 242.57 77.47 0)
+			(at 177.8 76.2 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4581,7 +3043,7 @@
 			)
 		)
 		(property "Description" "Special symbol for telling ERC where power comes from"
-			(at 242.57 77.47 0)
+			(at 177.8 76.2 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4602,216 +3064,8 @@
 		)
 	)
 	(symbol
-		(lib_id "AmpX_Library_1:Resistor SMD DigiKey ERJ-T06J221V")
-		(at 58.42 91.44 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "2efe528b-4554-4e7e-82fe-cf0654d72980")
-		(property "Reference" "R5"
-			(at 58.42 86.868 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "Resistor SMD DigiKey ERJ-T06J221V"
-			(at 58.42 87.63 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Footprint" "AmpX-Footprint-Library.pretty:Resistor_SMD_Digikey_RESC2012X70N"
-			(at 58.42 84.328 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify bottom)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "https://www.digikey.de/de/products/detail/panasonic-electronic-components/ERJ-T06J221V/2340241"
-			(at 60.452 103.124 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 58.42 91.44 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "2"
-			(uuid "b8e4c657-5f2c-47fc-bee5-148a8e177fd7")
-		)
-		(pin "1"
-			(uuid "00bb80c7-f3f3-4d7c-91a9-5f43eb143df4")
-		)
-		(instances
-			(project "AmpX Open Energy Gateway"
-				(path "/548f25e8-745d-4cdd-aa0b-f57ad858b984"
-					(reference "R5")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "AmpX_Library_1:LED_GREEN_CMD15-21VGD_TR8")
-		(at 41.91 76.2 180)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "53b19ddf-a2e4-4c71-a1d4-7eb998fefa8a")
-		(property "Reference" "LED4"
-			(at 35.56 71.628 0)
-			(effects
-				(font
-					(size 1.524 1.524)
-				)
-			)
-		)
-		(property "Value" "CMD15-21VGD/TR8"
-			(at 35.56 72.39 0)
-			(effects
-				(font
-					(size 1.524 1.524)
-				)
-				(hide yes)
-			)
-		)
-		(property "Footprint" "AmpX-Footprint-Library.pretty:LED_GREEN_CMD15-21_VCC"
-			(at 41.91 83.058 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-					(italic yes)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "CMD15-21VGD/TR8"
-			(at 41.91 65.786 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-					(italic yes)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 41.91 76.2 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "fad2744c-73ad-4538-a511-a55b02b932e1")
-		)
-		(pin "2"
-			(uuid "61f4aa78-e117-431c-b722-921629b2c2ab")
-		)
-		(instances
-			(project "AmpX Open Energy Gateway"
-				(path "/548f25e8-745d-4cdd-aa0b-f57ad858b984"
-					(reference "LED4")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "AmpX_Library_1:Resistor SMD DigiKey ERJ-T06J221V")
-		(at 57.15 62.23 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "6f5f3452-84e9-4a7a-a056-384fa18e9b13")
-		(property "Reference" "R3"
-			(at 57.15 57.912 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "Resistor SMD DigiKey ERJ-T06J221V"
-			(at 57.15 58.42 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Footprint" "AmpX-Footprint-Library.pretty:Resistor_SMD_Digikey_RESC2012X70N"
-			(at 57.15 55.118 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify bottom)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "https://www.digikey.de/de/products/detail/panasonic-electronic-components/ERJ-T06J221V/2340241"
-			(at 59.182 73.914 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 57.15 62.23 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "2"
-			(uuid "88f322a7-2970-4def-bd6c-1bce87c3c74c")
-		)
-		(pin "1"
-			(uuid "bb688f4d-3d8f-431a-ab6e-baf6de722c60")
-		)
-		(instances
-			(project "AmpX Open Energy Gateway"
-				(path "/548f25e8-745d-4cdd-aa0b-f57ad858b984"
-					(reference "R3")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "power:PWR_FLAG")
-		(at 242.57 74.93 0)
+		(at 177.8 73.66 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -4820,7 +3074,7 @@
 		(fields_autoplaced yes)
 		(uuid "7ed159fc-6d7a-4137-b370-993b4a34113b")
 		(property "Reference" "#FLG01"
-			(at 242.57 73.025 0)
+			(at 177.8 71.755 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4829,7 +3083,7 @@
 			)
 		)
 		(property "Value" "PWR_FLAG"
-			(at 242.57 69.85 0)
+			(at 177.8 68.58 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4837,7 +3091,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 242.57 74.93 0)
+			(at 177.8 73.66 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4846,7 +3100,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 242.57 74.93 0)
+			(at 177.8 73.66 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4855,7 +3109,7 @@
 			)
 		)
 		(property "Description" "Special symbol for telling ERC where power comes from"
-			(at 242.57 74.93 0)
+			(at 177.8 73.66 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4876,147 +3130,8 @@
 		)
 	)
 	(symbol
-		(lib_id "AmpX_Library_1:LED_GREEN_CMD15-21VGD_TR8")
-		(at 41.91 48.26 180)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "80581cef-1c09-4e49-96b5-cfcd160bbddd")
-		(property "Reference" "LED2"
-			(at 35.56 43.434 0)
-			(effects
-				(font
-					(size 1.524 1.524)
-				)
-			)
-		)
-		(property "Value" "CMD15-21VGD/TR8"
-			(at 35.56 44.45 0)
-			(effects
-				(font
-					(size 1.524 1.524)
-				)
-				(hide yes)
-			)
-		)
-		(property "Footprint" "AmpX-Footprint-Library.pretty:LED_GREEN_CMD15-21_VCC"
-			(at 41.91 55.118 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-					(italic yes)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "CMD15-21VGD/TR8"
-			(at 41.91 37.846 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-					(italic yes)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 41.91 48.26 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "f3b3a696-1bfc-4e8c-846f-40abfd62a1b1")
-		)
-		(pin "2"
-			(uuid "44096784-d124-4ebc-9315-1256a4f95db1")
-		)
-		(instances
-			(project "AmpX Open Energy Gateway"
-				(path "/548f25e8-745d-4cdd-aa0b-f57ad858b984"
-					(reference "LED2")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "AmpX_Library_1:Resistor SMD DigiKey ERJ-T06J221V")
-		(at 57.15 48.26 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "80bf7e8f-bab3-4fc7-a007-defda4610831")
-		(property "Reference" "R2"
-			(at 57.15 43.434 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "Resistor SMD DigiKey ERJ-T06J221V"
-			(at 57.15 44.45 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Footprint" "AmpX-Footprint-Library.pretty:Resistor_SMD_Digikey_RESC2012X70N"
-			(at 57.15 41.148 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify bottom)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "https://www.digikey.de/de/products/detail/panasonic-electronic-components/ERJ-T06J221V/2340241"
-			(at 59.182 59.944 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 57.15 48.26 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "2"
-			(uuid "609f105b-da34-45bc-8c16-ae6059d2919a")
-		)
-		(pin "1"
-			(uuid "5d323395-8bb7-4576-ae11-f7ff35e2c0fa")
-		)
-		(instances
-			(project "AmpX Open Energy Gateway"
-				(path "/548f25e8-745d-4cdd-aa0b-f57ad858b984"
-					(reference "R2")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "Module_Ethernet_LAN_W5500_Lite:Module_Ethernet_LAN_W5500_Lite")
-		(at 201.93 52.07 0)
+		(at 137.16 50.8 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -5025,7 +3140,7 @@
 		(fields_autoplaced yes)
 		(uuid "8b0d106e-8452-44f8-98ea-b410a4ae87a6")
 		(property "Reference" "U2"
-			(at 214.63 51.4349 0)
+			(at 149.86 50.1649 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5034,7 +3149,7 @@
 			)
 		)
 		(property "Value" "W5500"
-			(at 214.63 53.9749 0)
+			(at 149.86 52.7049 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5043,7 +3158,7 @@
 			)
 		)
 		(property "Footprint" "Module_Ethernet_LAN_W5500_Lite.3dshapes:Module_Ethernet_LAN_W5500_Lite"
-			(at 198.12 45.72 0)
+			(at 133.35 44.45 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5052,7 +3167,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 198.12 45.72 0)
+			(at 133.35 44.45 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5061,7 +3176,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 198.12 45.72 0)
+			(at 133.35 44.45 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5112,77 +3227,8 @@
 		)
 	)
 	(symbol
-		(lib_id "AmpX_Library_1:Resistor SMD DigiKey ERJ-T06J221V")
-		(at 57.15 34.29 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "99235127-5603-43ef-8b96-adea0c411de8")
-		(property "Reference" "R1"
-			(at 57.15 29.718 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "Resistor SMD DigiKey ERJ-T06J221V"
-			(at 57.15 30.48 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Footprint" "AmpX-Footprint-Library.pretty:Resistor_SMD_Digikey_RESC2012X70N"
-			(at 57.15 27.178 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify bottom)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "https://www.digikey.de/de/products/detail/panasonic-electronic-components/ERJ-T06J221V/2340241"
-			(at 59.182 45.974 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 57.15 34.29 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "2"
-			(uuid "1912d2cb-c1ba-4468-aeea-a0efefbda39f")
-		)
-		(pin "1"
-			(uuid "60fd5d78-2b32-4579-97f5-54a89df41bef")
-		)
-		(instances
-			(project ""
-				(path "/548f25e8-745d-4cdd-aa0b-f57ad858b984"
-					(reference "R1")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "Connector:Conn_01x05_Pin")
-		(at 173.99 78.74 0)
+		(at 109.22 77.47 0)
 		(mirror y)
 		(unit 1)
 		(exclude_from_sim no)
@@ -5192,7 +3238,7 @@
 		(fields_autoplaced yes)
 		(uuid "99dca858-d16d-4550-be09-158f0797b8fe")
 		(property "Reference" "J2"
-			(at 175.26 77.4699 0)
+			(at 110.49 76.1999 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5201,7 +3247,7 @@
 			)
 		)
 		(property "Value" "STATUS"
-			(at 175.26 80.0099 0)
+			(at 110.49 78.7399 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5210,7 +3256,7 @@
 			)
 		)
 		(property "Footprint" "Connector_JST:JST_XH_B5B-XH-A_1x05_P2.50mm_Vertical"
-			(at 173.99 78.74 0)
+			(at 109.22 77.47 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5219,7 +3265,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 173.99 78.74 0)
+			(at 109.22 77.47 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5228,7 +3274,7 @@
 			)
 		)
 		(property "Description" "Generic connector, single row, 01x05, script generated"
-			(at 173.99 78.74 0)
+			(at 109.22 77.47 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5261,77 +3307,8 @@
 		)
 	)
 	(symbol
-		(lib_id "AmpX_Library_1:Resistor SMD DigiKey ERJ-T06J221V")
-		(at 57.15 76.2 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "9a3bb48e-a5ed-46c7-b60d-9075c140eb3f")
-		(property "Reference" "R4"
-			(at 57.15 71.882 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "Resistor SMD DigiKey ERJ-T06J221V"
-			(at 57.15 72.39 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Footprint" "AmpX-Footprint-Library.pretty:Resistor_SMD_Digikey_RESC2012X70N"
-			(at 57.15 69.088 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify bottom)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "https://www.digikey.de/de/products/detail/panasonic-electronic-components/ERJ-T06J221V/2340241"
-			(at 59.182 87.884 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 57.15 76.2 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "2"
-			(uuid "6f84892f-1ca7-4936-8e8d-05094ee30f88")
-		)
-		(pin "1"
-			(uuid "1742e6b5-e08a-4f33-a329-a49a373585f9")
-		)
-		(instances
-			(project "AmpX Open Energy Gateway"
-				(path "/548f25e8-745d-4cdd-aa0b-f57ad858b984"
-					(reference "R4")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "power:+3.3V")
-		(at 166.37 93.98 0)
+		(at 101.6 92.71 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -5340,7 +3317,7 @@
 		(fields_autoplaced yes)
 		(uuid "9b077254-c5ad-41e3-a9fa-8c190e6cf5fe")
 		(property "Reference" "#PWR07"
-			(at 166.37 97.79 0)
+			(at 101.6 96.52 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5349,7 +3326,7 @@
 			)
 		)
 		(property "Value" "+3.3V"
-			(at 166.37 88.9 0)
+			(at 101.6 87.63 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5357,7 +3334,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 166.37 93.98 0)
+			(at 101.6 92.71 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5366,7 +3343,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 166.37 93.98 0)
+			(at 101.6 92.71 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5375,7 +3352,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
-			(at 166.37 93.98 0)
+			(at 101.6 92.71 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5397,7 +3374,7 @@
 	)
 	(symbol
 		(lib_id "Connector:Conn_01x02_Pin")
-		(at 236.22 74.93 0)
+		(at 171.45 73.66 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -5405,7 +3382,7 @@
 		(dnp no)
 		(uuid "b8d0941e-92e3-4f8e-8f84-dc1917dd3b57")
 		(property "Reference" "J1"
-			(at 231.14 75.438 0)
+			(at 166.37 74.168 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5413,7 +3390,7 @@
 			)
 		)
 		(property "Value" "POW"
-			(at 231.14 77.978 0)
+			(at 166.37 76.708 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5421,7 +3398,7 @@
 			)
 		)
 		(property "Footprint" "Connector_JST:JST_XH_B2B-XH-A_1x02_P2.50mm_Vertical"
-			(at 236.22 74.93 0)
+			(at 171.45 73.66 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5430,7 +3407,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 236.22 74.93 0)
+			(at 171.45 73.66 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5439,7 +3416,7 @@
 			)
 		)
 		(property "Description" "Generic connector, single row, 01x02, script generated"
-			(at 236.22 74.93 0)
+			(at 171.45 73.66 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5457,228 +3434,6 @@
 			(project ""
 				(path "/548f25e8-745d-4cdd-aa0b-f57ad858b984"
 					(reference "J1")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "AmpX_Library_1:LED_GREEN_CMD15-21VGD_TR8")
-		(at 41.91 62.23 180)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "baaa95c4-86b4-4c2a-9565-5267d0299baf")
-		(property "Reference" "LED3"
-			(at 35.56 58.166 0)
-			(effects
-				(font
-					(size 1.524 1.524)
-				)
-			)
-		)
-		(property "Value" "CMD15-21VGD/TR8"
-			(at 35.56 58.42 0)
-			(effects
-				(font
-					(size 1.524 1.524)
-				)
-				(hide yes)
-			)
-		)
-		(property "Footprint" "AmpX-Footprint-Library.pretty:LED_GREEN_CMD15-21_VCC"
-			(at 41.91 69.088 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-					(italic yes)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "CMD15-21VGD/TR8"
-			(at 41.91 51.816 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-					(italic yes)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 41.91 62.23 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "670eaa9b-6185-4aea-8429-1800c549e42c")
-		)
-		(pin "2"
-			(uuid "9751ec24-00e0-4191-a03f-6cefe2d31dbc")
-		)
-		(instances
-			(project "AmpX Open Energy Gateway"
-				(path "/548f25e8-745d-4cdd-aa0b-f57ad858b984"
-					(reference "LED3")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "AmpX_Library_1:LED_GREEN_CMD15-21VGD_TR8")
-		(at 43.18 91.44 180)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "c60ad8b4-dc57-46ee-a262-6a8a53d0cb44")
-		(property "Reference" "LED5"
-			(at 36.83 86.868 0)
-			(effects
-				(font
-					(size 1.524 1.524)
-				)
-			)
-		)
-		(property "Value" "CMD15-21VGD/TR8"
-			(at 36.83 87.63 0)
-			(effects
-				(font
-					(size 1.524 1.524)
-				)
-				(hide yes)
-			)
-		)
-		(property "Footprint" "AmpX-Footprint-Library.pretty:LED_GREEN_CMD15-21_VCC"
-			(at 43.18 98.298 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-					(italic yes)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "CMD15-21VGD/TR8"
-			(at 43.18 81.026 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-					(italic yes)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 43.18 91.44 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "614afc8a-0842-4a1e-860b-2549f8000e64")
-		)
-		(pin "2"
-			(uuid "97cbf908-6144-4d4a-8853-91cfe3f95c94")
-		)
-		(instances
-			(project "AmpX Open Energy Gateway"
-				(path "/548f25e8-745d-4cdd-aa0b-f57ad858b984"
-					(reference "LED5")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Connector:Conn_01x06_Pin")
-		(at 97.79 66.04 0)
-		(mirror y)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "c797bb83-fef5-4a9a-8413-5f534db3aace")
-		(property "Reference" "J3"
-			(at 99.06 68.5801 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Value" "Status Conn Top"
-			(at 99.06 66.0401 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Footprint" "Connector_Wire:SolderWire-0.5sqmm_1x06_P4.6mm_D0.9mm_OD2.1mm"
-			(at 97.79 66.04 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 97.79 66.04 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Generic connector, single row, 01x06, script generated"
-			(at 97.79 66.04 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "201c96c2-2947-4533-9ca5-39ef2cc5e82e")
-		)
-		(pin "3"
-			(uuid "137875af-aafa-4352-b035-3cea7d857afc")
-		)
-		(pin "2"
-			(uuid "a2d811be-e310-4f36-afa9-715b9dbfdc32")
-		)
-		(pin "6"
-			(uuid "0ae7462b-7354-484a-8cf2-28515edddfc4")
-		)
-		(pin "4"
-			(uuid "52d95e85-d45a-406e-89ae-d3a08ea59ec1")
-		)
-		(pin "5"
-			(uuid "c3e26f16-51fc-4c97-ac0a-4739a26ecc14")
-		)
-		(instances
-			(project ""
-				(path "/548f25e8-745d-4cdd-aa0b-f57ad858b984"
-					(reference "J3")
 					(unit 1)
 				)
 			)
