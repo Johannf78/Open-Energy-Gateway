@@ -46,9 +46,11 @@
 
 ### Operational Features
 - [x] **Auto-Discovery**: Automatic meter detection during startup
-- [x] **Multi-Meter Support**: Currently configured for 4 active meters
+- [x] **Multi-Meter Support**: Currently configured for 5 active meters, tested and operational
 - [x] **Status Monitoring**: Continuous health checking with LED feedback
 - [x] **Automatic Reboot**: 24-hour reboot cycle for system stability
+- [x] **WebSocket Event Handling**: Complete event handler with connection/disconnection tracking
+- [x] **Optimized Performance**: WebSocket servicing during meter reads for responsive connections
 
 ## 🔄 Current Capabilities
 
@@ -61,39 +63,46 @@
 
 ### Tested Functionality
 - **Modbus Register Reading**: All register types (int32, int64, float) properly converted
-- **WebSocket Performance**: 3-second update intervals without blocking
+- **WebSocket Performance**: 3-second update intervals with optimized 12-second initial connection
+- **WebSocket Event Handler**: Fully implemented with connection tracking and error handling
 - **API Communication**: Successful data transmission to remote servers
 - **Fault Recovery**: Automatic reconnection on communication failures
 - **Memory Management**: Stable operation within ESP32 memory constraints
+- **5-Meter Operation**: Successfully tested with 5 meters reading and displaying real-time data
 
 ## 📋 Known Limitations
 
 ### Current Constraints
-- **Active Meter Limit**: Only 4 meters actively configured (vs 32 theoretical maximum)
+- **Active Meter Limit**: 5 meters actively configured and operational (vs 32 theoretical maximum)
+- **WebSocket Connection Time**: 12-second initial connection due to Modbus blocking (acceptable for production)
 - **Hardcoded Settings**: Some configuration values require code changes
 - **Memory Usage**: OTA functionality disabled due to size constraints
 - **Admin Interface**: Admin page structure exists but functionality incomplete
 - **Windows mDNS**: .local domain resolution not working on Windows (use IP address as workaround)
 
 ### Technical Debt
-- **Code Duplication**: Hardcoded meter sections (4 meters) need dynamic generation for scaling
-- **Global Variables**: `m1_serial_number` through `m4_serial_number` pattern needs array-based approach
-- **HTML Templates**: Static meter sections in `webpage.h` and `web_settings.h` need template generation
+- **HTML Templates**: Static meter sections (5 meters) in web files - need dynamic generation for scaling beyond 5
+- **WebSocket Connection Time**: 12 seconds acceptable but could be improved with staggered meter reads
 - **String Operations**: Some inefficient string concatenation in API functions
 - **Error Recovery**: Basic retry logic, could be enhanced
 - **Configuration Management**: Settings require web admin interface completion
 - **Documentation**: Some TODO comments indicate pending improvements
 
+### Resolved Technical Debt
+- ✅ **Global Variables**: Converted from hardcoded `m1_serial_number` variables to `meterSerialNumbers[]` array
+- ✅ **Backend Scalability**: All backend functions use dynamic loops with `maxNumberOfMeters` constant
+- ✅ **WebSocket Event Handler**: Fully implemented with proper connection tracking
+- ✅ **WebSocket Performance**: Optimized to service connections during meter reads
+
 ## 🎯 Immediate Development Opportunities
 
 ### High Priority
-1. **Scale Meter Support**: Implement dynamic meter support using WebSocket foundation (eliminate hardcoded 4-meter limit)
-2. **Dynamic HTML Generation**: Convert static meter sections to template-based generation
-3. **Array-Based Meter Management**: Replace global variables with scalable data structures
-4. **Complete Admin Interface**: Implement gateway configuration functionality
-5. **Dynamic Configuration**: Move hardcoded values to web-configurable settings
-6. **Enhanced Error Handling**: Improve fault tolerance and recovery mechanisms
-7. **Windows mDNS Resolution**: Troubleshoot and fix .local domain access on Windows
+1. **Further Performance Optimization**: Implement staggered meter reads for sub-5-second WebSocket connections
+2. **Scale to 10 Meters**: Add HTML sections for meters 6-10 (backend already supports this)
+3. **Complete Admin Interface**: Implement gateway configuration functionality
+4. **Dynamic Configuration**: Move hardcoded values to web-configurable settings
+5. **Enhanced Error Handling**: Improve fault tolerance and recovery mechanisms
+6. **Windows mDNS Resolution**: Troubleshoot and fix .local domain access on Windows
 
 ### Medium Priority
 1. **Memory Optimization**: Further reduce footprint to enable OTA

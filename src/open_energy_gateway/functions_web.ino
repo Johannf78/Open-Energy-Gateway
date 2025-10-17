@@ -9,8 +9,43 @@ void initServer() {
   server.on("/update_meters_name", HTTP_POST, handleChangeMetersName);
   server.on("/update_gateway_id", HTTP_POST, handleUpdateGatewayId);  // Add this line
   server.begin();
+  
+  //Handle the websocket events, this is used to handle the connection/disconnection events.
+  //function is defined below.
+  webSocket.onEvent(webSocketEvent);
+
   //Initialise the websockets on port 81
   webSocket.begin();
+}
+
+
+// WebSocket event handler - handles connection/disconnection events
+void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length) {
+  switch(type) {
+    case WStype_DISCONNECTED:
+      Serial.printf("[%u] Disconnected!\n", num);
+      break;
+      
+    case WStype_CONNECTED:
+      {
+        IPAddress ip = webSocket.remoteIP(num);
+        Serial.printf("[%u] Connected from %d.%d.%d.%d\n", num, ip[0], ip[1], ip[2], ip[3]);
+      }
+      break;
+      
+    case WStype_TEXT:
+      // Client sent text message (not used in this application)
+      Serial.printf("[%u] Received text: %s\n", num, payload);
+      break;
+      
+    case WStype_ERROR:
+      Serial.printf("[%u] WebSocket Error!\n", num);
+      break;
+      
+    default:
+      // Handle other WebSocket event types
+      break;
+  }
 }
 
 //Handle the root webpage
@@ -27,41 +62,23 @@ void handleRoot() {
   web_hwebpage_homeome.replace("m3_serial_number", m3_serial_number);
   webpage_home.replace("m4_serial_number", m4_serial_number);
   */
+  
+  //the String webpage has been defined in the included file webpage.h
+  String webpage_home_local = webpage_home;  // Create local copy to avoid mutating global String
+  
 
   //This must be a server side replacement, as the javascript reacts based on this value.
-  webpage_home.replace("numberOfMetersValue", String(numberOfMeters));
+  webpage_home_local.replace("numberOfMetersValue", String(numberOfMeters));
 
-  /*
-  for (int i = 1; i <= maxNumberOfMeters; i++)
-  {
-    String meterPrefix = "m" + String(i) + "_";
-    //Copy the saved meter name from the preferences to the json doc, this is so that the name can be displayed on the page, even if the name has been changed recently.
-    JsonDoc[meterPrefix + "name"] = preferences.getString(meterPrefix + "name");
-  }
-  */
-  /*
-  JsonDoc["m1_name"] = preferences.getString("m1_name");
-  JsonDoc["m2_name"] = preferences.getString("m2_name");
-  JsonDoc["m3_name"] = preferences.getString("m3_name");
-  JsonDoc["m4_name"] = preferences.getString("m4_name");
-  */
+  //Copy the saved meter names from the preferences to the json doc, this is so that the names can be displayed on the page, even if the names have been changed recently.
   for (int i =1; i <= maxNumberOfMeters ; i++){
     String keyName = "m" + String(i) + "_name";
+    //Copy the saved meter name from the preferences to the json doc, this is so that the name can be displayed on the page, even if the name has been changed recently.
     JsonDoc[keyName] = preferences.getString(keyName.c_str());
   }
 
-  /*
-  for (int i = 1; i <= maxNumberOfMeters; i++)
-  {
-    String meterList = "<ul>";
-    String keyName = "m" + String(i) + "_name";
-    meterList += "<li>Meter " + String(i) + ": " + preferences.getString(keyName.c_str()) + "</li>";
-    meterList += "</ul>";
-    webpage_home.replace("var_meter_list", meterList);
-  }
-  */
-
-  server.send(200, "text/html", web_inc_header + webpage_home);
+  //Send the page to the client
+  server.send(200, "text/html", web_inc_header + webpage_home_local);
 }
 
 //Handle the settings webpage

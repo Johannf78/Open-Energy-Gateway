@@ -116,7 +116,7 @@ String webpage_meters = R"(
       if (reconnectAttempts < maxReconnectAttempts) {
         reconnectAttempts++;
         console.log('Reconnecting... attempt ' + reconnectAttempts);
-        setTimeout(connectToWebSocket, 5000);
+        setTimeout(connectToWebSocket, 1000); //1 seconds delay between reconnection attempts
       } else {
         console.log('Max reconnection attempts reached');
       }

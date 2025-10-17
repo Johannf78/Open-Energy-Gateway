@@ -28,7 +28,7 @@ String web_inc_header = R"(
 
       /* Sidebar Styles */
     .sidebar {
-      width: 250px;
+      width: 220px;
       background-color: #374151;
       border-right: 1px solid #1f2937;
       flex-shrink: 0;

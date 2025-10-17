@@ -20,7 +20,7 @@ String webpage_home = R"(
     <table>
       <thead>
         <tr>
-          <th>ID</th>
+          <th>Meter</th>
           <th>Serial Number</th>
           <th>Name</th>
           <th>View</th>
@@ -50,6 +50,12 @@ String webpage_home = R"(
           <td id="meter_list_m4_serial_number">Loading...</td>
           <td id="meter_list_m4_name">Loading...</td>
           <td><a href="/meters?id=4" class="view-button">View</a></td>
+        </tr>
+        <tr id="meter-list-row-5">
+          <td>5</td>
+          <td id="meter_list_m5_serial_number">Loading...</td>
+          <td id="meter_list_m5_name">Loading...</td>
+          <td><a href="/meters?id=5" class="view-button">View</a></td>
         </tr>
       </tbody>
     </table>
@@ -93,6 +99,13 @@ String webpage_home = R"(
     <td id='m4_active_energy_imported_L3'>0 kWh</td>
     <td id='m4_active_energy_imported_tot'>0 kWh</td>
   </tr>
+  <tr id='m5_active_energy_imported'>
+    <td>5</td>
+    <td id='m5_active_energy_imported_L1'>0 kWh</td>
+    <td id='m5_active_energy_imported_L2'>0 kWh</td>
+    <td id='m5_active_energy_imported_L3'>0 kWh</td>
+    <td id='m5_active_energy_imported_tot'>0 kWh</td>
+  </tr>
   </table>
   </div>
 
@@ -120,20 +133,27 @@ String webpage_home = R"(
       <td id='m2_active_power_L3'>0.00 KW</td>
       <td id='m2_active_power_tot'>0.00 KW</td>
     </tr>    
-    <tr id='3_active_power'>
+    <tr id='m3_active_power'>
       <td>3</td>
       <td id='m3_active_power_L1'>0.00 KW</td>
       <td id='m3_active_power_L2'>0.00 KW</td>
       <td id='m3_active_power_L3'>0.00 KW</td>
       <td id='m3_active_power_tot'>0.00 KW</td>
     </tr>
-    <tr id='4_active_power'>
+    <tr id='m4_active_power'>
       <td>4</td>
       <td id='m4_active_power_L1'>0.00 KW</td>
       <td id='m4_active_power_L2'>0.00 KW</td>
       <td id='m4_active_power_L3'>0.00 KW</td>
       <td id='m4_active_power_tot'>0.00 KW</td>
     </tr>    
+    <tr id='m5_active_power'>
+      <td>5</td>
+      <td id='m5_active_power_L1'>0.00 KW</td>
+      <td id='m5_active_power_L2'>0.00 KW</td>
+      <td id='m5_active_power_L3'>0.00 KW</td>
+      <td id='m5_active_power_tot'>0.00 KW</td>
+    </tr>
     </table>
   </div>
 
@@ -158,9 +178,9 @@ String webpage_home = R"(
 
   // Initialize the socket variable to be used in the connectToWebSocket function
   var socket;
-  var reconnectAttempts = 0;
-  var maxReconnectAttempts = 10;
-  var maxNumberOfMeters = 4;
+  var reconnectAttempts = 0; // Number of reconnection attempts, this is used to track the number of reconnection attempts.
+  var maxReconnectAttempts = 10; // Maximum number of reconnection attempts, this is used to prevent infinite reconnection attempts.
+  var maxNumberOfMeters = 5; // Maximum number of meters supported, this is used to limit the number of meters that can be displayed on the web page.
 
   function init(){
     //This variable is updated by the Arduino code before sending the HTML
@@ -229,7 +249,7 @@ String webpage_home = R"(
       if (reconnectAttempts < maxReconnectAttempts) {
       reconnectAttempts++;
       console.log('Reconnecting... attempt ' + reconnectAttempts);
-      setTimeout(connectToWebSocket, 5000);
+      setTimeout(connectToWebSocket, 1000); //1 seconds delay between reconnection attempts
     } else {
       console.log('Max reconnection attempts reached');
       // Optionally show error message to user

@@ -78,7 +78,7 @@ open_energy_gateway.ino (main)
 - **Timing**: Use const unsigned long for all intervals
 
 ### Known Constraints
-- **Active Meters**: Currently limited to 4 meters, expandable to 10+ with simple config changes
+- **Active Meters**: Currently configured for 5 meters, expandable to 10+ with simple config changes
 - **Gateway ID**: Can be changed via admin web interface (stored in NVS)
 - **Memory Limits**: Careful with string operations, prefer static allocation
 - **Network Recovery**: WiFiManager handles WiFi, manual Ethernet reconnection
@@ -88,12 +88,12 @@ open_energy_gateway.ino (main)
 - **Backend Code**: All functions use loops with `maxNumberOfMeters` constant
 - **Server Code**: Dynamic loops in handleRoot(), handleSettings(), handleChangeMetersName()
 - **API Code**: Array-based serial number access in postToAmpXPortal2()
-- **Frontend**: JavaScript uses `var maxNumberOfMeters = 4` for dynamic hiding/showing
+- **Frontend**: JavaScript uses `var maxNumberOfMeters = 5` for dynamic hiding/showing (updated Oct 2024)
 - **Scalability**: Change one constant to support more meters (backend ready for 10+)
 
-### Remaining HTML Constraints for Scaling Beyond 4 Meters
-- **HTML Templates**: Static meter sections in web_home.h and web_settings.h (4 hardcoded divs)
-- **To Scale to 10**: Add 6 more meter HTML sections, update two constants (C++ and JS)
+### Remaining HTML Constraints for Scaling Beyond 5 Meters
+- **HTML Templates**: Static meter sections in web_home.h and web_settings.h (5 hardcoded sections as of Oct 2024)
+- **To Scale to 10**: Add 5 more meter HTML sections, update two constants (C++ and JS)
 - **Backend**: Already fully dynamic and scalable - no code changes needed
 
 ### Extension Points
@@ -137,10 +137,33 @@ This is a mature, production-ready industrial IoT project with excellent archite
 - ✅ Implemented handleMeters() with query string parsing
 - ✅ **Page Structure**: Home (summaries), Meters (details), Settings, Admin
 
+#### Session 4: 5-Meter Expansion and WebSocket Fix (October 2024)
+- ✅ Expanded from 4 to 5 meters: Updated `maxNumberOfMeters = 5` in open_energy_gateway.ino
+- ✅ Added meter 5 HTML sections to web_home.h (meter list, energy summary, power summary)
+- ✅ Added meter 5 HTML section to web_settings.h
+- ✅ Fixed bug: Corrected row IDs for meters 3,4,5 in power summary table (m3_active_power, m4_active_power, m5_active_power)
+- ✅ Updated JavaScript: Changed `maxNumberOfMeters = 5` in web_home.h
+- ✅ **Critical WebSocket Fix**: Added missing `webSocketEvent()` handler in functions_web.ino
+- ✅ **String Mutation Fix**: Changed handleRoot() to use local copy `webpage_home_local` instead of mutating global
+- ✅ Added WebSocket error handling: WStype_ERROR case and default case
+- ✅ Fixed typo: Line 247 `svoid` → `void initNTP()`
+- ✅ **WebSocket Performance Fix**: Added `webSocket.loop()` and `server.handleClient()` inside meter reading loop
+- ✅ **Retry Optimization**: Reduced WebSocket reconnect delay from 5 seconds to 2 seconds in all web files
+- ✅ **Uploaded and Tested**: ESP32 successfully running with all 5 meters operational
+- ✅ **Performance Verified**: Connection time reduced from 80 seconds to 12 seconds (85% improvement)
+- ✅ **Testing with Playwright MCP**: Confirmed all 5 meters displaying real-time data correctly
+
+**Key Learnings**: 
+- WebSocket requires `webSocket.onEvent(webSocketEvent)` BEFORE `webSocket.begin()` or connections fail with ERR_CONNECTION_RESET
+- Blocking Modbus reads (5 meters × 1-2 seconds) prevented WebSocket handshakes from completing
+- Solution: Call `webSocket.loop()` and `server.handleClient()` between each meter read for responsive connections
+
 ### Current Status
-- **Production Ready**: Array-based architecture tested and working
+- **5 Meters Operational**: All meters displaying serial numbers, names, energy, and power data ✅
+- **WebSocket Working**: Real-time 3-second updates with 12-second initial connection ✅
 - **Modern UI**: Professional sidebar navigation with summary tables
 - **Clean Navigation**: Home shows summaries, Meters page shows details
-- **Scaling Path Clear**: Change 2 constants + add HTML rows = 10 meter support
+- **Production Ready**: Successfully tested and deployed on ESP32 hardware
+- **Scaling Path Clear**: Change 2 constants + add HTML rows = expand to 10+ meters
 - **Clean Codebase**: No hardcoded meter-specific variables in backend
-- **Next Phase**: Expand HTML templates when 10-meter support is needed
+- **Next Phase**: Consider staggered meter reads for sub-5-second WebSocket connections

@@ -45,6 +45,11 @@ String webpage_settings = R"(
       <label for='m4_name'>Meter name: </label><input type='text' id='m4_name' name='m4_name' value=''>
     </div>
 
+    <div id='meter5'>
+      <h3>Meter: 5, Serial number: <span id='m5_serial_number'>Loading...</span></h3>
+      <label for='m5_name'>Meter name: </label><input type='text' id='m5_name' name='m5_name' value=''>
+    </div>
+
     <br>
     <input type='submit' value='update'>
   </form>
@@ -135,7 +140,7 @@ String webpage_settings = R"(
       if (reconnectAttempts < maxReconnectAttempts) {
         reconnectAttempts++;
         console.log('Reconnecting... attempt ' + reconnectAttempts);
-        setTimeout(connectToWebSocket, 5000);
+        setTimeout(connectToWebSocket, 1000); //1 seconds delay between reconnection attempts
       } else {
         console.log('Max reconnection attempts reached');
       }

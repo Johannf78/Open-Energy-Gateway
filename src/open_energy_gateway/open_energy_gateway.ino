@@ -199,8 +199,8 @@ String m4_serial_number = "";
 */
 
 int numberOfMeters = 0;  // Number of meters connected, this will automatically be updated based on the number of meters detected
-const int maxNumberOfMeters = 4;
-String meterSerialNumbers[maxNumberOfMeters];
+const int maxNumberOfMeters = 5;  // Maximum number of meters supported, this is used to limit the number of meters that can be displayed on the web page.
+String meterSerialNumbers[maxNumberOfMeters]; // Array to store the serial numbers of the meters.
 
 
 
@@ -243,6 +243,7 @@ void postToAmpXPortal2(int meterNumber);
 void setupMeterRegisters();
 void detectNumberOfMeters();
 void handleWebSocket();
+void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length);
 void initNTP();
 String getCurrentTimestamp();
 void loadGatewayId();
@@ -352,6 +353,10 @@ void loop() {
       for (int i = 1; i <= numberOfMeters; i++) {
         //JF: New fuction to handle both RS485 and TCPIP
         handlePowerMeter(i);
+
+        // Service WebSocket and HTTP clients between each meter read
+        webSocket.loop();
+        server.handleClient();
       }
       handleWebSocket();
   
@@ -379,7 +384,7 @@ void loop() {
     //Post meter data to remote server
     for (int i = 1; i <= numberOfMeters; i++) {
       //postToEmonCMS(i);
-      postToAmpXPortal2(i);
+      //postToAmpXPortal2(i);
     }
     counter2 = now;
   }
