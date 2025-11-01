@@ -17,6 +17,7 @@ String webpage_home = R"(
 
   <div class="card">
   <h2>Meter List</h2>
+  <p>(Connection typically completes in 2-8 seconds)</p>
     <table>
       <thead>
         <tr>
@@ -30,32 +31,62 @@ String webpage_home = R"(
         <tr id="meter-list-row-1">
           <td>1</td>
           <td id="meter_list_m1_serial_number">Loading...</td>
-          <td id="meter_list_m1_name">Loading...</td>
+          <td id="meter_list_m1_name" style="text-align: left;">Loading...</td>
           <td><a href="/meters?id=1" class="view-button">View</a></td>
         </tr>
         <tr id="meter-list-row-2">
           <td>2</td>
           <td id="meter_list_m2_serial_number">Loading...</td>
-          <td id="meter_list_m2_name">Loading...</td>
+          <td id="meter_list_m2_name" style="text-align: left;">Loading...</td>
           <td><a href="/meters?id=2" class="view-button">View</a></td>
         </tr>
         <tr id="meter-list-row-3">
           <td>3</td>
           <td id="meter_list_m3_serial_number">Loading...</td>
-          <td id="meter_list_m3_name">Loading...</td>
+          <td id="meter_list_m3_name" style="text-align: left;">Loading...</td>
           <td><a href="/meters?id=3" class="view-button">View</a></td>
         </tr>
         <tr id="meter-list-row-4">
           <td>4</td>
           <td id="meter_list_m4_serial_number">Loading...</td>
-          <td id="meter_list_m4_name">Loading...</td>
+          <td id="meter_list_m4_name" style="text-align: left;">Loading...</td>
           <td><a href="/meters?id=4" class="view-button">View</a></td>
         </tr>
         <tr id="meter-list-row-5">
           <td>5</td>
           <td id="meter_list_m5_serial_number">Loading...</td>
-          <td id="meter_list_m5_name">Loading...</td>
+          <td id="meter_list_m5_name" style="text-align: left;">Loading...</td>
           <td><a href="/meters?id=5" class="view-button">View</a></td>
+        </tr>
+        <tr id="meter-list-row-6">
+          <td>6</td>
+          <td id="meter_list_m6_serial_number">Loading...</td>
+          <td id="meter_list_m6_name" style="text-align: left;">Loading...</td>
+          <td><a href="/meters?id=6" class="view-button">View</a></td>
+        </tr>
+        <tr id="meter-list-row-7">
+          <td>7</td>
+          <td id="meter_list_m7_serial_number">Loading...</td>
+          <td id="meter_list_m7_name" style="text-align: left;">Loading...</td>
+          <td><a href="/meters?id=7" class="view-button">View</a></td>
+        </tr>
+        <tr id="meter-list-row-8">
+          <td>8</td>
+          <td id="meter_list_m8_serial_number">Loading...</td>
+          <td id="meter_list_m8_name" style="text-align: left;">Loading...</td>
+          <td><a href="/meters?id=8" class="view-button">View</a></td>
+        </tr>
+        <tr id="meter-list-row-9">
+          <td>9</td>
+          <td id="meter_list_m9_serial_number">Loading...</td>
+          <td id="meter_list_m9_name" style="text-align: left;">Loading...</td>
+          <td><a href="/meters?id=9" class="view-button">View</a></td>
+        </tr>
+        <tr id="meter-list-row-10">
+          <td>10</td>
+          <td id="meter_list_m10_serial_number">Loading...</td>
+          <td id="meter_list_m10_name" style="text-align: left;">Loading...</td>
+          <td><a href="/meters?id=10" class="view-button">View</a></td>
         </tr>
       </tbody>
     </table>
@@ -106,6 +137,41 @@ String webpage_home = R"(
     <td id='m5_active_energy_imported_L3'>0 kWh</td>
     <td id='m5_active_energy_imported_tot'>0 kWh</td>
   </tr>
+  <tr id='m6_active_energy_imported'>
+    <td>6</td>
+    <td id='m6_active_energy_imported_L1'>0 kWh</td>
+    <td id='m6_active_energy_imported_L2'>0 kWh</td>
+    <td id='m6_active_energy_imported_L3'>0 kWh</td>
+    <td id='m6_active_energy_imported_tot'>0 kWh</td>
+  </tr>
+  <tr id='m7_active_energy_imported'>
+    <td>7</td>
+    <td id='m7_active_energy_imported_L1'>0 kWh</td>
+    <td id='m7_active_energy_imported_L2'>0 kWh</td>
+    <td id='m7_active_energy_imported_L3'>0 kWh</td>
+    <td id='m7_active_energy_imported_tot'>0 kWh</td>
+  </tr>
+  <tr id='m8_active_energy_imported'>
+    <td>8</td>
+    <td id='m8_active_energy_imported_L1'>0 kWh</td>
+    <td id='m8_active_energy_imported_L2'>0 kWh</td>
+    <td id='m8_active_energy_imported_L3'>0 kWh</td>
+    <td id='m8_active_energy_imported_tot'>0 kWh</td>
+  </tr>
+  <tr id='m9_active_energy_imported'>
+    <td>9</td>
+    <td id='m9_active_energy_imported_L1'>0 kWh</td>
+    <td id='m9_active_energy_imported_L2'>0 kWh</td>
+    <td id='m9_active_energy_imported_L3'>0 kWh</td>
+    <td id='m9_active_energy_imported_tot'>0 kWh</td>
+  </tr>
+  <tr id='m10_active_energy_imported'>
+    <td>10</td>
+    <td id='m10_active_energy_imported_L1'>0 kWh</td>
+    <td id='m10_active_energy_imported_L2'>0 kWh</td>
+    <td id='m10_active_energy_imported_L3'>0 kWh</td>
+    <td id='m10_active_energy_imported_tot'>0 kWh</td>
+  </tr>
   </table>
   </div>
 
@@ -154,6 +220,41 @@ String webpage_home = R"(
       <td id='m5_active_power_L3'>0.00 KW</td>
       <td id='m5_active_power_tot'>0.00 KW</td>
     </tr>
+    <tr id='m6_active_power'>
+      <td>6</td>
+      <td id='m6_active_power_L1'>0.00 KW</td>
+      <td id='m6_active_power_L2'>0.00 KW</td>
+      <td id='m6_active_power_L3'>0.00 KW</td>
+      <td id='m6_active_power_tot'>0.00 KW</td>
+    </tr>
+    <tr id='m7_active_power'>
+      <td>7</td>
+      <td id='m7_active_power_L1'>0.00 KW</td>
+      <td id='m7_active_power_L2'>0.00 KW</td>
+      <td id='m7_active_power_L3'>0.00 KW</td>
+      <td id='m7_active_power_tot'>0.00 KW</td>
+    </tr>
+    <tr id='m8_active_power'>
+      <td>8</td>
+      <td id='m8_active_power_L1'>0.00 KW</td>
+      <td id='m8_active_power_L2'>0.00 KW</td>
+      <td id='m8_active_power_L3'>0.00 KW</td>
+      <td id='m8_active_power_tot'>0.00 KW</td>
+    </tr>
+    <tr id='m9_active_power'>
+      <td>9</td>
+      <td id='m9_active_power_L1'>0.00 KW</td>
+      <td id='m9_active_power_L2'>0.00 KW</td>
+      <td id='m9_active_power_L3'>0.00 KW</td>
+      <td id='m9_active_power_tot'>0.00 KW</td>
+    </tr>
+    <tr id='m10_active_power'>
+      <td>10</td>
+      <td id='m10_active_power_L1'>0.00 KW</td>
+      <td id='m10_active_power_L2'>0.00 KW</td>
+      <td id='m10_active_power_L3'>0.00 KW</td>
+      <td id='m10_active_power_tot'>0.00 KW</td>
+    </tr>
     </table>
   </div>
 
@@ -161,7 +262,7 @@ String webpage_home = R"(
     <p>Connection status: <span id="connection_status" style="color: gray;">Connecting...</span></p>
     <p>Last update: <span id="last_update">--:--:--</span></p>
     <br>
-    <p>Values updates every 3 seconds.</p>  
+    <p>Values updates every 5 seconds.</p>  
   </div>
 
 
@@ -180,7 +281,7 @@ String webpage_home = R"(
   var socket;
   var reconnectAttempts = 0; // Number of reconnection attempts, this is used to track the number of reconnection attempts.
   var maxReconnectAttempts = 10; // Maximum number of reconnection attempts, this is used to prevent infinite reconnection attempts.
-  var maxNumberOfMeters = 5; // Maximum number of meters supported, this is used to limit the number of meters that can be displayed on the web page.
+  var maxNumberOfMeters = 10; // Maximum number of meters supported, this is used to limit the number of meters that can be displayed on the web page.
 
   function init(){
     //This variable is updated by the Arduino code before sending the HTML

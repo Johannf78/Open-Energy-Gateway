@@ -8,6 +8,7 @@ void initServer() {
   server.on("/meters", handleMeters);
   server.on("/update_meters_name", HTTP_POST, handleChangeMetersName);
   server.on("/update_gateway_id", HTTP_POST, handleUpdateGatewayId);  // Add this line
+  server.on("/reboot_gateway", HTTP_POST, handleRebootGateway); 
   server.begin();
   
   //Handle the websocket events, this is used to handle the connection/disconnection events.
@@ -149,14 +150,18 @@ void handleMeters() {
   
   // Validate meter ID
   if (meterId < 1 || meterId > maxNumberOfMeters) {
-    server.send(404, "text/plain", "Invalid meter ID");
-    return;
+    //default to meter 1 if the meter ID is invalid
+    meterId = 1;
   }
+  
   
   String html = web_inc_header + webpage_meters;
   
   // Replace METER_NUMBER placeholders with actual meter number
   html.replace("METER_NUMBER", String(meterId));
+
+  // Replace numberOfMetersValue with actual number of connected meters
+  html.replace("numberOfMetersValue", String(numberOfMeters));
   
   // Load meter name and serial number to JsonDoc for WebSocket
   String meterPrefix = "m" + String(meterId) + "_";
@@ -276,4 +281,53 @@ void handleUpdateGatewayId() {
     //No gateway_id parameter
     server.send(400, "text/plain", "Missing gateway_id parameter");
   }
+}
+
+//Handle the gateway reboot form submission
+void handleRebootGateway() {
+  //Send response page first before rebooting
+  String successPage = R"(
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Gateway Rebooting</title>
+      <meta name='viewport' content='width=device-width, initial-scale=1'>
+      <meta http-equiv="refresh" content="15;url=/">
+      <style>
+        body { background-color: #EEEEEE; font-family: Arial, sans-serif; }
+        main { margin: auto; border: 3px solid black; padding: 20px; max-width: 600px; }
+        .warning { color: orange; font-weight: bold; }
+        .countdown { font-size: 24px; color: #333; }
+      </style>
+    </head>
+    <body>
+      <main>
+        <h1>Gateway Rebooting...</h1>
+        <p class="warning">The gateway is rebooting now.</p>
+        <p>This page will automatically redirect to the home page in <span class="countdown">15</span> seconds.</p>
+        <p>If the page doesn't redirect automatically, click <a href="/">here</a>.</p>
+        <script>
+          let countdown = 15;
+          const countdownElement = document.querySelector('.countdown');
+          setInterval(() => {
+            countdown--;
+            countdownElement.textContent = countdown;
+            if (countdown <= 0) {
+              window.location.href = '/';
+            }
+          }, 1000);
+        </script>
+      </main>
+    </body>
+    </html>
+  )";
+  
+  server.send(200, "text/html", web_inc_header + successPage);
+  
+  //Delay briefly to ensure the response is sent
+  delay(500);
+  
+  //Reboot the ESP32
+  debugln("Rebooting gateway...");
+  ESP.restart();
 }

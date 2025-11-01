@@ -140,7 +140,7 @@ String web_inc_header = R"(
       border: 1px solid black; 
       padding: 8px; 
       background-color: #cccccc;
-      text-align: left;
+      text-align: center;
       font-weight: bold;
       color: #333;
     }
@@ -170,6 +170,10 @@ String web_inc_header = R"(
       background-color: #d0d0d0;
     }
     
+    .card ul {
+      margin-left: 20px;
+      padding-left: 20px;
+    }
 
 </style>
 </head>
@@ -183,7 +187,7 @@ String web_inc_header = R"(
     <nav class="sidebar-nav">
       <ul>
         <li>
-          <a href="/" class="active">
+          <a href="/" >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="20"
@@ -242,5 +246,33 @@ String web_inc_header = R"(
       </ul>
     </nav>
   </aside>
+
+  <script>
+  // Auto-highlight active navigation based on current page
+  function setActiveNav() {
+    const currentPath = window.location.pathname;
+    const navLinks = document.querySelectorAll('.sidebar-nav a');
+    
+    navLinks.forEach(link => {
+      link.classList.remove('active');
+      
+      // Get the href attribute and normalize it
+      const linkPath = link.getAttribute('href');
+      
+      // Check for exact match or if current path starts with link path (for /meters?id=N)
+      if (linkPath === currentPath || 
+          (linkPath !== '/' && currentPath.startsWith(linkPath))) {
+        link.classList.add('active');
+      }
+      // Special case: highlight Home only on exact root match
+      else if (linkPath === '/' && currentPath === '/') {
+        link.classList.add('active');
+      }
+    });
+  }
+  
+  // Run on page load
+  document.addEventListener('DOMContentLoaded', setActiveNav);
+</script>
 
   )";

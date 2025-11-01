@@ -4,7 +4,7 @@
 #define MODBUS_TYPE_TCPIP 2
 //Set the required Modbus type variant here to either RS485 or TCPIP
 //In other words, change this depending on if the board is for RS485 or for TCPIP
-#define MODBUS_TYPE MODBUS_TYPE_RS485
+#define MODBUS_TYPE MODBUS_TYPE_TCPIP
 
 //NB, Also remember to change the API server from local to live if needed...
 
@@ -199,8 +199,9 @@ String m4_serial_number = "";
 */
 
 int numberOfMeters = 0;  // Number of meters connected, this will automatically be updated based on the number of meters detected
-const int maxNumberOfMeters = 5;  // Maximum number of meters supported, this is used to limit the number of meters that can be displayed on the web page.
+const int maxNumberOfMeters = 10;  // Maximum number of meters supported, this is used to limit the number of meters that can be displayed on the web page.
 String meterSerialNumbers[maxNumberOfMeters]; // Array to store the serial numbers of the meters.
+int currentMeterIndex = 1;  // Track which meter to read next (for staggered reading)
 
 
 
@@ -323,7 +324,7 @@ void loop() {
   static unsigned long counter3 = 0;
   
   //Interval to test the meter connection and read the parameters, and update the local web page.
-  const unsigned long METER_CONNECTION_INTERVAL = 3000;    // 3 seconds for testing, 1 min = 60000 for production
+  const unsigned long METER_CONNECTION_INTERVAL = 1000;    // 1 second (staggered reading: 5 meters × 1s = 5s cycle)
   //Interval to post the meter data to the remote server
   const unsigned long REMOTE_SERVER_INTERVAL = 30000;    // 30 seconds
   //Interval to reboot the ESP32
@@ -349,16 +350,24 @@ void loop() {
       //Turn on LED 2 to indicate successful connection to energy meter.
       digitalWrite(LED_2_METER, HIGH);
 
-      //Read the parameters from the meter and update the local web page.
-      for (int i = 1; i <= numberOfMeters; i++) {
+      //Read ONE meter per iteration (staggered approach for faster WebSocket response)
+      if (numberOfMeters > 0) {
+        debug("Reading Meter ");
+        debugln(currentMeterIndex);
+        
         //JF: New fuction to handle both RS485 and TCPIP
-        handlePowerMeter(i);
-
-        // Service WebSocket and HTTP clients between each meter read
-        webSocket.loop();
-        server.handleClient();
+        handlePowerMeter(currentMeterIndex);
+        
+        // Broadcast updated data immediately after reading this meter
+        handleWebSocket();
+        
+        // Move to next meter (cycle: 1→2→3→4→5→1...)
+        currentMeterIndex++;
+        if (currentMeterIndex > numberOfMeters) {
+          currentMeterIndex = 1;
+        }
       }
-      handleWebSocket();
+
   
     } else {
       debugln("Connection test failed!");

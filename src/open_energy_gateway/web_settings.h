@@ -13,55 +13,103 @@ String webpage_settings = R"(
   <div class="content">
 
 
+  <div class="card">
+    <h2>Information/Status</h2>
+    <ul>
+      <li>Gateway ID: <span id='m_gateway_id'>Loading...</span></li>
+      <li>Wi-Fi Strength: <span id='m_wifi_rssi'>Loading...</span></li>
+      <li>Connected Meters: <span id='m_connected_meters_num'>Loading...</span></li>
+    </ul>
+  </div>
 
-  <br>
-  <h2>Information/Status</h2>
-  <ul>
-    <li>Gateway ID: <span id='m_gateway_id'>Loading...</span></li>
-    <li>Wi-Fi Strength: <span id='m_wifi_rssi'>Loading...</span></li>
-    <li>Connected Meters: <span id='m_connected_meters_num'>Loading...</span></li>
-  </ul>
-  <h2>Set Meter Names</h2>
-  <p>To identify meters, set a name for each meter.</p>
+  <div class="card">
+    <h2>Set Meter Names</h2>
+    <p>To identify meters, set a name for each meter.</p>
+    <br><br>
+    <form action='update_meters_name' method='post' enctype='application/x-www-form-urlencoded'>
+      <div id='meter1'>
+        <h3>Meter: 1, Serial number: <span id='m1_serial_number'>Loading...</span></h3>
+        <label for='m1_name'>Meter name: </label><input type='text' id='m1_name' name='m1_name' value=''>
+        <br><br>
+      </div>
+
+      <div id='meter2'>
+        <h3>Meter: 2, Serial number: <span id='m2_serial_number'>Loading...</span></h3>
+        <label for='m2_name'>Meter name: </label><input type='text' id='m2_name' name='m2_name' value=''>
+        <br><br>
+      </div>
+
+      <div id='meter3'>
+        <h3>Meter: 3, Serial number: <span id='m3_serial_number'>Loading...</span></h3>
+        <label for='m3_name'>Meter name: </label><input type='text' id='m3_name' name='m3_name' value=''>
+        <br><br>
+      </div>
+
+      <div id='meter4'>
+        <h3>Meter: 4, Serial number: <span id='m4_serial_number'>Loading...</span></h3>
+        <label for='m4_name'>Meter name: </label><input type='text' id='m4_name' name='m4_name' value=''>
+        <br><br>
+      </div>
+
+      <div id='meter5'>
+        <h3>Meter: 5, Serial number: <span id='m5_serial_number'>Loading...</span></h3>
+        <label for='m5_name'>Meter name: </label><input type='text' id='m5_name' name='m5_name' value=''>
+        <br><br>
+      </div>
+
+      <div id='meter6'>
+        <h3>Meter: 6, Serial number: <span id='m6_serial_number'>Loading...</span></h3>
+        <label for='m6_name'>Meter name: </label><input type='text' id='m6_name' name='m6_name' value=''>
+        <br><br>
+      </div>
+
+      <div id='meter7'>
+        <h3>Meter: 7, Serial number: <span id='m7_serial_number'>Loading...</span></h3>
+        <label for='m7_name'>Meter name: </label><input type='text' id='m7_name' name='m7_name' value=''>
+        <br><br>
+      </div>
+
+      <div id='meter8'>
+        <h3>Meter: 8, Serial number: <span id='m8_serial_number'>Loading...</span></h3>
+        <label for='m8_name'>Meter name: </label><input type='text' id='m8_name' name='m8_name' value=''>
+        <br><br>
+      </div>
+
+      <div id='meter9'>
+        <h3>Meter: 9, Serial number: <span id='m9_serial_number'>Loading...</span></h3>
+        <label for='m9_name'>Meter name: </label><input type='text' id='m9_name' name='m9_name' value=''>
+        <br><br>
+      </div>
+
+      <div id='meter10'>
+        <h3>Meter: 10, Serial number: <span id='m10_serial_number'>Loading...</span></h3>
+        <label for='m10_name'>Meter name: </label><input type='text' id='m10_name' name='m10_name' value=''>
+        <br><br>
+      </div>
+
+      <br>
+      <input type='submit' value='update' style="margin-top: 10px;">
+    </form>
+  </div>
   
-  <form action='update_meters_name' method='post' enctype='application/x-www-form-urlencoded'>
-    <div id='meter1'>
-      <h3>Meter: 1, Serial number: <span id='m1_serial_number'>Loading...</span></h3>
-      <label for='m1_name'>Meter name: </label><input type='text' id='m1_name' name='m1_name' value=''>
-    </div>
-
-    <div id='meter2'>
-      <h3>Meter: 2, Serial number: <span id='m2_serial_number'>Loading...</span></h3>
-      <label for='m2_name'>Meter name: </label><input type='text' id='m2_name' name='m2_name' value=''>
-    </div>
-
-    <div id='meter3'>
-      <h3>Meter: 3, Serial number: <span id='m3_serial_number'>Loading...</span></h3>
-      <label for='m3_name'>Meter name: </label><input type='text' id='m3_name' name='m3_name' value=''>
-    </div>
-
-    <div id='meter4'>
-      <h3>Meter: 4, Serial number: <span id='m4_serial_number'>Loading...</span></h3>
-      <label for='m4_name'>Meter name: </label><input type='text' id='m4_name' name='m4_name' value=''>
-    </div>
-
-    <div id='meter5'>
-      <h3>Meter: 5, Serial number: <span id='m5_serial_number'>Loading...</span></h3>
-      <label for='m5_name'>Meter name: </label><input type='text' id='m5_name' name='m5_name' value=''>
-    </div>
-
-    <br>
-    <input type='submit' value='update'>
-  </form>
-
-  <br>
+  <div class="card">
+    <h2>Gateway Reboot</h2>
+    <form action='reboot_gateway' method='post'>
+      <p>
+      <label>Click the button to reboot the gateway:</label>
+      <input type='submit' value='Reboot'></p>
+    </form>
+  </div>
+  
+  <div class="card">
   <h2>Meter Firmware Update</h2>
-  <form action='update' method='post'>
-    <p>
-    <label>Click the button to download and update the device firmware:</label>
-    <input type='submit' value='update'></p>
-  </form>
-
+    <form action='update' method='post'>
+      <p>
+      <label>Click the button to download and update the device firmware:</label>
+      <input type='submit' value='Update'></p>
+    </form>
+  </div>
+  
   <div class="card">
     <p>Connection status: <span id="connection_status" style="color: gray;">Connecting...</span></p>
     <p>Last update: <span id="last_update">--:--:--</span></p>

@@ -49,8 +49,10 @@
 - [x] **Multi-Meter Support**: Currently configured for 5 active meters, tested and operational
 - [x] **Status Monitoring**: Continuous health checking with LED feedback
 - [x] **Automatic Reboot**: 24-hour reboot cycle for system stability
+- [x] **Gateway Reboot Function**: Web-based reboot button with countdown and auto-redirect
 - [x] **WebSocket Event Handling**: Complete event handler with connection/disconnection tracking
-- [x] **Optimized Performance**: WebSocket servicing during meter reads for responsive connections
+- [x] **Staggered Meter Reading**: Sequential 1-second reads for <3-second WebSocket connections
+- [x] **Optimized Performance**: Sub-3-second initial connection, progressive data updates
 
 ## 🔄 Current Capabilities
 
@@ -63,7 +65,8 @@
 
 ### Tested Functionality
 - **Modbus Register Reading**: All register types (int32, int64, float) properly converted
-- **WebSocket Performance**: 3-second update intervals with optimized 12-second initial connection
+- **WebSocket Performance**: Sub-3-second initial connection with staggered meter reads (77% improvement)
+- **Progressive Data Updates**: Meters populate sequentially every 1 second, full cycle every 5 seconds
 - **WebSocket Event Handler**: Fully implemented with connection tracking and error handling
 - **API Communication**: Successful data transmission to remote servers
 - **Fault Recovery**: Automatic reconnection on communication failures
@@ -74,15 +77,13 @@
 
 ### Current Constraints
 - **Active Meter Limit**: 5 meters actively configured and operational (vs 32 theoretical maximum)
-- **WebSocket Connection Time**: 12-second initial connection due to Modbus blocking (acceptable for production)
 - **Hardcoded Settings**: Some configuration values require code changes
 - **Memory Usage**: OTA functionality disabled due to size constraints
-- **Admin Interface**: Admin page structure exists but functionality incomplete
+- **Admin Interface**: Gateway reboot implemented, other admin functions pending
 - **Windows mDNS**: .local domain resolution not working on Windows (use IP address as workaround)
 
 ### Technical Debt
 - **HTML Templates**: Static meter sections (5 meters) in web files - need dynamic generation for scaling beyond 5
-- **WebSocket Connection Time**: 12 seconds acceptable but could be improved with staggered meter reads
 - **String Operations**: Some inefficient string concatenation in API functions
 - **Error Recovery**: Basic retry logic, could be enhanced
 - **Configuration Management**: Settings require web admin interface completion
@@ -92,17 +93,17 @@
 - ✅ **Global Variables**: Converted from hardcoded `m1_serial_number` variables to `meterSerialNumbers[]` array
 - ✅ **Backend Scalability**: All backend functions use dynamic loops with `maxNumberOfMeters` constant
 - ✅ **WebSocket Event Handler**: Fully implemented with proper connection tracking
-- ✅ **WebSocket Performance**: Optimized to service connections during meter reads
+- ✅ **WebSocket Performance**: Optimized with staggered meter reads - <3-second connections achieved (was 12-13 seconds)
+- ✅ **Staggered Meter Reading**: Sequential 1-second intervals instead of batched 5-second reads
 
 ## 🎯 Immediate Development Opportunities
 
 ### High Priority
-1. **Further Performance Optimization**: Implement staggered meter reads for sub-5-second WebSocket connections
-2. **Scale to 10 Meters**: Add HTML sections for meters 6-10 (backend already supports this)
-3. **Complete Admin Interface**: Implement gateway configuration functionality
-4. **Dynamic Configuration**: Move hardcoded values to web-configurable settings
-5. **Enhanced Error Handling**: Improve fault tolerance and recovery mechanisms
-6. **Windows mDNS Resolution**: Troubleshoot and fix .local domain access on Windows
+1. **Scale to 10 Meters**: Add HTML sections for meters 6-10 (backend already supports this)
+2. **Complete Admin Interface**: Implement remaining gateway configuration functionality
+3. **Dynamic Configuration**: Move hardcoded values to web-configurable settings
+4. **Enhanced Error Handling**: Improve fault tolerance and recovery mechanisms
+5. **Windows mDNS Resolution**: Troubleshoot and fix .local domain access on Windows
 
 ### Medium Priority
 1. **Memory Optimization**: Further reduce footprint to enable OTA

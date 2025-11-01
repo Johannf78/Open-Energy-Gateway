@@ -12,6 +12,23 @@ String webpage_meters = R"(
   <div class="content">
 
   <div class="card">
+    <h2>Select Meter</h2>
+        <label for="meter_selector" style="display: block; margin-bottom: 8px; font-weight: 500;">Select Meter:</label>
+        <select id="meter_selector" style="padding: 8px 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px; min-width: 150px;">
+          <option value="1" id="meter_selector_option_1">Meter 1</option>
+          <option value="2" id="meter_selector_option_2">Meter 2</option>
+          <option value="3" id="meter_selector_option_3">Meter 3</option>
+          <option value="4" id="meter_selector_option_4">Meter 4</option>
+          <option value="5" id="meter_selector_option_5">Meter 5</option>
+          <option value="6" id="meter_selector_option_6">Meter 6</option>
+          <option value="7" id="meter_selector_option_7">Meter 7</option>
+          <option value="8" id="meter_selector_option_8">Meter 8</option>
+          <option value="9" id="meter_selector_option_9">Meter 9</option>
+          <option value="10" id="meter_selector_option_10">Meter 10</option>
+        </select>
+  </div>
+  
+  <div class="card">
     <h2>Meter: <span id="meter_number">METER_NUMBER</span></h2>
     <p><strong>Serial Number:</strong> <span id='meter_serial_number'></span></p>
     <p><strong>Meter Name:</strong> <span id='meter_name'></span></p>
@@ -159,6 +176,40 @@ String webpage_meters = R"(
   window.onload = function(event){
     init();
   }
+
+// Meter selector functionality
+document.addEventListener('DOMContentLoaded', function() {
+  
+  var maxNumberOfMeters = 10; // Maximum number of meters supported
+  //value will be replaced by the server
+  var numberOfMeters = numberOfMetersValue; // Actual number of connected meters
+  
+  const meterSelector = document.getElementById('meter_selector');
+  const urlParams = new URLSearchParams(window.location.search);
+  const currentMeter = urlParams.get('id') || '1';
+  
+  // Hide options beyond numberOfMeters (following same pattern as home/settings pages)
+  for (let i = 1; i <= maxNumberOfMeters; i++) {
+    const option = document.getElementById('meter_selector_option_' + i);
+    if (option) {
+      if (i > numberOfMeters) {
+        option.style.display = 'none';
+      } else {
+        option.style.display = '';
+      }
+    }
+  }
+  
+  // Set the dropdown to the current meter
+  meterSelector.value = currentMeter;
+  
+  // Handle meter selection change
+  meterSelector.addEventListener('change', function() {
+    const selectedMeter = this.value;
+    window.location.href = '/meters?id=' + selectedMeter;
+  });
+});
+
 </script>
 </html>
 

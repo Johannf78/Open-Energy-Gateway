@@ -2282,7 +2282,7 @@
 			(extension_offset 0.5)
 			(keep_text_aligned yes)
 		)
-		(gr_text "86.5"
+		(gr_text "86,5"
 			(at 147.13 120.85 0)
 			(layer "Dwgs.User")
 			(uuid "7141e1b2-5a69-46c2-b1f5-c56d355c6f0b")
@@ -2465,7 +2465,7 @@
 	(segment
 		(start 151.44 86.26)
 		(end 157.13 86.26)
-		(width 0.2)
+		(width 0.4)
 		(layer "B.Cu")
 		(net 4)
 		(uuid "0daf4bc5-a960-4295-a645-bb9e651943a7")
@@ -2473,7 +2473,7 @@
 	(segment
 		(start 176.16 109.17)
 		(end 178.5 109.17)
-		(width 0.2)
+		(width 0.4)
 		(layer "B.Cu")
 		(net 4)
 		(uuid "0f608f42-7f89-40ae-8361-8159c2f8ab25")
@@ -2481,7 +2481,7 @@
 	(segment
 		(start 176.16 105.29)
 		(end 176.16 109.17)
-		(width 0.2)
+		(width 0.4)
 		(layer "B.Cu")
 		(net 4)
 		(uuid "9e2b2de7-c70a-436c-a810-ae562101eca4")
@@ -2489,7 +2489,7 @@
 	(segment
 		(start 157.13 86.26)
 		(end 176.16 105.29)
-		(width 0.2)
+		(width 0.4)
 		(layer "B.Cu")
 		(net 4)
 		(uuid "a9ea0719-76bd-44d0-83f9-d4af0356550b")
@@ -2577,7 +2577,7 @@
 	(segment
 		(start 128.42 108.96)
 		(end 157.01 108.96)
-		(width 0.2)
+		(width 0.4)
 		(layer "B.Cu")
 		(net 7)
 		(uuid "9be11337-2c86-45a0-806c-ba76e79d7018")
@@ -2585,7 +2585,7 @@
 	(segment
 		(start 105.72 86.26)
 		(end 128.42 108.96)
-		(width 0.2)
+		(width 0.4)
 		(layer "B.Cu")
 		(net 7)
 		(uuid "df02d675-47cc-430d-a501-5ff8205c2a7d")

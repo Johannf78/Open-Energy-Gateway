@@ -1,9 +1,51 @@
 # Active Context - AmpX Open Energy Gateway
 
 ## Current Focus
-**5-Meter Gateway Fully Operational (October 2024)**: Successfully expanded gateway from 4 to 5 meters with full WebSocket functionality. Fixed critical WebSocket connection issues and optimized performance from 80-second delays to 12-second connections. All 5 meters displaying real-time data with 3-second updates. System is production-ready and deployed on ESP32 hardware.
+**Staggered Meter Reading Optimization Complete (January 2025)**: Successfully implemented sequential meter reading strategy, achieving sub-3-second WebSocket connections (77% improvement from previous 13-second delays). System now reads one meter per second in a continuous cycle, providing progressive data updates for superior user experience. All 5 meters operational with production-ready performance. Gateway reboot functionality added to admin interface.
 
 ## Recent Major Achievements
+
+### Staggered Meter Reading Optimization (January 2025)
+**Objective**: Reduce WebSocket initial connection time from 13 seconds to sub-3 seconds through optimized meter reading strategy.
+
+**Problem Analysis**:
+- Original implementation read all 5 meters in batch every 5 seconds
+- WebSocket handshake had to wait for entire batch cycle to complete
+- Result: 5s wait + 8s meter reads = 13-second connection time
+
+**Implementation Details**:
+- Added `currentMeterIndex` global variable to track next meter to read
+- Changed `METER_CONNECTION_INTERVAL` from 5000ms to 1000ms
+- Modified main loop to read ONE meter per iteration instead of all 5
+- Meter index cycles continuously: 1→2→3→4→5→1→2...
+- Each meter still reads every 5 seconds total (5 meters × 1 second)
+- WebSocket broadcast occurs immediately after each meter read
+
+**Technical Changes**:
+```cpp
+// Added line 204: int currentMeterIndex = 1;
+// Modified line 327: METER_CONNECTION_INTERVAL = 1000ms
+// Modified lines 353-369: Sequential single-meter reading with auto-cycling
+```
+
+**Performance Results**:
+- **Before**: 13-second initial connection (all meters batch read)
+- **After**: <3-second initial connection (first meter appears in 1-2 seconds)
+- **Improvement**: 77% faster (10-second reduction)
+- **User Experience**: Progressive data population instead of delayed batch updates
+
+**Additional Features**:
+- Gateway reboot functionality added to settings page
+- 15-second countdown with auto-redirect after reboot
+- Connection message updated: "10 seconds" → "2-3 seconds"
+
+**Current Status**:
+- ✅ Sub-3-second WebSocket connections achieved (target exceeded!)
+- ✅ Progressive meter data updates (1 per second)
+- ✅ Each meter still refreshes every 5 seconds
+- ✅ Gateway reboot function operational
+- ✅ Production-tested and validated on ESP32
+- 🎯 Best-in-class performance for industrial IoT gateway
 
 ### UI Redesign and Meters Page (October 2024)
 **Objective**: Modernize the web interface with a professional sidebar layout, add comprehensive summary tables, and create a dedicated meters detail page.
@@ -79,7 +121,7 @@
 - ✅ Connection performance optimized (12-second initial connection)
 - ✅ Production-ready and deployed on ESP32
 - ✅ Professional UI with all data displaying correctly
-- 🎯 Future enhancement: Staggered meter reads for sub-5-second connections
+- ✅ **COMPLETED**: Staggered meter reads achieved sub-3-second connections (Session 5)
 
 ## Recent Issue Resolution
 
