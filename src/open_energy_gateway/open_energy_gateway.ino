@@ -72,9 +72,10 @@ for ESP32-WROVER-IE-N8R8-DEVKITC-VE Espressif
 //Creates a web server and serves a webpage with all the meter readings and settings.
 #include <WebServer.h>
 
-//Search for Arduino Websockets, install the one by Markus Sattler
+//Search for Arduino Websockets, install the one WebSockets by Markus Sattler
 //Is the ESP Async WebServer@3.8.1 not maybe a better option - JF
 #include <WebSocketsServer.h>
+//Tested on version 2.7.1
 
 //Search for ArduinoJson, install the one by Benoit Blanchon
 #include <ArduinoJson.h>
