@@ -1,6 +1,6 @@
 //API to post data to the AmpX Portal and EmonCMS
 
-//Post data to the AmpX Portal
+//Post data to the AmpX Portal API v2
 void postToAmpXPortal2(int meterNumber = 1) {
     debugln("postToAmpXPortal2 function called - Docker API");
   
@@ -26,19 +26,28 @@ void postToAmpXPortal2(int meterNumber = 1) {
     timestamp += String(secs) + "Z";
     */
     
-    // Determine serial number for this meter
+    // Determine serial number for this meter (API v2 requires non-empty serial_number)
     String serialNumber = "";
-    /*
-    if (meterNumber == 1) serialNumber = m1_serial_number;
-    else if (meterNumber == 2) serialNumber = m2_serial_number;
-    else if (meterNumber == 3) serialNumber = m3_serial_number;
-    else if (meterNumber == 4) serialNumber = m4_serial_number;
-    else serialNumber = "";
-    */
-    if (meterNumber >= 1 && meterNumber <= maxNumberOfMeters ) {
+    if (meterNumber >= 1 && meterNumber <= maxNumberOfMeters) {
       serialNumber = meterSerialNumbers[meterNumber - 1];
     }
-    
+    serialNumber.trim();
+
+    if (serialNumber.length() == 0) {
+      JsonVariant serialVar = JsonDoc[meterPrefix + "serial_number"];
+      if (!serialVar.isNull()) {
+        serialNumber = serialVar.as<String>();
+        serialNumber.trim();
+      }
+    }
+
+    // Numeric fallback when Modbus has not filled a serial yet (meter 1 -> "10000001", meter 2 -> "10000002", ...)
+    const unsigned long kFallbackSerialBase = 10000000UL;
+    if (serialNumber.length() == 0) {
+      serialNumber = String(kFallbackSerialBase + (unsigned long) meterNumber);
+      debugln("[WARN] Meter serial not read; using fallback serial_number: " + serialNumber);
+    }
+
     // Start building the JSON manually for Docker API format
     String httpRequestData = "{";
     httpRequestData += "\"gateway_id\":\"" + String(GATEWAY_ID) + "\",";
@@ -53,15 +62,14 @@ void postToAmpXPortal2(int meterNumber = 1) {
       String key = kv.key().c_str();
       // Only include readings for this meter (starts with correct prefix)
       if (key.startsWith(meterPrefix)) {
-        String value = kv.value().as<String>();
-        // If this is a name field and value is empty, set default
-        if (key.endsWith("_name") && value.length() == 0) {
-          value = "New meter";
+        if (key.endsWith("_name") || key.endsWith("_serial_number")) {
+          continue;
         }
+        String value = kv.value().as<String>();
         if (!firstValue) {
           httpRequestData += ",";
         }
-        httpRequestData += "\"" + key + "\":" + (key.endsWith("_name") ? ("\"" + value + "\"") : value);
+        httpRequestData += "\"" + key + "\":" + value;
         firstValue = false;
       }
     }

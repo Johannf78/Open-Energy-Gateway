@@ -2193,6 +2193,19 @@
 		(layer "Edge.Cuts")
 		(uuid "d9fe36d6-e2bc-4802-bfef-1f09d08adb01")
 	)
+	(gr_text "AmpX Energy Gateway V 1.1"
+		(at 162.534 85.799 0)
+		(layer "F.Cu")
+		(uuid "b64734c6-f1d0-4749-9a6f-a27304a686a9")
+		(effects
+			(font
+				(size 1.2 1.2)
+				(thickness 0.3)
+				(bold yes)
+			)
+			(justify left bottom)
+		)
+	)
 	(gr_text "AmpX Open Energy Gateway"
 		(at 115 88.5 90)
 		(layer "B.SilkS")

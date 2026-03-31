@@ -58,6 +58,7 @@ void setup() {
 
 
 void loop() {
+  
   digitalWrite(LED_1_POWER, HIGH);
   delay(200);
   digitalWrite(LED_2_METER, HIGH);

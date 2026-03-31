@@ -29,9 +29,13 @@ void initNTP() {
       debugln(" SUCCESS!");
       debug("Current time: ");
       debugln(ctime(&now));
+      //If we are able to connect to a time server, then the internet is working.
+      digitalWrite(LED_4_INTERNET, HIGH);
     } else {
       debugln(" TIMEOUT!");
       debugln("Failed to sync with NTP servers. Using system time.");
+      //If we are not able to connect to a time server, then the internet is probably not working.
+      digitalWrite(LED_4_INTERNET, LOW);
     }
   }
   

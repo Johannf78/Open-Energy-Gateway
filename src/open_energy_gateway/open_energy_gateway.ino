@@ -128,7 +128,9 @@ int GATEWAY_ID = DEFAULT_GATEWAY_ID;
 #if MODBUS_TYPE == MODBUS_TYPE_RS485
   
   //Custom written AmpX Modbus library for RS485
-  //Saved in libary folder. On my pc: D:\OneDrive\JF Data\UserData\Documents\Arduino\libraries\ampx_modbus_rs485\src\ampx_modbus_rs485.cpp  
+  //Saved in libary folder. On my pc: 
+  //On Windows: D:\OneDrive\JF Data\UserData\Documents\Arduino\libraries\ampx_modbus_rs485\src\ampx_modbus_rs485.cpp  
+  //On Linux: /home/username/Arduino/libraries/ampx_modbus_tcpip-main/src
   #include <ampx_modbus_rs485.h>
 
   //1.Define the RS485 control pins
@@ -229,12 +231,12 @@ const char* api_key = "c0526f06893d1063800d3bb966927711"; //your_API_KEY
 
 //AmpX Energy Portal, Remote energy logging
 const char* ampxportal_server_local = "http://192.168.2.32:8080/api/v2/";
-const char* ampxportal_server_live = "https://portal.ampx.app/api/v2/";
+const char* ampxportal_server_live = "https://ampx.app/api/v2/";
 //"https://ampx.app/api/v2/"; //old "https://portal.ampx.app/api/v2/"; //old "https://app.ampx.co/api/v2/";
 
 
 // Which API to use local or live? - set to true for local development, false for live
-#define USE_LOCAL_SERVER true
+#define USE_LOCAL_SERVER false
 
 
 //Function prototypes, it needs to be here because it is used in the setup function.
@@ -264,11 +266,11 @@ void setup() {
   //Indicate that the power is on with a LED
   digitalWrite(LED_1_POWER, HIGH);
 
-  Serial.begin(9600); // Debug serial
+  Serial.begin(115200); // Debug serial
   while (!Serial) {
     delay(10); // Wait for serial port to become ready.
   }
-  delay(3200); //Wait some more for the serial port to become ready...
+  delay(1200); //Wait some more for the serial port to become ready...
                 //1200 Ok, but increase if debugging and resetting by cycling the power.
   debugln("Serial port ready. Begin setup...");
   
@@ -393,7 +395,7 @@ void loop() {
     //Post meter data to remote server
     for (int i = 1; i <= numberOfMeters; i++) {
       //postToEmonCMS(i);
-      //postToAmpXPortal2(i);
+      postToAmpXPortal2(i);
     }
     counter2 = now;
   }
