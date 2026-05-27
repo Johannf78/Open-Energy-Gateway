@@ -22,7 +22,7 @@ void setup() {
   pinMode(LED_4_INTERNET, OUTPUT);
   pinMode(LED_5_SERVER, OUTPUT);
 
-  Serial.begin(9600); // Initialize serial communication
+  Serial.begin(115200); // Initialize serial communication
   delay(2000); //Wait for the serial port te become available.
   Serial.println("");
   Serial.println("");

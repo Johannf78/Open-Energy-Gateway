@@ -62,9 +62,13 @@ A comprehensive ESP32-based energy monitoring gateway that communicates with Mea
 
 ### Prerequisites
 - [Arduino IDE](https://www.arduino.cc/en/software) (recommended)
+- In Arduino IDE, add this under `File -> Preferences -> Additional Board Manager URLs`:  
+  `https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json`
+  Then install `esp32` from `Tools -> Board -> Boards Manager`.
 - ESP32 Board Package for Arduino IDE
+- USB-to-UART driver for your ESP32 board (CP210x VCP driver): [Silicon Labs CP210x USB to UART Bridge VCP Drivers](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers)
 - Required Arduino libraries (see Dependencies section)
-- Optional: [PlatformIO](https://platformio.org/) (alternative IDE)
+
 
 ### Quick Start
 
@@ -87,7 +91,14 @@ A comprehensive ESP32-based energy monitoring gateway that communicates with Mea
    #define MODBUS_TYPE MODBUS_TYPE_TCPIP  // For TCP/IP version
    ```
 
-4. **Upload to ESP32**
+4. **Install USB Driver (Required)**
+   - Most ESP32 development boards use a CP210x USB-to-UART bridge chip
+   - Install the CP210x VCP driver from Silicon Labs:  
+     [https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers)
+   - On the Silicon Labs download list (Windows), select **CP210x Windows Drivers**
+   - Reconnect the board after driver installation so the serial COM port is detected
+
+5. **Upload to ESP32**
    - Connect your ESP32 via USB
    - Select the correct board and port
    - Compile and upload the code

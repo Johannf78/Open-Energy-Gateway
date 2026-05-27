@@ -4,7 +4,7 @@
 #define MODBUS_TYPE_TCPIP 2
 //Set the required Modbus type variant here to either RS485 or TCPIP
 //In other words, change this depending on if the board is for RS485 or for TCPIP
-#define MODBUS_TYPE MODBUS_TYPE_TCPIP
+#define MODBUS_TYPE MODBUS_TYPE_RS485
 
 //NB, Also remember to change the API server from local to live if needed...
 
