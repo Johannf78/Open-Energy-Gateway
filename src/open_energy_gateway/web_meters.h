@@ -12,6 +12,14 @@ String webpage_meters = R"(
   <div class="content">
 
   <div class="card">
+    <p>Connection status: <span id="connection_status" style="color: gray;">Connecting...</span></p>
+    <p>Last update: <span id="last_update">--:--:--</span></p>
+    <br>
+    <p>Values updates every 5 seconds. Initial connection typically takes up to 30 seconds.</p>  
+  </div>
+
+
+  <div class="card">
     <h2>Select Meter</h2>
         <label for="meter_selector" style="display: block; margin-bottom: 8px; font-weight: 500;">Select Meter:</label>
         <select id="meter_selector" style="padding: 8px 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px; min-width: 150px;">
@@ -34,8 +42,7 @@ String webpage_meters = R"(
     <p><strong>Meter Name:</strong> <span id='meter_name'></span></p>
   </div>
 
-  <div class="card">
-    
+  <div class="card">    
   <table>
     <tr>
       <th>Entity</th>
@@ -75,12 +82,6 @@ String webpage_meters = R"(
     </table>
   </div>
   
-  <div class="card">
-    <p>Connection status: <span id="connection_status" style="color: gray;">Connecting...</span></p>
-    <p>Last update: <span id="last_update">--:--:--</span></p>
-    <br>
-    <p>Values updates every 3 seconds.</p>  
-  </div>
 
     </div> <!-- End of content -->
   </main>

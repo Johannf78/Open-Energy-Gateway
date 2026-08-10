@@ -13,7 +13,13 @@ String webpage_home = R"(
   <!-- Content -->
   <div class="content">
 
-  
+  <div class="card">
+    <p>Connection status: <span id="connection_status" style="color: gray;">Connecting...</span></p>
+    <p>Last update: <span id="last_update">--:--:--</span></p>
+    <br>
+    <p>Values updates every 5 seconds. Initial connection typically takes up to 30 seconds.</p>  
+  </div>
+
 
   <div class="card">
   <h2>Meter List</h2>
@@ -256,13 +262,6 @@ String webpage_home = R"(
       <td id='m10_active_power_tot'>0.00 KW</td>
     </tr>
     </table>
-  </div>
-
-  <div class="card">
-    <p>Connection status: <span id="connection_status" style="color: gray;">Connecting...</span></p>
-    <p>Last update: <span id="last_update">--:--:--</span></p>
-    <br>
-    <p>Values updates every 5 seconds.</p>  
   </div>
 
 

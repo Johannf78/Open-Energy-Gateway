@@ -12,7 +12,13 @@ String webpage_settings = R"(
   <!-- Content -->
   <div class="content">
 
-
+  <div class="card">
+    <p>Connection status: <span id="connection_status" style="color: gray;">Connecting...</span></p>
+    <p>Last update: <span id="last_update">--:--:--</span></p>
+    <br>
+    <p>Values updates every 5 seconds. Initial connection typically takes up to 30 seconds.</p>  
+  </div>
+  
   <div class="card">
     <h2>Information/Status</h2>
     <ul>
@@ -91,34 +97,8 @@ String webpage_settings = R"(
       <input type='submit' value='update' style="margin-top: 10px;">
     </form>
   </div>
-  
-  <div class="card">
-    <h2>Gateway Reboot</h2>
-    <form action='reboot_gateway' method='post'>
-      <p>
-      <label>Click the button to reboot the gateway:</label>
-      <input type='submit' value='Reboot'></p>
-    </form>
-  </div>
-  
-  <div class="card">
-  <h2>Meter Firmware Update</h2>
-    <form action='update' method='post'>
-      <p>
-      <label>Click the button to download and update the device firmware:</label>
-      <input type='submit' value='Update'></p>
-    </form>
-  </div>
-  
-  <div class="card">
-    <p>Connection status: <span id="connection_status" style="color: gray;">Connecting...</span></p>
-    <p>Last update: <span id="last_update">--:--:--</span></p>
-    <br>
-    <p>Values updates every 3 seconds.</p>  
-  </div>
 
-
-
+  
   </div> <!-- End of content -->
   </main>
 </div> <!-- End of app-container -->

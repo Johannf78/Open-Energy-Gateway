@@ -56,6 +56,7 @@ void setupMeterRegisters() {
 
         } else {
           Serial.println("Error reading meter: " + String(i));
+          break;  // no more meters after first gap, exit the loop
         }
       } 
   

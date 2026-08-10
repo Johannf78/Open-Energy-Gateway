@@ -147,12 +147,35 @@ Meters are automatically discovered during startup. The system supports:
 - **Stop Bits**: 1
 
 ### API Configuration
-The system supports dual API endpoints (configurable in code):
+The system supports dual API endpoints (configurable in `open_energy_gateway.ino`):
 ```cpp
-const char* ampxportal_server_local = "http://192.168.2.32:8080/api/v2/";
-const char* ampxportal_server_live = "https://portal.ampx.app/api/v2/";
+// Local: LAN IP of the PC running XAMPP (port 80). Update when the PC IP changes.
+const char* ampxportal_server_local = "http://192.168.2.120/api/v2/";
+const char* ampxportal_server_live = "https://ampx.app/api/v2/";
+const char* ampxportal_api_key = "...";  // must match AMPX_API_KEY in api/config/config.php
 #define USE_LOCAL_SERVER true  // Set to false for production
 ```
+
+Every upload sends header `X-AmpX-Api-Key` (firmware **1.0.3+**). Full API docs: `ampx.app/api/README.md`.
+
+**Breaking changes:** If the portal/API contract changes so older flashed gateways fail, bump `FIRMWARE_VERSION` in the same change and publish OTA before (or with) the live API cutover. The API key requirement is one such break (pre-1.0.3 → 401).
+
+**Local development stack (verified July–August 2026):**
+- API: XAMPP at `D:\xampp\htdocs\ampx.app\api\` — `POST /api/v2/` with `X-AmpX-Api-Key` (see that folder’s `README.md`)
+- Portal UI: http://ampx-app.local/ (WordPress vhost; not the public Cloudflare `ampx.app` host)
+- InfluxDB (current): `influxdb2.ampx.app` via `api/config/config.php`; success = HTTP **201**; missing/wrong key = **401**
+- InfluxDB (target): managed **Cloud Serverless** org AmpX / Energy Gateway — host `https://eu-central-1-1.aws.cloud2.influxdata.com` (AWS Frankfurt); API v3 cutover pending — see `ampx.app/api/README.md`
+- Postman: `http://ampx-app.local/api/v2/` or `http://127.0.0.1/api/v2/` — enable header `X-AmpX-Api-Key`
+- ESP must reach the PC on TCP **80**; Windows Wi‑Fi profile should be **Private** with Apache firewall allow rules
+- Do not use port **8080** unless a separate Docker API is running
+
+**Live stack (verified July 2026; API key gate pending Hetzner deploy):**
+- API: `https://ampx.app/api/v2/` — set `#define USE_LOCAL_SERVER false`
+- When enabling the key on live: deploy `api/config/config.php` + `v2/index.php` and flash/OTA gateways with matching `ampxportal_api_key` together
+- Portal UI: https://ampx.app/ → Meters → gateway → View Data
+- WordPress `wp-config.php` must define `AMPX_INFLUXDB_URL`, `AMPX_INFLUXDB_TOKEN`, `AMPX_INFLUXDB_ORG`, `AMPX_INFLUXDB_BUCKET` (portal plugin requires them)
+- After editing live `wp-config.php` on Hetzner: flush PHP OPcache or constants may appear missing
+- Create/assign the gateway in WP Admin; Influx data alone does not register it in the portal list
 
 ## 💻 Usage
 
@@ -274,10 +297,63 @@ The project includes infrastructure for future SPIFFS implementation:
 - Check IP address in serial monitor
 - Ensure port 80 is not blocked
 
+**Web UI Stuck on “Connecting…” (WebSocket)**
+
+The page is served over HTTP (port 80). **Connection status: Connecting…** means the browser is waiting for the WebSocket on **port 81** (`ws://hostname:81/`). The HTTP page can load while the WebSocket is still down.
+
+**Cause:** Modbus meter reads are blocking. If `webSocket.loop()` and `server.handleClient()` are not called around each meter read, the ESP32 cannot complete WebSocket handshakes until that work finishes — the UI can stay on Connecting for a long time (sometimes ~1–2 minutes).
+
+**Required pattern** in the main loop (around each `handlePowerMeter()` call):
+```cpp
+server.handleClient();
+webSocket.loop();
+handlePowerMeter(currentMeterIndex);
+handleWebSocket();
+server.handleClient();
+webSocket.loop();
+```
+
+Also keep `server.handleClient()` / `webSocket.loop()` at the end of `loop()`.
+
+**Boot delay (separate from WebSocket):** Before `loop()` runs, `setup()` may wait on NTP (up to ~20 seconds) and meter discovery (each missing Modbus address can take ~1 second). The web server does not handle clients until `setup()` finishes.
+
+**Cannot Connect to Setup Hotspot (Windows)**
+
+On first boot (or when no WiFi credentials are saved), the gateway creates an open access point named `energy-gateway-{GATEWAY_ID}` (for example `energy-gateway-100001`). Connect to this network and open **http://192.168.4.1** to configure WiFi.
+
+**Problem:** Windows shows as connected to the hotspot, but the PC does not receive an IP address (often `169.254.x.x` instead of `192.168.4.x`), so the setup page cannot be opened. The Windows Settings UI may still show “IP assignment: Automatic (DHCP)” even when DHCP is not actually active on the adapter.
+
+**Solution:**
+1. Confirm in Command Prompt with `ipconfig /all` that the Wi‑Fi adapter shows **DHCP Enabled: Yes**.
+2. If it shows **No**, enable DHCP from an elevated Command Prompt or PowerShell:
+   ```
+   netsh interface ip set address name="WiFi 3" dhcp
+   netsh interface ip set dns name="WiFi 3" dhcp
+   ```
+   Replace `WiFi 3` with your adapter name from `ipconfig` if different.
+3. Disconnect and reconnect to the gateway hotspot, then check that you have an address such as `192.168.4.2` and gateway `192.168.4.1`.
+4. Open **http://192.168.4.1** in a browser.
+
+**Workaround:** If DHCP still fails, set a temporary static IP on the Wi‑Fi adapter: IP `192.168.4.10`, subnet mask `255.255.255.0`, gateway `192.168.4.1`.
+
 **API Upload Failures**
-- Verify internet connectivity
-- Check API endpoint configuration
-- Monitor serial output for error messages
+- Serial success looks like: `HTTP Response Code: 201` and `Data stored successfully`
+- HTTP **401**: `ampxportal_api_key` must match `AMPX_API_KEY` in `api/config/config.php` (local already enforces this)
+- `connection refused` (-1) to the PC IP: check Windows Firewall / Wi‑Fi **Private** profile; Apache must accept LAN inbound on port 80 (not only localhost)
+- Confirm `ampxportal_server_local` matches the PC’s current LAN IP and uses `/api/v2/` on port 80
+- Confirm InfluxDB is healthy (`https://influxdb2.ampx.app/health`) — API returns 500 if storage fails
+- View data (local): http://ampx-app.local/ → Meters → gateway → View Data
+- View data (live): https://ampx.app/ → Meters → gateway → View Data (needs WP gateway assignment + `AMPX_INFLUXDB_*` in live `wp-config.php`)
+- Misleading firmware message: “No internet connection” on connection-refused may mean LAN blocked, not WAN down
+
+**Live portal “critical error” on Meters**
+- Check Debug Log Manager log (path in `WP_DEBUG_LOG`), not only Apache `www_logs`
+- Common cause: missing `AMPX_INFLUXDB_*` constants in live `wp-config.php`
+- If constants were just added and error persists: flush PHP OPcache
+
+**NTP `TIMEOUT!` on boot**
+- `initNTP()` waits up to a max (currently ~15s) and exits early on success; increase the timeout if sync still fails
+- Check router/firewall allows outbound NTP (UDP/123)
 
 ### Status LED Indicators
 - **LED 1 (Power - Pin 12)**: System power status

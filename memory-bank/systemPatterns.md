@@ -56,17 +56,71 @@ Global `DynamicJsonDocument` serves as central data store:
 ## Communication Patterns
 
 ### WebSocket Real-Time Updates
-- 3-second interval meter reading
-- Immediate JSON broadcast to connected clients
+- Staggered meter reading (one meter per ~1s interval) with immediate JSON broadcast
 - No polling required from web interface
 - Comprehensive error handling with automatic reconnection
 - Connection status indicators for user feedback
 - All dynamic content updates via WebSocket (no server-side string replacement)
 
+### Non-Blocking Network Servicing (Critical)
+Blocking Modbus (`modbus_test_connection`, `handlePowerMeter`) prevents WebSocket handshakes if the network stack is not serviced. **Required pattern** in the meter-read path:
+
+```cpp
+server.handleClient();
+webSocket.loop();
+handlePowerMeter(currentMeterIndex);
+handleWebSocket();   // broadcast JSON
+server.handleClient();
+webSocket.loop();
+```
+
+Also keep `server.handleClient()` / `webSocket.loop()` at the end of `loop()`. UI “Connecting…” = waiting on port 81; HTTP page load does not imply WebSocket is up.
+
+**Boot note**: `setup()` does not service clients until it returns — NTP sync and full meter discovery can delay first connection.
+
+### Breaking-change versioning
+- If a change makes previously flashed gateways fail against the portal/API, bump `FIRMWARE_VERSION` in the same change (and publish matching `version.json` for OTA).
+- API key auth (Aug 2026) was such a break: pre-1.0.3 devices get **401**. Allowed then only because no field fleet existed.
+
+### Time-series hosting pattern (August 2026)
+- **Production today**: InfluxDB 2 at `influxdb2.ampx.app`; portal uses Flux
+- **Target**: Managed **InfluxDB Cloud Serverless** (AmpX / Energy Gateway / AWS Frankfurt) — SQL reads, v2-compatible writes; AmpX app stays on Hetzner
+- **Avoid**: Self-hosting InfluxDB on the Hetzner WordPress host for production reliability
+- **Future AmpX API v3**: New endpoint writing to Cloud Serverless; keep v2 until cutover; firmware URL bump is a versioned change
+
 ### API Upload Pattern
-- 30-second interval for remote server uploads
-- Separate JSON formatting for API requirements
-- Configurable local vs live server endpoints
+- 30-second interval for remote server uploads (`postToAmpXPortal2`)
+- JSON: `gateway_id`, `meter_id`, `serial_number`, `timestamp`, `values{mN_*}`
+- Auth: HTTP header `X-AmpX-Api-Key` = sketch `ampxportal_api_key` = `AMPX_API_KEY` in `api/config/config.php` (shared fleet secret; `hash_equals` on server)
+- Missing/wrong key → **401** before validation/Influx; empty server config → **500**
+- Success = HTTP **201**; Influx tags: `gateway`, `meter`, `serial_number`; measurement `meter_readings_detailed`
+- Configurable local vs live via `USE_LOCAL_SERVER` / `ampxportal_server_local` | `_live`
+- Local = XAMPP API on LAN IP port 80; live = `https://ampx.app/api/v2/` (key gate on live only after Hetzner deploy)
+- Portal reads Influx via plugin (`class-ampx-portal-influxdb-detailed.php`); UI at `/meters/?gateway_id=`
+
+### HTTP OTA Pattern (August 2026)
+- Admin HTML must **not** call outbound `HTTPClient` in web handlers — that caused `ERR_CONNECTION_RESET` / hangs
+- Flow: `/admin` renders immediately → FreeRTOS task on core 0 fetches `version.json` into cache → browser polls `/ota_status` (cache only, never blocks WebServer)
+- Equal → “Up to date”, Update button **disabled**; unequal → “Update available”, button enabled
+- Manifest fetch fail → “Unavailable”, button stays enabled (manual attempt allowed)
+- `POST /update` re-checks manifest; refuses with “Already on latest” if versions match
+- Download URL from manifest `url` (local mode forces `firmwareURL`); flash via `HTTPUpdate`
+- Host both `ampx_open_energy_gateway.bin` and `version.json` under `/firmware/`
+- ArduinoOTA not used; first flash via USB with dual OTA partitions, then field updates via Admin
+
+### Portal Influx Config Pattern (WordPress)
+- Plugin never hardcodes Influx credentials; `AMPX_Portal_Config` requires `AMPX_INFLUXDB_*` constants in `wp-config.php`
+- Meters page fails hard (or admin error box) if those constants are missing
+- On PHP 8.4 hosts: always pass `$escape` to `str_getcsv`; skip Influx `#` annotation CSV lines
+- After deploying `wp-config.php` on OPcache hosts (Hetzner): flush OPcache before testing
+- WP gateway table is separate from Influx: assign gateway to user in admin before portal UI shows it
+
+### Portal Meter Data Pattern (August 2026)
+- **Query window**: `range(start: -30d)` (`READINGS_RANGE_DAYS = 30`)
+- **Table**: newest `READINGS_DISPLAY_LIMIT` (1000) via Flux `limit(n: 1000)`; UI must state both caps
+- **Export CSV**: must not scrape the DOM — use `admin_post_ampx_export_meter_csv` with nonce + gateway ACL; Influx fetch with `$limit = null` (same 30d window, no row cap)
+- **Wide tables**: theme `.meter-data-container .table-wrapper` needs `max-height` + `overflow-x: scroll` so the horizontal scrollbar stays in the viewport (bar at end of full table height is invisible)
+- Avoid `.table-wrapper { overflow: hidden }` for meter readings — it clips columns with no scroll
 
 ### Status LED Feedback Pattern
 ```cpp

@@ -93,6 +93,7 @@ void postToAmpXPortal2(int meterNumber = 1) {
       HTTPClient http;   
       http.begin(url);
       http.addHeader("Content-Type", "application/json");
+      http.addHeader("X-AmpX-Api-Key", ampxportal_api_key);
     
       // Send HTTP POST request
       int httpResponseCode = http.POST(httpRequestData);

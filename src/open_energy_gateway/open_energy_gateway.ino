@@ -1,12 +1,28 @@
+//Before compiling....
+//1. Make sure the correct connection type is set, either RS485 or TCPIP 
+//2. Set the flash size correctly to 8MB
+//3. Partition scheme: custom (partitions.csv — dual OTA app slots). Alternative: "8M with spiffs (3MB APP/1.5MB SPIFFS)"
+//4. Set the API to use the local server or the remote server. #define USE_LOCAL_SERVER true or false
+//5. Set debug to enabled or disabled. Disable for live to increase speed, but one also lose the debug info.
+//6. Select the correct COM port
+//7. OTA: Admin pulls https://ampx.app/firmware/ampx_open_energy_gateway.bin (first flash via USB with OTA partitions)
+
 //There will be two variants of this gateway, one working with Modbus over RS485 and the other
 //working with mobus over TCP/IP, this is setup here and used depeding on what is needed.
 #define MODBUS_TYPE_RS485 1
 #define MODBUS_TYPE_TCPIP 2
 //Set the required Modbus type variant here to either RS485 or TCPIP
 //In other words, change this depending on if the board is for RS485 or for TCPIP
-#define MODBUS_TYPE MODBUS_TYPE_RS485
+//For TCPIP use MODBUS_TYPE_TCPIP, for RS485 use MODBUS_TYPE_RS485
+#define MODBUS_TYPE MODBUS_TYPE_TCPIP
 
 //NB, Also remember to change the API server from local to live if needed...
+
+//Defining custom partiotions.
+//Custom partitions is defined in the file partitions.csv
+//This file can be edited using the online tool: https://thelastoutpostworkshop.github.io/ESP32PartitionBuilder/
+//https://www.youtube.com/watch?v=EuHxodrye6E
+
 
 /*
 The following .ino files should be in the same directory as this main .ino file (AmpX-Energy-Gateway.ino).
@@ -31,16 +47,17 @@ Then install the board manager.
 Now select the port and then 
 Select "node32s" under the boards.
 
-//OTA Update has been disabled to reduce file size.
-Go to Tools > Partition Scheme and select "Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)" or "Huge APP (3MB No OTA/1MB SPIFFS)" if you don't need OTA.
+HTTP OTA (Admin): downloads ampx_open_energy_gateway.bin from ampx.app/firmware/
+Requires dual-app OTA partitions (this sketch uses custom partitions.csv on 8MB flash).
 
-ESP Board to be selected in Arduino IDE: 
+ESP Board to be selected in Arduino IDE:
 for ESP32-WROOM-32U - DUBEUYEW
-  node32S           
-  Partition: 4MB
-for ESP32-WROVER-IE-N8R8-DEVKITC-VE Espressif
-  ESP32 Dev module
-  Partition: 8MB
+  node32S
+  Partition: 4MB (OTA not supported in this pass)
+for ESP32-WROVER-IE-N8R8-DEVKITC-VE Espressif / 8MB modules
+  ESP32 Dev Module
+  Flash Size: 8MB
+  Partition: custom (partitions.csv) or "8M with spiffs (3MB APP/1.5MB SPIFFS)"
 */
 //Required to communicate with the RS485 Controller.
 #include <HardwareSerial.h>
@@ -57,9 +74,13 @@ for ESP32-WROVER-IE-N8R8-DEVKITC-VE Espressif
 //https://github.com/espressif/arduino-esp32/tree/master/libraries/ESPmDNS
 #include <ESPmDNS.h>
 
-//Arduion Over the Air update functionality, commented out for now to try and save space
-//#include <ArduinoOTA.h>
-//#include <Update.h>
+// HTTP pull OTA (Admin). ArduinoOTA intentionally disabled to save flash.
+#include <Update.h>
+#include <HTTPUpdate.h>
+#include <WiFiClientSecure.h>
+
+// Bump when publishing a new .bin to ampx.app/firmware/
+#define FIRMWARE_VERSION "1.0.3"
 
 //Time library for NTP synchronization
 #include <time.h>
@@ -216,9 +237,6 @@ DynamicJsonDocument JsonDoc(2048);        //DynamicJsonDocument allocates memory
 //JSON document for meter register definitions
 JsonDocument MeterRegisterDefs;
 
-
-//Firmware URL to use to update the firmware via OTA
-const char* firmwareURL = "https://ampx.co/downloads/ampx_open_energy_gateway.ino.bin";
 bool readSerial = false;
 bool onBoot = true; //this is used to check if the device the first time it starts up, used in the loop to send read and send data immediately.
 
@@ -230,15 +248,49 @@ const char* emoncms_server = "http://emoncms.org";
 const char* api_key = "c0526f06893d1063800d3bb966927711"; //your_API_KEY
 */
 
-//AmpX Energy Portal, Remote energy logging
-const char* ampxportal_server_local = "http://192.168.2.32:8080/api/v2/";
+//AmpX Energy Portal, Remote energy logging. Use IP address of the server if using local server(no dns server).
+// LAN IP of PC running XAMPP (port 80). Do not use :8080 unless Docker API is running.
+// Note: https://ampx.app is the public site; local vhost is ampx-app.local (ESP should use IP).
+const char* ampxportal_server_local = "http://192.168.2.120/api/v2/";
 const char* ampxportal_server_live = "https://ampx.app/api/v2/";
 //"https://ampx.app/api/v2/"; //old "https://portal.ampx.app/api/v2/"; //old "https://app.ampx.co/api/v2/";
 
+// Shared secret for AmpX Portal API v2 (header X-AmpX-Api-Key). Must match AMPX_API_KEY in api/config/config.php.
+const char* ampxportal_api_key = "b9e96dfb8f9c722b917f1c536ec67c373e5644eee75f267dce94b7294f0274b7";
 
 // Which API to use local or live? - set to true for local development, false for live
 #define USE_LOCAL_SERVER false
 
+// Firmware OTA hosting (same local/live switch as API)
+#if USE_LOCAL_SERVER
+const char* firmwareURL = "http://192.168.2.120/firmware/ampx_open_energy_gateway.bin";
+const char* firmwareManifestURL = "http://192.168.2.120/firmware/version.json";
+#else
+const char* firmwareURL = "https://ampx.app/firmware/ampx_open_energy_gateway.bin";
+const char* firmwareManifestURL = "https://ampx.app/firmware/version.json";
+#endif
+
+struct FirmwareManifest {
+  bool ok = false;
+  String version;
+  String url;
+  String error;
+};
+
+// Cached OTA status — filled in loop(), never via HTTPClient inside a WebServer handler.
+struct OtaStatusCache {
+  bool ready = false;
+  bool ok = false;
+  String available = "Checking…";
+  String status = "Checking…";
+  bool upToDate = false;
+  bool updateAvailable = false;
+  String error = "";
+};
+OtaStatusCache otaStatusCache;
+volatile bool otaManifestCheckRequested = true;
+unsigned long otaManifestLastCheckMs = 0;
+TaskHandle_t otaManifestTaskHandle = NULL;
 
 //Function prototypes, it needs to be here because it is used in the setup function.
 //one needs to add a forward declaration for this function as well, as it is defined in a seperate .ino file:functions.ino
@@ -253,8 +305,19 @@ String getCurrentTimestamp();
 void loadGatewayId();
 void saveGatewayId(int newGatewayId);
 void handleUpdateGatewayId();
+void handleUpdate();
+void handleAdmin();
+void handleOtaStatus();
 void initmDNS();
-
+void initOTA();
+bool doOTAUpdate();
+void saveOtaStatus(const String& status);
+String getOtaStatusText();
+String getOtaTimeText();
+bool fetchFirmwareManifest(FirmwareManifest& out);
+void serviceOtaManifestCheck();
+void requestOtaManifestCheck();
+void otaManifestTask(void* param);
 void setup() {
   // initialize LED status pins as outputs.
   pinMode(LED_1_POWER, OUTPUT);
@@ -314,6 +377,16 @@ void setup() {
   //Detect number of meters and set global variable, numberOfMeters.
   detectNumberOfMeters();
 
+  // OTA manifest checks on a side task so HTTPClient never blocks the web server loop.
+  xTaskCreatePinnedToCore(
+      otaManifestTask,
+      "otaManifest",
+      8192,
+      NULL,
+      1,
+      &otaManifestTaskHandle,
+      0);
+
   //Do Over the air update for firmware updates
   //initOTA();
 }
@@ -357,12 +430,20 @@ void loop() {
       if (numberOfMeters > 0) {
         debug("Reading Meter ");
         debugln(currentMeterIndex);
+
+        //Handle webserver requests from client, this is important to do here to ensure the web page is updated immediately.
+        server.handleClient();
+        webSocket.loop();
         
         //JF: New fuction to handle both RS485 and TCPIP
         handlePowerMeter(currentMeterIndex);
         
         // Broadcast updated data immediately after reading this meter
         handleWebSocket();
+
+        //Handle webserver requests from client again, this is important to do here to ensure the web page is updated immediately.
+        server.handleClient();
+        webSocket.loop();
         
         // Move to next meter (cycle: 1→2→3→4→5→1...)
         currentMeterIndex++;

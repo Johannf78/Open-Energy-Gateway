@@ -107,10 +107,52 @@ JsonDocument MeterRegisterDefs;           // Register definitions
 
 ### API Endpoints
 ```cpp
-const char* ampxportal_server_local = "http://192.168.2.32:8080/api/v2/";
-const char* ampxportal_server_live = "https://portal.ampx.app/api/v2/";
+// Local: PC LAN IP + XAMPP on port 80 (update IP when DHCP changes)
+const char* ampxportal_server_local = "http://192.168.2.120/api/v2/";
+const char* ampxportal_server_live = "https://ampx.app/api/v2/";
+const char* ampxportal_api_key = "...";  // must match AMPX_API_KEY in api/config/config.php
 #define USE_LOCAL_SERVER true  // Development flag
 ```
+
+### Local AmpX stack (July–August 2026)
+- **API code**: `D:\xampp\htdocs\ampx.app\api\` (v2 endpoint `POST /api/v2/`) — docs: `api/README.md`
+- **Auth**: Required header `X-AmpX-Api-Key` (local verified August 2026); value from `AMPX_API_KEY` / `ampxportal_api_key`
+- **Portal (WordPress)**: http://ampx-app.local/ (hosts → 127.0.0.1; Apache vhost DocumentRoot `htdocs/ampx.app`)
+- **LAN access to API**: junction `D:\xampp\htdocs\api` → `ampx.app\api` so `http://{LAN_IP}/api/v2/` works
+- **LAN access to firmware**: junction `D:\xampp\htdocs\firmware` → `ampx.app\firmware` so `http://{LAN_IP}/firmware/*.bin` works
+- **InfluxDB (current production)**: `https://influxdb2.ampx.app`, org `ampx`, bucket `energy_metrics`, measurement `meter_readings_detailed` (InfluxDB 2 + Flux portal reads)
+- **Success**: HTTP **201** + portal meters page for the gateway; **401** if key missing/wrong
+- **Postman**: Local URL `http://ampx-app.local/api/v2/` or `http://127.0.0.1/api/v2/`; enable `X-AmpX-Api-Key` header
+- **Do not use**: `:8080` unless a Docker API container is running; public DNS `ampx.app` ≠ local vhost
+
+### InfluxDB Cloud Serverless (target — August 2026)
+- **Product**: Managed InfluxDB Cloud Serverless (not self-hosted on Hetzner; not early-access “InfluxDB 3 Cloud”)
+- **Account**: AmpX · **Organization**: Energy Gateway · **Org ID**: `86a141bfd8d7f66a`
+- **Region**: AWS `eu-central-1` (EU Frankfurt)
+- **Host**: `https://eu-central-1-1.aws.cloud2.influxdata.com`
+- **Bucket**: `energy_metrics` (ID `43bdc9cfa0531940`, retention 30 days)
+- **Docs**: https://docs.influxdata.com/influxdb3/cloud-serverless/
+- **Writes**: v1/v2-compatible `/api/v2/write` + line protocol (spike **204** OK)
+- **Queries (HTTP/PHP-friendly)**: InfluxQL on `GET /query?db=energy_metrics` — requires **DBRP** mapping (created: database `energy_metrics` / rp `autogen` → bucket id `43bdc9cfa0531940`)
+- **Queries (native SQL)**: Flight+gRPC client libraries (not used in spike)
+- **Token**: local `INFLUXDB_CLOUD_TOKEN` in `api/config/config.php` (v2 still uses legacy `INFLUXDB_*`); rotate if exposed
+- **Spike script**: `api/v2/tests/spike_cloud_serverless.php`
+- **AmpX wiring**: Pending API v3 + portal query cutover + firmware; never put Cloud token in README
+- **Upgrade path if needed**: Cloud Dedicated (sales), not DIY Core on the WP host
+
+### Live AmpX portal (July 2026)
+- **Site**: https://ampx.app/ (Hetzner `dedivirt3789.your-server.de`, FTP `ampxapp`, PHP **8.4**)
+- **API**: `https://ampx.app/api/v2/` (same tree under `public_html/api`); shared-key gate not live until `AMPX_API_KEY` + `v2/index.php` deployed
+- **Portal plugin**: `ampx-portal-plugin` (**1.1.4** local) — meters shortcode reads Influx via `AMPX_Portal_InfluxDB_Detailed`
+- **Portal theme**: `ampx-portal-theme` (**1.0.9** local) — `assets/css/style-index.css` meter-data table scroll
+- **Meter Data page**: `/meter-data/?meter_sn=&gateway_id=` — table ≤1000 newest / 30d; Export CSV = full 30d via `admin-post.php?action=ampx_export_meter_csv`
+- **Required in live `wp-config.php`** (before “stop editing”):
+  - `AMPX_INFLUXDB_URL`, `AMPX_INFLUXDB_TOKEN`, `AMPX_INFLUXDB_ORG`, `AMPX_INFLUXDB_BUCKET`
+  - Local XAMPP `wp-config.php` already had these; live was missing them → WP critical error on Meters
+- **OPcache**: After changing live `wp-config.php`, flush OPcache or PHP keeps old defines
+- **Debug log**: `WP_DEBUG_LOG` → Debug Log Manager file under `wp-content/uploads/debug-log-manager/` (not `wp-content/debug.log`)
+- **Gateway registry**: Create/assign gateway in WP Admin; Influx alone does not list a gateway
+- **Design docs**: `ampx.app/docs/superpowers/specs/2026-08-10-meter-data-display-limit-export-design.md`
 
 ## Memory Management
 
@@ -121,25 +163,34 @@ const char* ampxportal_server_live = "https://portal.ampx.app/api/v2/";
 - **Web Assets Ready**: `index.html`, `settings.html`, `admin.html`, `meter_registers_meatrol.json`
 
 ### Storage Optimization
-- OTA functionality disabled to save space
 - Conditional debug output compilation
 - Static string templates with runtime replacement
 - Optimized JSON document sizing
+- HTTP OTA enabled (ArduinoOTA not used); sketch ~1.3MB fits dual ~2.1MB OTA app slots in `partitions.csv`
 
 ## Timing & Performance
 
 ### Update Intervals
 ```cpp
-const unsigned long METER_CONNECTION_INTERVAL = 3000;    // 3 seconds
+const unsigned long METER_CONNECTION_INTERVAL = 1000;   // 1 second (staggered: one meter per tick)
 const unsigned long REMOTE_SERVER_INTERVAL = 30000;     // 30 seconds  
 const unsigned long REBOOT_INTERVAL = 86400000;         // 24 hours
 ```
 
 ### Processing Pipeline
-1. **Meter Reading**: 3-second intervals for up to 32 meters
-2. **WebSocket Update**: Immediate after meter reading
-3. **API Upload**: 30-second intervals
-4. **Status Monitoring**: Continuous LED status updates
+1. **Meter Reading**: One meter per 1-second interval (full cycle ≈ numberOfMeters seconds)
+2. **Network service**: `server.handleClient()` + `webSocket.loop()` before/after each meter read (required for responsive WS)
+3. **WebSocket Update**: Immediate broadcast after each meter read
+4. **API Upload**: 30-second intervals
+5. **Status Monitoring**: Continuous LED status updates
+
+### Flash / OTA (August 2026)
+- Target: **8MB** modules — Arduino IDE **ESP32 Dev Module**, Flash **8MB**, Partition **custom** (`src/open_energy_gateway/partitions.csv` dual OTA apps) or **8M with spiffs**
+- Admin HTTP pull: `https://ampx.app/firmware/ampx_open_energy_gateway.bin` via `HTTPUpdate` (`FIRMWARE_VERSION` in sketch)
+- Local hosting: `D:\xampp\htdocs\ampx.app\firmware\` + junction `D:\xampp\htdocs\firmware` for LAN IP downloads
+- Deploy live: `firmware/deploy-firmware.ps1` with `AMPX_FTP_PASS` (Hetzner `ampxapp`)
+- First install still requires USB flash with OTA partitions; thereafter Admin Update Firmware
+- ArduinoOTA intentionally disabled (flash size / unused for field updates)
 
 ## Security Considerations
 

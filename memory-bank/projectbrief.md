@@ -24,7 +24,7 @@ Create a comprehensive ESP32-based energy monitoring gateway that communicates w
 - **Real-time monitoring**: 3-second update intervals for web interface
 - **Data collection**: Voltage, current, power, and energy readings per phase
 - **Web interface**: Live dashboard with WebSocket updates
-- **API integration**: Automatic 5-minute uploads to AmpX Portal
+- **API integration**: Automatic ~30-second uploads to AmpX Portal (local or live) authenticated with shared API key header; time-series target is managed InfluxDB Cloud Serverless (SQL), with current production still on InfluxDB 2
 - **Auto-discovery**: Automatic detection of connected meters
 
 ### Data Management
@@ -32,6 +32,7 @@ Create a comprehensive ESP32-based energy monitoring gateway that communicates w
 - JSON data serialization
 - Non-volatile storage (NVS) for settings
 - Real-time timestamp synchronization via NTP
+- AmpX Portal Meter Data: display newest 1000 readings / last 30 days; CSV export of full 30-day window
 
 ## Technical Constraints
 - Arduino IDE development environment

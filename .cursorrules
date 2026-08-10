@@ -26,7 +26,7 @@ open_energy_gateway.ino (main)
 ### Memory Management Rules
 - Use `DynamicJsonDocument JsonDoc(2048)` as primary data store
 - Enable/disable features via `#define DEBUG 1` for size optimization
-- OTA disabled to fit in ESP32 memory constraints
+- OTA: Admin HTTP pull from `https://ampx.app/firmware/ampx_open_energy_gateway.bin` (`HTTPUpdate`); ArduinoOTA disabled; needs 8MB dual-app partitions (`partitions.csv` custom)
 - Web interface via header files (webpage.h, web_settings.h, web_admin.h), SPIFFS option available for future
 
 ### Data Processing Pipeline
@@ -58,9 +58,16 @@ open_energy_gateway.ino (main)
 
 ### API Integration Patterns
 - **Dual Endpoints**: Local development vs live production server
+- **Auth**: Shared header `X-AmpX-Api-Key` = sketch `ampxportal_api_key` = `AMPX_API_KEY` in `api/config/config.php` (local enforced; live pending deploy)
 - **JSON Format**: gateway_id, meter_id, serial_number, timestamp, values{}
-- **Error Handling**: HTTP status checking with LED feedback
+- **Error Handling**: HTTP status checking with LED feedback (401 = bad/missing key)
 - **Timing**: 30-second intervals, non-blocking upload
+
+### Breaking-change versioning (mandatory)
+- Any change that makes **existing flashed gateways stop working** (API auth, payload shape, required headers, protocol) **must** bump `#define FIRMWARE_VERSION` in the same change set (and `version.json` when publishing OTA).
+- Prefer a clear semver signal: patch for compatible fixes; **minor/major** for breaking API/firmware contracts so Admin/OTA and operators can tell field devices are incompatible.
+- Document the break in Memory Bank + READMEs; coordinate live API deploy with firmware flash/OTA (no orphaned field devices).
+- Context (Aug 2026): shared API key was accepted as breaking because **no live gateways were in the field**; that will not always be true.
 
 ### Development Workflow
 1. **Arduino IDE**: Primary development environment
@@ -104,6 +111,7 @@ open_energy_gateway.ino (main)
 
 ### Performance Considerations
 - **Real-Time**: Staggered 1-second meter reads with immediate WebSocket broadcast
+- **Critical**: Always call `server.handleClient()` and `webSocket.loop()` before AND after `handlePowerMeter()` — end-of-loop alone is not enough; UI “Connecting…” = waiting on WS port 81
 - **Connection Speed**: Sub-3-second initial connection, progressive data updates
 - **Refresh Cycle**: Each meter reads every 5 seconds (5 meters × 1s interval)
 - **API Batching**: 30-second uploads, could batch multiple meters
@@ -179,13 +187,93 @@ This is a mature, production-ready industrial IoT project with excellent archite
 - 1-second intervals allow responsive WebSocket servicing while maintaining data freshness
 - Progressive data population superior UX compared to delayed batch updates
 
+#### Session 6: WebSocket Servicing + Ops Notes (July 2026)
+- ✅ Restored `server.handleClient()` + `webSocket.loop()` before/after `handlePowerMeter()` in `open_energy_gateway.ino`
+- ✅ Documented cause of multi-minute “Connecting…” (blocking Modbus without WS servicing)
+- ✅ Documented Windows SoftAP DHCP mismatch (Settings shows Automatic; `ipconfig` shows DHCP Enabled: No)
+- ✅ Documented 8MB flash / OTA partition guidance (ESP32 Dev Module + 8M with spiffs)
+- ✅ Memory Bank + README troubleshooting updated
+
+**Key Learnings**:
+- Staggered reads alone are insufficient without network stack servicing around Modbus
+- “Connecting…” is WebSocket port 81, not HTTP page load
+- Boot delays (NTP, scanning maxNumberOfMeters) are separate from runtime WS handshake stalls
+- OneDrive project path is OK for backup; pause sync / Defender exclusions help compile speed
+
+#### Session 7: Local API E2E + Boot Tuning (July 2026)
+- ✅ Local URL: `http://{PC_LAN_IP}/api/v2/` (port 80); dropped obsolete `:8080`
+- ✅ Junction `htdocs/api` → `ampx.app/api` for IP-based Apache access
+- ✅ ESP → API → Influx → portal verified (gateway 100007, 201 + View Data)
+- ✅ Meter discovery early `break`; NTP max wait ~15s
+- ✅ API human docs belong in `ampx.app/api/README.md`; gateway README links only
+
+**Key Learnings**:
+- `ampx-app.local` = local WordPress; public DNS `ampx.app` = live/Cloudflare
+- ESP connection refused to PC often firewall/profile, not “no internet”
+- Keep `ampxportal_server_local` IP in sync with the PC
+
+#### Session 8: Live Portal Meters Fix + Live API E2E (July 2026)
+- ✅ Live ESP posts **201** to `https://ampx.app/api/v2/`; gateway 100007 created/assigned in WP Admin
+- ✅ Fixed live Meters critical error: missing `AMPX_INFLUXDB_*` in live `wp-config.php`
+- ✅ OPcache still served old wp-config until `opcache_reset()` — always flush after live config edits
+- ✅ Hardened portal plugin: PHP 8.4 `str_getcsv` escape + annotated CSV skip; meters shortcode try/catch
+- ✅ Verified live Meters + View Data for SN 2724193004
+
+**Key Learnings**:
+- API/Influx success ≠ portal UI; WP gateway registry + Influx constants both required
+- Live debug is Debug Log Manager path in `WP_DEBUG_LOG`, not `wp-content/debug.log`
+- Hetzner host: `dedivirt3789.your-server.de`, FTP `ampxapp`, PHP 8.4
+
+#### Session 9: Shared API Key Auth (August 2026)
+- ✅ Local `/api/v2/` requires `X-AmpX-Api-Key` (`AMPX_API_KEY` in config; `hash_equals` gate in `v2/index.php`)
+- ✅ Firmware `ampxportal_api_key` + header in `postToAmpXPortal2()`; `FIRMWARE_VERSION` **1.0.3**
+- ✅ Verified curl + Postman: 401 without/unchecked key, 201 with correct key on `ampx-app.local`
+- ⏳ Live Hetzner not yet gated — deploy API + flash/OTA together to avoid production 401s
+
+**Key Learnings**:
+- Smallest fleet-prep change is shared API secret before scale; per-gateway keys can reuse same header later
+- Postman must have the key header **checked** or the request is unauthenticated
+- Do not put real secrets in public README examples (`YOUR_KEY` placeholder only)
+
+#### Session 10: Portal Meter Data UX (August 2026)
+- ✅ Theme `ampx-portal-theme` **1.0.9**: meter-data table horizontal scroll — `max-height` on `.table-wrapper` so H-scrollbar stays in viewport
+- ✅ Plugin `ampx-portal-plugin` **1.1.4**: display newest **1000** / last **30 days**; UI copy states limits; Export CSV = full 30d via `admin_post_ampx_export_meter_csv`
+- ✅ Verified local gateway **100008** / SN **3423875005**; CLI `bin/test-meter-export-limits.php`
+- ⏳ Live Hetzner still needs theme + plugin deploy for the UX fixes
+
+**Key Learnings**:
+- `overflow: hidden` on `.table-wrapper` clips wide tables with no scrollbar
+- Horizontal scrollbar at the bottom of a multi-thousand-px table is effectively invisible — constrain height
+- DOM-based CSV export cannot serve “all data” once the table is capped — use server export with `$limit = null`
+
+#### Session 11: InfluxDB Cloud Serverless org (August 2026)
+- ✅ Created managed **Cloud Serverless** account **AmpX**, org **Energy Gateway** (`86a141bfd8d7f66a`)
+- ✅ Region AWS **eu-central-1** (Frankfurt); host `https://eu-central-1-1.aws.cloud2.influxdata.com`
+- ✅ Bucket **`energy_metrics`** (ID `43bdc9cfa0531940`, 30-day retention)
+- ✅ Decision: managed Serverless (not self-host Influx on Hetzner); company email for org ownership
+- ✅ API token → `INFLUXDB_CLOUD_*` in local `api/config/config.php` only
+- ✅ Spike: write **204**; InfluxQL **200** after DBRP; script `api/v2/tests/spike_cloud_serverless.php`
+- ⏳ Not wired to AmpX yet — production remains `influxdb2.ampx.app` until API v3 + portal cutover
+- Note: **InfluxDB 3 Cloud** (early-access managed Enterprise) ≠ **Cloud Serverless**
+
+**Key Learnings**:
+- Prefer Cloud Serverless for SQL + low ops; escalate to Cloud Dedicated if quotas bite
+- Rough cost at 200 gateways × 30s posts is material — longer upload intervals cut Serverless spend sharply
+- Keep Influx tokens out of git/docs; org metadata (host/org id) is fine to document
+
 ### Current Status
-- **5 Meters Operational**: All meters displaying serial numbers, names, energy, and power data ✅
-- **WebSocket Optimized**: Sub-3-second initial connection with progressive data updates ✅
-- **Best-in-Class Performance**: 77% faster than previous implementation ✅
+- **5+ Meters Supported**: Array-based backend; HTML scaled for more meters as configured ✅
+- **WebSocket Servicing**: Required around meter reads to keep handshakes responsive ✅
+- **Local API E2E**: Verified against XAMPP + Influx + ampx-app.local portal ✅
+- **Local API Key Auth**: Enforced and Postman-verified (August 2026) ✅
+- **Local Portal Meter Data UX**: Scroll + 1000/30d limits + full-window CSV ✅
+- **Live API + Portal E2E**: Verified gateway 100007 on https://ampx.app (Meters + View Data) ✅
+- **Live API Key**: Not deployed yet — coordinate with firmware 1.0.3+ ⏳
+- **Live Portal UX deploy**: Theme 1.0.9 + plugin 1.1.4 pending ⏳
+- **Influx Cloud Serverless**: Org created (Frankfurt); AmpX cutover pending ⏳
 - **Modern UI**: Professional sidebar navigation with summary tables
 - **Clean Navigation**: Home shows summaries, Meters page shows details
 - **Admin Features**: Gateway reboot with countdown timer implemented
 - **Production Ready**: Successfully tested and deployed on ESP32 hardware
-- **Scaling Path Clear**: Change 2 constants + add HTML rows = expand to 10+ meters
+- **Scaling Path Clear**: Change constants + HTML rows for additional meters
 - **Clean Codebase**: No hardcoded meter-specific variables in backend

@@ -16,7 +16,9 @@ void initNTP() {
     // Wait for time synchronization
     debugln("Waiting for NTP time sync: ");
     time_t now = time(nullptr);
-    int timeout = 20; // 20 second timeout
+    // Max wait only; loop exits early when sync succeeds. 5s was too short on some networks (TIMEOUT).
+    // Raise further (e.g. 20) if serial still shows TIMEOUT / LED_4 stays off.
+    int timeout = 15;
     
     while (now < 24 * 3600 && timeout > 0) {  // Wait until we have a valid timestamp
       delay(1000);

@@ -1,8 +1,8 @@
 //Initialise the server and websocket
 void initServer() {
   server.on("/", handleRoot);
-  // Commented out to reduce space
-  // server.on("/update", HTTP_POST, handleUpdate);
+  server.on("/update", HTTP_POST, handleUpdate);
+  server.on("/ota_status", HTTP_GET, handleOtaStatus);
   server.on("/settings", handleSettings);
   server.on("/admin", handleAdmin);
   server.on("/meters", handleMeters);
@@ -129,17 +129,121 @@ void handleSettings()
 }
 
 //Handle the admin webpage
+// Do NOT call fetchFirmwareManifest() here — outbound HTTPClient inside a WebServer
+// handler causes ERR_CONNECTION_RESET / hangs on ESP32. Check runs in loop() via cache.
 void handleAdmin()
 {
-  //Handle the admin page. Change the gateway ID, Server and API key, and other settings only ment for admin.
-  //ToDo: Not sure if this is needed, as it can just be hard coded... Lets see...
+  requestOtaManifestCheck();
+
   String page = webpage_admin;
+  String available = otaStatusCache.ready ? otaStatusCache.available : "Checking…";
+  String updateCheck = otaStatusCache.ready ? otaStatusCache.status : "Checking…";
+  String updateDisabled = "disabled";
+  if (otaStatusCache.ready && !otaStatusCache.upToDate) {
+    updateDisabled = "";
+  }
 
-  //Replace the gateway ID placeholder with the actual value
   page.replace("m_gateway_id", String(GATEWAY_ID));
+  page.replace("m_firmware_version", String(FIRMWARE_VERSION));
+  page.replace("m_available_version", available);
+  page.replace("m_update_check", updateCheck);
+  page.replace("m_ota_status", getOtaStatusText());
+  page.replace("m_ota_time", getOtaTimeText());
+  page.replace("m_manifest_url", String(firmwareManifestURL));
+  page.replace("m_update_disabled", updateDisabled);
 
-  //send the page to the client
-  server.send(200, "text/html", page);
+  server.send(200, "text/html", web_inc_header + page);
+}
+
+// Instant JSON from cache (filled by serviceOtaManifestCheck in loop).
+void handleOtaStatus() {
+  if (server.hasArg("refresh")) {
+    requestOtaManifestCheck();
+  }
+
+  DynamicJsonDocument doc(384);
+  doc["ready"] = otaStatusCache.ready;
+  doc["current"] = FIRMWARE_VERSION;
+  doc["manifest_url"] = firmwareManifestURL;
+  doc["ok"] = otaStatusCache.ok;
+  doc["available"] = otaStatusCache.available;
+  doc["up_to_date"] = otaStatusCache.upToDate;
+  doc["update_available"] = otaStatusCache.updateAvailable;
+  doc["status"] = otaStatusCache.status;
+  doc["error"] = otaStatusCache.error;
+
+  String json;
+  serializeJson(doc, json);
+  server.send(200, "application/json", json);
+}
+
+// Admin-triggered HTTP OTA: refuse if already latest, else status page then flash.
+void handleUpdate() {
+  FirmwareManifest manifest;
+  if (fetchFirmwareManifest(manifest) && manifest.version == String(FIRMWARE_VERSION)) {
+    saveOtaStatus("Already on latest (" + manifest.version + ")");
+    String alreadyPage = R"(
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Already Up To Date</title>
+        <meta name='viewport' content='width=device-width, initial-scale=1'>
+        <meta http-equiv="refresh" content="5;url=/admin">
+        <style>
+          body { background-color: #EEEEEE; font-family: Arial, sans-serif; }
+          main { margin: auto; border: 3px solid black; padding: 20px; max-width: 600px; }
+        </style>
+      </head>
+      <body>
+        <main>
+          <h1>Already on latest</h1>
+          <p>This gateway is already running firmware version )" + String(FIRMWARE_VERSION) + R"(.</p>
+          <p><a href="/admin">Back to Admin</a></p>
+        </main>
+      </body>
+      </html>
+    )";
+    server.send(200, "text/html", alreadyPage);
+    return;
+  }
+
+  String updatingPage = R"(
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Firmware Updating</title>
+      <meta name='viewport' content='width=device-width, initial-scale=1'>
+      <meta http-equiv="refresh" content="60;url=/admin">
+      <style>
+        body { background-color: #EEEEEE; font-family: Arial, sans-serif; }
+        main { margin: auto; border: 3px solid black; padding: 20px; max-width: 600px; }
+        .warning { color: orange; font-weight: bold; }
+      </style>
+    </head>
+    <body>
+      <main>
+        <h1>Updating Firmware...</h1>
+        <p class="warning">Downloading and installing firmware.</p>
+        <p>Do not power off the gateway. This page will redirect to Admin in about 60 seconds.</p>
+        <p>If the page does not redirect, open <a href="/admin">Admin</a> after the device reboots.</p>
+      </main>
+    </body>
+    </html>
+  )";
+
+  // Standalone status page (full HTML document — do not prepend site header)
+  server.send(200, "text/html", updatingPage);
+  server.client().flush();
+  delay(500);
+
+  bool ok = doOTAUpdate();
+  if (ok) {
+    debugln("OTA OK — restarting...");
+    delay(300);
+    ESP.restart();
+  } else {
+    debugln("OTA failed or skipped — see Admin last OTA status.");
+  }
 }
 
 //Handle the meters webpage - shows details for a single meter
@@ -242,6 +346,34 @@ void handleChangeMetersName() {
 
 //Handle the gateway ID update form submission
 void handleUpdateGatewayId() {
+  // Simple shared password — only AmpX staff should change Gateway ID in the field
+  const char* gatewayIdAdminPassword = "1000";
+  if (!server.hasArg("admin_password") || server.arg("admin_password") != gatewayIdAdminPassword) {
+    String denyPage = R"(
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Access Denied</title>
+        <meta name='viewport' content='width=device-width, initial-scale=1'>
+        <style>
+          body { background-color: #EEEEEE; font-family: Arial, sans-serif; }
+          main { margin: auto; border: 3px solid black; padding: 20px; max-width: 600px; }
+          .error { color: red; font-weight: bold; }
+        </style>
+      </head>
+      <body>
+        <main>
+          <h1>Access Denied</h1>
+          <p class="error">Incorrect password. Gateway ID was not changed.</p>
+          <p><a href="/admin">Back to Admin</a></p>
+        </main>
+      </body>
+      </html>
+    )";
+    server.send(403, "text/html", denyPage);
+    return;
+  }
+
   if (server.hasArg("gateway_id")) {
     String gatewayIdStr = server.arg("gateway_id");
     int newGatewayId = gatewayIdStr.toInt();
@@ -292,7 +424,7 @@ void handleRebootGateway() {
     <head>
       <title>Gateway Rebooting</title>
       <meta name='viewport' content='width=device-width, initial-scale=1'>
-      <meta http-equiv="refresh" content="15;url=/">
+      <meta http-equiv="refresh" content="30;url=/">
       <style>
         body { background-color: #EEEEEE; font-family: Arial, sans-serif; }
         main { margin: auto; border: 3px solid black; padding: 20px; max-width: 600px; }
@@ -304,17 +436,20 @@ void handleRebootGateway() {
       <main>
         <h1>Gateway Rebooting...</h1>
         <p class="warning">The gateway is rebooting now.</p>
-        <p>This page will automatically redirect to the home page in <span class="countdown">15</span> seconds.</p>
+        <p>This page will automatically redirect to the home page in <span class="countdown">30</span> seconds.</p>
         <p>If the page doesn't redirect automatically, click <a href="/">here</a>.</p>
         <script>
-          let countdown = 15;
+          let countdown = 30;
           const countdownElement = document.querySelector('.countdown');
-          setInterval(() => {
+          const timer = setInterval(() => {
             countdown--;
-            countdownElement.textContent = countdown;
             if (countdown <= 0) {
+              clearInterval(timer);
+              countdownElement.textContent = '0';
               window.location.href = '/';
+              return;
             }
+            countdownElement.textContent = countdown;
           }, 1000);
         </script>
       </main>

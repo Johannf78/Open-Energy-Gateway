@@ -23,13 +23,14 @@ Industrial and commercial facilities need comprehensive energy monitoring across
 1. **Cost-Effective**: Open-source solution using affordable ESP32 hardware
 2. **Scalable**: Monitor up to 32 meters from single gateway
 3. **Flexible**: Support for both RS485 and TCP/IP communication
-4. **Real-Time**: Live web interface with 3-second updates
-5. **Cloud-Ready**: Automatic data upload to AmpX Portal
+4. **Real-Time**: Live web interface with WebSocket updates (staggered meter reads; network stack serviced around Modbus)
+5. **Cloud-Ready**: Automatic data upload to AmpX Portal API (local XAMPP or live `ampx.app`) with shared `X-AmpX-Api-Key`; portal Meters/View Data read Influx (today: InfluxDB 2; target: managed Cloud Serverless + SQL)
 
 ### User Experience Goals
 - **Plug-and-Play Setup**: WiFiManager for easy network configuration
 - **Auto-Discovery**: Automatic meter detection and configuration
 - **Intuitive Interface**: Clean web dashboard showing all meter data
+- **Portal Meter Data**: Scrollable wide tables; clear 1000-row / 30-day display limits; CSV export of full 30-day window
 - **Mobile-Friendly**: Responsive design for smartphone/tablet access
 - **Status Visibility**: LED indicators for system health monitoring
 

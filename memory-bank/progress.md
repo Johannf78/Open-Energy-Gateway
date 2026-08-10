@@ -41,6 +41,7 @@
 ### API Integration
 - [x] **AmpX Portal Integration**: Structured JSON uploads every 30 seconds
 - [x] **Dual Server Support**: Local development and live production endpoints
+- [x] **Shared API Key Auth**: `X-AmpX-Api-Key` required on local `/api/v2/` (firmware 1.0.3); live cutover pending
 - [x] **Data Formatting**: Proper timestamp and meter identification in API calls
 - [x] **Error Handling**: HTTP client error management and retry logic
 
@@ -65,8 +66,8 @@
 
 ### Tested Functionality
 - **Modbus Register Reading**: All register types (int32, int64, float) properly converted
-- **WebSocket Performance**: Sub-3-second initial connection with staggered meter reads (77% improvement)
-- **Progressive Data Updates**: Meters populate sequentially every 1 second, full cycle every 5 seconds
+- **WebSocket Performance**: Staggered meter reads plus `handleClient`/`webSocket.loop` around each read (July 2026)
+- **Progressive Data Updates**: Meters populate sequentially every 1 second
 - **WebSocket Event Handler**: Fully implemented with connection tracking and error handling
 - **API Communication**: Successful data transmission to remote servers
 - **Fault Recovery**: Automatic reconnection on communication failures
@@ -78,9 +79,10 @@
 ### Current Constraints
 - **Active Meter Limit**: 5 meters actively configured and operational (vs 32 theoretical maximum)
 - **Hardcoded Settings**: Some configuration values require code changes
-- **Memory Usage**: OTA functionality disabled due to size constraints
-- **Admin Interface**: Gateway reboot implemented, other admin functions pending
+- **Admin Interface**: Gateway reboot + HTTP OTA implemented; other admin functions pending
 - **Windows mDNS**: .local domain resolution not working on Windows (use IP address as workaround)
+- **Live OTA binary**: Must upload `ampx_open_energy_gateway.bin` to Hetzner `public_html/firmware/` (local hosting works; live URL 404 until published)
+- **Live API key**: Local enforces `AMPX_API_KEY`; live `ampx.app/api/v2/` not yet gated — deploy with matching firmware to avoid 401s
 
 ### Technical Debt
 - **HTML Templates**: Static meter sections (5 meters) in web files - need dynamic generation for scaling beyond 5
@@ -95,20 +97,37 @@
 - ✅ **WebSocket Event Handler**: Fully implemented with proper connection tracking
 - ✅ **WebSocket Performance**: Optimized with staggered meter reads - <3-second connections achieved (was 12-13 seconds)
 - ✅ **Staggered Meter Reading**: Sequential 1-second intervals instead of batched 5-second reads
+- ✅ **WebSocket Loop Servicing (July 2026)**: Restored `server.handleClient()` + `webSocket.loop()` before/after `handlePowerMeter()` — fixes multi-minute “Connecting…” when Modbus blocked handshakes
+- ✅ **Boot discovery early-exit**: `detectNumberOfMeters()` breaks on first missing Modbus ID (contiguous 1..N)
+- ✅ **NTP max wait**: tuned (~15s; exits early on success) after 5s proved too short
+- ✅ **Local API E2E (July 2026)**: ESP → `http://{LAN_IP}/api/v2/` → InfluxDB → `ampx-app.local` portal View Data (gateway 100007 verified)
+- ✅ **Live API E2E (July 2026)**: ESP → `https://ampx.app/api/v2/` → Influx → live portal Meters + View Data (100007 / SN 2724193004)
+- ✅ **Live meters critical error**: Added `AMPX_INFLUXDB_*` to live `wp-config.php`; flushed OPcache; PHP 8.4 CSV/`str_getcsv` harden in portal plugin
+- ✅ **HTTP Pull OTA (August 2026)**: Admin `POST /update` via `HTTPUpdate`; NVS last status; local E2E 1.0.1→1.0.2; ArduinoOTA left disabled
+- ✅ **Shared API Key (August 2026)**: Local `X-AmpX-Api-Key` / `AMPX_API_KEY`; firmware `ampxportal_api_key` + 1.0.3; Postman/curl 401/201 verified
+- ✅ **InfluxDB Cloud Serverless org (August 2026)**: AmpX / Energy Gateway / AWS Frankfurt (`eu-central-1-1.aws.cloud2.influxdata.com`); AmpX code still on `influxdb2.ampx.app` until v3 cutover
+- ✅ **Portal Meter Data UX (August 2026)**: Theme horizontal scroll (max-height viewport); plugin display 1000/30d with clear copy; server CSV export full 30d (`admin_post`); local verified gateway 100008
+
+### Remaining Performance / Ops Notes
+- Handshake still waits for the duration of an in-progress `handlePowerMeter()` call (acceptable with staggered single-meter reads)
+- Update `ampxportal_server_local` when the PC LAN IP changes
+- Ensure Windows Wi‑Fi profile Private + Apache firewall allow so ESP can reach PC:80
+- Live portal: after editing `wp-config.php` on Hetzner, flush PHP OPcache (constants can look “missing” until then)
+- Live debug: Debug Log Manager path in `WP_DEBUG_LOG`, not `wp-content/debug.log`
 
 ## 🎯 Immediate Development Opportunities
 
 ### High Priority
-1. **Scale to 10 Meters**: Add HTML sections for meters 6-10 (backend already supports this)
-2. **Complete Admin Interface**: Implement remaining gateway configuration functionality
-3. **Dynamic Configuration**: Move hardcoded values to web-configurable settings
-4. **Enhanced Error Handling**: Improve fault tolerance and recovery mechanisms
-5. **Windows mDNS Resolution**: Troubleshoot and fix .local domain access on Windows
+1. **Influx Cloud Serverless spike**: Bucket + token; prove write + SQL; then plan API v3 / portal SQL cutover
+2. **Deploy portal UX to live**: Theme 1.0.9 + plugin 1.1.4 (meter-data scroll, limits copy, full-window CSV)
+3. **Live API key cutover**: Deploy `AMPX_API_KEY` + `v2/index.php` to Hetzner with matching firmware 1.0.3+
+4. **Publish live OTA `.bin` + `version.json`**: So field devices can update without USB
+5. **Scale to 10 Meters**: Add HTML sections for meters 6-10 (backend already supports this)
+6. **Windows mDNS Resolution**: Troubleshoot and fix .local domain access on Windows
 
 ### Medium Priority
-1. **Memory Optimization**: Further reduce footprint to enable OTA
-2. **Additional Meter Support**: Extend beyond Meatrol to other manufacturers
-3. **Data Persistence**: Local data logging capabilities
+1. **Additional Meter Support**: Extend beyond Meatrol to other manufacturers
+2. **Data Persistence**: Local data logging capabilities
 4. **Alert System**: Email/SMS notifications for fault conditions
 
 ### Future Enhancements
