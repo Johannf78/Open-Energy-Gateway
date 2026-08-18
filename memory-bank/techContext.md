@@ -17,7 +17,7 @@
 
 ### Build Configuration
 - **Partition Scheme**: "Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)" or "Huge APP (3MB No OTA/1MB SPIFFS)"
-- **Serial Baud Rate**: 9600
+- **Serial Baud Rate**: 115200 (sketch `Serial.begin(115200)`)
 - **Debug Level**: Configurable via `#define DEBUG 1`
 
 ## Hardware Specifications
@@ -186,7 +186,10 @@ const unsigned long REBOOT_INTERVAL = 86400000;         // 24 hours
 
 ### Flash / OTA (August 2026)
 - Target: **8MB** modules — Arduino IDE **ESP32 Dev Module**, Flash **8MB**, Partition **custom** (`src/open_energy_gateway/partitions.csv` dual OTA apps) or **8M with spiffs**
-- Admin HTTP pull: `https://ampx.app/firmware/ampx_open_energy_gateway.bin` via `HTTPUpdate` (`FIRMWARE_VERSION` in sketch)
+- Current firmware: **`FIRMWARE_VERSION` 1.0.7** (do not ship 1.0.3 reboot loop, or 1.0.4/1.0.5 Check WDT)
+- `SET_LOOP_TASK_STACK_SIZE(16384)` — default 8KB `loop()` stack overflows during HTTPS TLS
+- Admin HTTP pull: `https://ampx.app/firmware/ampx_open_energy_gateway.bin` via `HTTPUpdate` + **static** `WiFiClientSecure`
+- Manifest check: `serviceOtaManifestCheck()` from **`loop()` only** after **Check for update**; no FreeRTOS OTA task; no Admin-load or boot-time HTTPS fetch
 - Local hosting: `D:\xampp\htdocs\ampx.app\firmware\` + junction `D:\xampp\htdocs\firmware` for LAN IP downloads
 - Deploy live: `firmware/deploy-firmware.ps1` with `AMPX_FTP_PASS` (Hetzner `ampxapp`)
 - First install still requires USB flash with OTA partitions; thereafter Admin Update Firmware
@@ -212,7 +215,7 @@ const unsigned long REBOOT_INTERVAL = 86400000;         // 24 hours
 - `upload_spiffs.bat`: Upload SPIFFS to ESP32
 
 ### Debugging
-- Serial output at 9600 baud
+- Serial output at **115200** baud
 - Configurable debug levels
 - WiFi signal strength reporting
 - Modbus communication status

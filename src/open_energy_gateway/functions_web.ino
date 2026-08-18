@@ -129,15 +129,14 @@ void handleSettings()
 }
 
 //Handle the admin webpage
-// Do NOT call fetchFirmwareManifest() here — outbound HTTPClient inside a WebServer
-// handler causes ERR_CONNECTION_RESET / hangs on ESP32. Check runs in loop() via cache.
+// Do NOT fetch the manifest here (or request a check). Outbound HTTPClient inside a
+// WebServer handler hangs the ESP32; HTTPS from loop() on Admin load caused TG1WDT reset.
+// Check runs in loop() only after GET /ota_status?refresh.
 void handleAdmin()
 {
-  requestOtaManifestCheck();
-
   String page = webpage_admin;
-  String available = otaStatusCache.ready ? otaStatusCache.available : "Checking…";
-  String updateCheck = otaStatusCache.ready ? otaStatusCache.status : "Checking…";
+  String available = otaStatusCache.ready ? otaStatusCache.available : "Not checked yet";
+  String updateCheck = otaStatusCache.ready ? otaStatusCache.status : "Not checked yet";
   String updateDisabled = "disabled";
   if (otaStatusCache.ready && !otaStatusCache.upToDate) {
     updateDisabled = "";
@@ -180,7 +179,7 @@ void handleOtaStatus() {
 // Admin-triggered HTTP OTA: refuse if already latest, else status page then flash.
 void handleUpdate() {
   FirmwareManifest manifest;
-  if (fetchFirmwareManifest(manifest) && manifest.version == String(FIRMWARE_VERSION)) {
+  if (fetchFirmwareManifest(manifest) && !isNewerVersion(manifest.version, String(FIRMWARE_VERSION))) {
     saveOtaStatus("Already on latest (" + manifest.version + ")");
     String alreadyPage = R"(
       <!DOCTYPE html>

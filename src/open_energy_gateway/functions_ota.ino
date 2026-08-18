@@ -1,5 +1,10 @@
 // HTTP pull OTA (Admin-triggered). ArduinoOTA is intentionally not used (flash size).
 
+// TLS/TCP clients in BSS, not on the Arduino loop() stack.
+// A local WiFiClientSecure in fetchFirmwareManifest() caused TG1WDT_SYS_RESET.
+static WiFiClientSecure otaTlsClient;
+static WiFiClient otaPlainClient;
+
 void initOTA() {
   // No ArduinoOTA. Firmware updates are started from Admin via doOTAUpdate().
 }
@@ -29,13 +34,23 @@ void requestOtaManifestCheck() {
   otaManifestCheckRequested = true;
 }
 
+// Returns true if serverVer > deviceVer (e.g. "1.0.6" > "1.0.5")
+bool isNewerVersion(const String& serverVer, const String& deviceVer) {
+  int sv[3] = {0, 0, 0};
+  int dv[3] = {0, 0, 0};
+  sscanf(serverVer.c_str(), "%d.%d.%d", &sv[0], &sv[1], &sv[2]);
+  sscanf(deviceVer.c_str(), "%d.%d.%d", &dv[0], &dv[1], &dv[2]);
+  for (int i = 0; i < 3; i++) {
+    if (sv[i] > dv[i]) return true;
+    if (sv[i] < dv[i]) return false;
+  }
+  return false;  // equal
+}
+
 void serviceOtaManifestCheck() {
-  const unsigned long OTA_MANIFEST_INTERVAL_MS = 300000;  // refresh every 5 minutes
-  unsigned long now = millis();
-  bool due = otaManifestCheckRequested ||
-             (otaManifestLastCheckMs == 0) ||
-             (now - otaManifestLastCheckMs > OTA_MANIFEST_INTERVAL_MS);
-  if (!due) {
+  // Manual only: Admin "Check for update" sets the flag. Do not auto-fetch on a timer
+  // (HTTPS TLS on loop() trips TG1WDT_SYS_RESET).
+  if (!otaManifestCheckRequested) {
     return;
   }
   if (WiFi.status() != WL_CONNECTED) {
@@ -43,17 +58,20 @@ void serviceOtaManifestCheck() {
   }
 
   otaManifestCheckRequested = false;
-  otaManifestLastCheckMs = now;
+  otaManifestLastCheckMs = millis();
 
   FirmwareManifest manifest;
   if (fetchFirmwareManifest(manifest)) {
+        
     bool upToDate = (manifest.version == String(FIRMWARE_VERSION));
+    bool newerAvailable = isNewerVersion(manifest.version, String(FIRMWARE_VERSION));
+
     otaStatusCache.ready = true;
     otaStatusCache.ok = true;
     otaStatusCache.available = manifest.version;
-    otaStatusCache.upToDate = upToDate;
-    otaStatusCache.updateAvailable = !upToDate;
-    otaStatusCache.status = upToDate ? "Up to date" : "Update available";
+    otaStatusCache.upToDate = upToDate || !newerAvailable;  // up to date if equal OR device is newer
+    otaStatusCache.updateAvailable = newerAvailable;
+    otaStatusCache.status =  newerAvailable ? "Update available" : "Up to date";
     otaStatusCache.error = "";
     debug("OTA manifest OK: ");
     debugln(manifest.version);
@@ -67,15 +85,6 @@ void serviceOtaManifestCheck() {
     otaStatusCache.error = manifest.error;
     debug("OTA manifest failed: ");
     debugln(manifest.error);
-  }
-}
-
-// Runs on core 0 so a slow/hanging HTTPClient cannot stall WebServer on loop()/core 1.
-void otaManifestTask(void* param) {
-  (void)param;
-  for (;;) {
-    serviceOtaManifestCheck();
-    vTaskDelay(pdMS_TO_TICKS(500));
   }
 }
 
@@ -100,59 +109,36 @@ bool fetchFirmwareManifest(FirmwareManifest& out) {
   int httpCode = -1;
   String body;
 
+  bool began = false;
+  yield();
   if (manifestUrl.startsWith("https://")) {
-    WiFiClientSecure secureClient;
-    secureClient.setInsecure();
-    secureClient.setTimeout(transferTimeoutMs);
-    if (!http.begin(secureClient, manifestUrl)) {
-      out.error = "Manifest begin failed";
-      return false;
-    }
-    httpCode = http.GET();
-    if (httpCode == HTTP_CODE_OK) {
-      body = http.getString();
-    }
-    http.end();
+    otaTlsClient.setInsecure();
+    otaTlsClient.setTimeout(transferTimeoutMs);
+    began = http.begin(otaTlsClient, manifestUrl);
+  } else if (manifestUrl.startsWith("http://")) {
+    otaPlainClient.setTimeout(transferTimeoutMs);
+    began = http.begin(otaPlainClient, manifestUrl);
   } else {
-    // Explicit connect timeout — HTTPClient alone often hangs inside WebServer context.
-    String host;
-    String path = "/";
-    uint16_t port = 80;
-    if (manifestUrl.startsWith("http://")) {
-      String rest = manifestUrl.substring(7);
-      int slash = rest.indexOf('/');
-      String hostPort = (slash >= 0) ? rest.substring(0, slash) : rest;
-      path = (slash >= 0) ? rest.substring(slash) : "/";
-      int colon = hostPort.indexOf(':');
-      if (colon >= 0) {
-        host = hostPort.substring(0, colon);
-        port = (uint16_t)hostPort.substring(colon + 1).toInt();
-      } else {
-        host = hostPort;
-      }
-    } else {
-      out.error = "Unsupported manifest URL";
-      return false;
-    }
-
-    WiFiClient client;
-    if (!client.connect(host.c_str(), port, connectTimeoutMs)) {
-      out.error = "Manifest connect failed";
-      return false;
-    }
-    client.setTimeout(transferTimeoutMs);
-    if (!http.begin(client, manifestUrl)) {
-      out.error = "Manifest begin failed";
-      client.stop();
-      return false;
-    }
-    httpCode = http.GET();
-    if (httpCode == HTTP_CODE_OK) {
-      body = http.getString();
-    }
-    http.end();
-    client.stop();
+    out.error = "Unsupported manifest URL";
+    return false;
   }
+  
+  if (!began) {
+    out.error = "Manifest begin failed";
+    return false;
+  }
+  
+  debugln("Manifest GET...");
+  httpCode = http.GET();
+  debug("Manifest HTTP ");
+  debugln(httpCode);
+  if (httpCode == HTTP_CODE_OK) {
+    body = http.getString();
+  }
+  http.end();
+  otaTlsClient.stop();
+  otaPlainClient.stop();
+  yield();
 
   if (httpCode != HTTP_CODE_OK) {
     out.error = "Manifest HTTP " + String(httpCode);
@@ -191,7 +177,7 @@ bool doOTAUpdate() {
 
   FirmwareManifest manifest;
   if (fetchFirmwareManifest(manifest)) {
-    if (manifest.version == String(FIRMWARE_VERSION)) {
+    if (!isNewerVersion(manifest.version, String(FIRMWARE_VERSION))) {
       String msg = "Already on latest (" + manifest.version + ")";
       debugln(msg);
       saveOtaStatus(msg);
@@ -209,13 +195,14 @@ bool doOTAUpdate() {
   httpUpdate.rebootOnUpdate(false);
 
   t_httpUpdate_return ret;
+  yield();
   if (downloadUrl.startsWith("https://")) {
-    WiFiClientSecure secureClient;
-    secureClient.setInsecure();
-    ret = httpUpdate.update(secureClient, downloadUrl);
+    otaTlsClient.setInsecure();
+    ret = httpUpdate.update(otaTlsClient, downloadUrl);
+    otaTlsClient.stop();
   } else {
-    WiFiClient client;
-    ret = httpUpdate.update(client, downloadUrl);
+    ret = httpUpdate.update(otaPlainClient, downloadUrl);
+    otaPlainClient.stop();
   }
 
   switch (ret) {

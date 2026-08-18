@@ -226,7 +226,7 @@ Open-Energy-Gateway/
 │       ├── functions_meter.ino           # Meter register definitions
 │       ├── functions_api.ino             # API communication
 │       ├── functions_ntp.ino             # Time synchronization
-│       ├── functions_ota.ino             # OTA updates (disabled)
+│       ├── functions_ota.ino             # HTTP pull OTA (Admin)
 │       ├── meter_registers.h             # Register definitions
 │       ├── webpage.h                     # HTML templates
 │       ├── web_admin.h                   # Admin interface
@@ -277,10 +277,11 @@ The project includes infrastructure for future SPIFFS implementation:
 2. **Web Assets Ready** in `data/` folder for future SPIFFS deployment
 
 ### Current Limitations
-- **Active Meters**: Currently configured for 4 meters (expandable to 32)
-- **Hardcoded Settings**: Gateway ID and server URLs require code modification
-- **OTA Updates**: Disabled to conserve memory
-- **Admin Interface**: Structure exists but functionality incomplete
+- **Active Meters**: Currently configured for 5 meters (backend expandable; HTML rows needed beyond that)
+- **Server URLs**: API and OTA hosts (`ampxportal_server_local` / `_live`, `USE_LOCAL_SERVER`, firmware URLs) require a firmware rebuild
+- **Gateway ID**: Changeable from Admin; stored in NVS (`DEFAULT_GATEWAY_ID` is first-boot only)
+- **OTA Updates**: Admin HTTP pull from `https://ampx.app/firmware/` (Check + Update); first flash USB with 8MB dual-OTA partitions; baseline **1.0.7**
+- **Admin Interface**: Gateway reboot + OTA; Gateway ID change with password
 
 ## 🔍 Troubleshooting
 
@@ -345,6 +346,12 @@ On first boot (or when no WiFi credentials are saved), the gateway creates an op
 - View data (local): http://ampx-app.local/ → Meters → gateway → View Data
 - View data (live): https://ampx.app/ → Meters → gateway → View Data (needs WP gateway assignment + `AMPX_INFLUXDB_*` in live `wp-config.php`)
 - Misleading firmware message: “No internet connection” on connection-refused may mean LAN blocked, not WAN down
+
+**Admin OTA reboot / Checking… stuck**
+- Serial `rst:0x8 (TG1WDT_SYS_RESET)` after `Fetching firmware manifest:` = old firmware (≤1.0.5) putting `WiFiClientSecure` on the `loop()` stack — USB-flash or OTA **1.0.7+**
+- Opening Admin must not fetch; only **Check for update** starts HTTPS
+- Serial Monitor baud is **115200**
+- Live files: `https://ampx.app/firmware/version.json` and the `.bin` must both be published and versions aligned
 
 **Live portal “critical error” on Meters**
 - Check Debug Log Manager log (path in `WP_DEBUG_LOG`), not only Apache `www_logs`

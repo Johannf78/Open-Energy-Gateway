@@ -78,17 +78,17 @@
 
 ### Current Constraints
 - **Active Meter Limit**: 5 meters actively configured and operational (vs 32 theoretical maximum)
-- **Hardcoded Settings**: Some configuration values require code changes
-- **Admin Interface**: Gateway reboot + HTTP OTA implemented; other admin functions pending
+- **Server URLs**: Local/live API and OTA URLs are compile-time (`USE_LOCAL_SERVER`, `ampxportal_server_*`, `firmwareURL`); Gateway ID is Admin + NVS, not hardcoded after first boot
+- **Admin Interface**: Gateway reboot + HTTP OTA (Check + Update) implemented; other admin functions pending
 - **Windows mDNS**: .local domain resolution not working on Windows (use IP address as workaround)
-- **Live OTA binary**: Must upload `ampx_open_energy_gateway.bin` to Hetzner `public_html/firmware/` (local hosting works; live URL 404 until published)
+- **Live OTA binary**: Live `https://ampx.app/firmware/` serving **1.0.7** (keep `.bin` and `version.json` in sync on publish)
 - **Live API key**: Local enforces `AMPX_API_KEY`; live `ampx.app/api/v2/` not yet gated — deploy with matching firmware to avoid 401s
 
 ### Technical Debt
 - **HTML Templates**: Static meter sections (5 meters) in web files - need dynamic generation for scaling beyond 5
 - **String Operations**: Some inefficient string concatenation in API functions
 - **Error Recovery**: Basic retry logic, could be enhanced
-- **Configuration Management**: Settings require web admin interface completion
+- **Configuration Management**: Gateway ID via Admin/NVS; WiFi via WiFiManager; API/OTA URLs still compile-time
 - **Documentation**: Some TODO comments indicate pending improvements
 
 ### Resolved Technical Debt
@@ -107,6 +107,8 @@
 - ✅ **Shared API Key (August 2026)**: Local `X-AmpX-Api-Key` / `AMPX_API_KEY`; firmware `ampxportal_api_key` + 1.0.3; Postman/curl 401/201 verified
 - ✅ **InfluxDB Cloud Serverless org (August 2026)**: AmpX / Energy Gateway / AWS Frankfurt (`eu-central-1-1.aws.cloud2.influxdata.com`); AmpX code still on `influxdb2.ampx.app` until v3 cutover
 - ✅ **Portal Meter Data UX (August 2026)**: Theme horizontal scroll (max-height viewport); plugin display 1000/30d with clear copy; server CSV export full 30d (`admin_post`); local verified gateway 100008
+- ✅ **OTA reboot-loop fix (August 2026)**: 1.0.3 FreeRTOS HTTPS manifest task → LoadProhibited reboot loop; **1.0.4** manifest check on `loop()` only
+- ✅ **Live HTTPS OTA (August 2026)**: 1.0.4/1.0.5 Check → `TG1WDT_SYS_RESET` (stack `WiFiClientSecure`); **1.0.7** static TLS client + 16KB loop stack + Check button + numeric version compare; live OTA on gateway 100008 Aug 18
 
 ### Remaining Performance / Ops Notes
 - Handshake still waits for the duration of an in-progress `handlePowerMeter()` call (acceptable with staggered single-meter reads)
@@ -114,16 +116,18 @@
 - Ensure Windows Wi‑Fi profile Private + Apache firewall allow so ESP can reach PC:80
 - Live portal: after editing `wp-config.php` on Hetzner, flush PHP OPcache (constants can look “missing” until then)
 - Live debug: Debug Log Manager path in `WP_DEBUG_LOG`, not `wp-content/debug.log`
+- Do not reintroduce FreeRTOS OTA / `WiFiClientSecure` side tasks, cross-core Arduino `String` caches, or a **local** `WiFiClientSecure` on `loop()`
 
 ## 🎯 Immediate Development Opportunities
 
 ### High Priority
-1. **Influx Cloud Serverless spike**: Bucket + token; prove write + SQL; then plan API v3 / portal SQL cutover
-2. **Deploy portal UX to live**: Theme 1.0.9 + plugin 1.1.4 (meter-data scroll, limits copy, full-window CSV)
-3. **Live API key cutover**: Deploy `AMPX_API_KEY` + `v2/index.php` to Hetzner with matching firmware 1.0.3+
-4. **Publish live OTA `.bin` + `version.json`**: So field devices can update without USB
-5. **Scale to 10 Meters**: Add HTML sections for meters 6-10 (backend already supports this)
-6. **Windows mDNS Resolution**: Troubleshoot and fix .local domain access on Windows
+1. **Ship-mode / clear WiFi (next):** Before sending a gateway to a customer, erase stored WiFi credentials so first boot at the site starts WiFiManager **AP mode** (no workshop SSID). Likely Admin “Clear WiFi / factory network reset” calling `wifiManager.resetSettings()` (already commented in `functions_wifi.ino`). Confirm reboot into AP; bump firmware if delivered by OTA.
+2. **API v3 + Cloud Serverless cutover**: Wire writes to `INFLUXDB_CLOUD_*`; portal InfluxQL/SQL; keep v2 until verified
+3. **Deploy portal UX to live**: Theme 1.0.9 + plugin 1.1.4 (meter-data scroll, limits copy, full-window CSV)
+4. **Live API key cutover**: Deploy `AMPX_API_KEY` + `v2/index.php` to Hetzner with matching firmware **1.0.7+**
+5. **Field OTA**: Live **1.0.7** published; OTA remaining 1.0.4 devices (never 1.0.3)
+6. **Scale to 10 Meters**: Add HTML sections for meters 6-10 (backend already supports this)
+7. **Windows mDNS Resolution**: Troubleshoot and fix .local domain access on Windows
 
 ### Medium Priority
 1. **Additional Meter Support**: Extend beyond Meatrol to other manufacturers

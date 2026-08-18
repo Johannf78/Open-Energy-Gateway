@@ -15,7 +15,7 @@ open_energy_gateway.ino     # Main application & coordination
 ├── functions_meter.ino     # Meter management & register definitions
 ├── functions_api.ino       # Remote API communication
 ├── functions_ntp.ino       # Time synchronization
-└── functions_ota.ino       # Over-the-air updates (disabled)
+└── functions_ota.ino       # HTTP pull OTA (Admin Check + Update)
 ```
 
 ### Hardware Abstraction Pattern
@@ -98,14 +98,16 @@ Also keep `server.handleClient()` / `webSocket.loop()` at the end of `loop()`. U
 - Local = XAMPP API on LAN IP port 80; live = `https://ampx.app/api/v2/` (key gate on live only after Hetzner deploy)
 - Portal reads Influx via plugin (`class-ampx-portal-influxdb-detailed.php`); UI at `/meters/?gateway_id=`
 
-### HTTP OTA Pattern (August 2026)
+### HTTP OTA Pattern (August 2026; field baseline 1.0.7)
 - Admin HTML must **not** call outbound `HTTPClient` in web handlers — that caused `ERR_CONNECTION_RESET` / hangs
-- Flow: `/admin` renders immediately → FreeRTOS task on core 0 fetches `version.json` into cache → browser polls `/ota_status` (cache only, never blocks WebServer)
-- Equal → “Up to date”, Update button **disabled**; unequal → “Update available”, button enabled
-- Manifest fetch fail → “Unavailable”, button stays enabled (manual attempt allowed)
-- `POST /update` re-checks manifest; refuses with “Already on latest” if versions match
-- Download URL from manifest `url` (local mode forces `firmwareURL`); flash via `HTTPUpdate`
-- Host both `ampx_open_energy_gateway.bin` and `version.json` under `/firmware/`
+- Flow: **Check for update** → `GET /ota_status?refresh=1` sets `otaManifestCheckRequested` → `loop()` runs `serviceOtaManifestCheck()` → fills `otaStatusCache` → JS polls `/ota_status` (no `refresh`). Opening `/admin` does **not** start TLS
+- **Never** fetch the manifest from a FreeRTOS side task: 1.0.3 used `otaManifestTask` on core 0 with boot-time HTTPS → LoadProhibited reboot loop (**1.0.4** moved check to `loop()`)
+- **Never** declare `WiFiClientSecure` as a local in `loop()` / `fetchFirmwareManifest()`: 1.0.4/1.0.5 stack overflow → `TG1WDT_SYS_RESET` on Check. Use **static** `otaTlsClient` / `otaPlainClient` + `SET_LOOP_TASK_STACK_SIZE(16384)`
+- Do not share Arduino `String` objects across cores without a mutex (prefer loop-only access)
+- Compare versions with `isNewerVersion()` (`major.minor.patch` numeric). Update only if server **>** device. Equal or older server → “Up to date”, button **disabled**
+- Manifest fetch fail → “Unavailable”; button may stay enabled for a manual attempt
+- `POST /update` re-checks; refuses if server is not newer; download URL from manifest `url` (local mode forces `firmwareURL`); flash via `HTTPUpdate`
+- Host both `ampx_open_energy_gateway.bin` and `version.json` under `/firmware/` (live verified 1.0.7)
 - ArduinoOTA not used; first flash via USB with dual OTA partitions, then field updates via Admin
 
 ### Portal Influx Config Pattern (WordPress)

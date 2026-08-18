@@ -4,8 +4,10 @@
 //3. Partition scheme: custom (partitions.csv — dual OTA app slots). Alternative: "8M with spiffs (3MB APP/1.5MB SPIFFS)"
 //4. Set the API to use the local server or the remote server. #define USE_LOCAL_SERVER true or false
 //5. Set debug to enabled or disabled. Disable for live to increase speed, but one also lose the debug info.
-//6. Select the correct COM port
-//7. OTA: Admin pulls https://ampx.app/firmware/ampx_open_energy_gateway.bin (first flash via USB with OTA partitions)
+//6. Select the correct COM port, check by using the function "Get Board Info"
+//7. Set the serial port baud rate to: 115200 baud.
+//8. Select the correct board: ESP32 Dev Module
+//9. OTA: Admin pulls https://ampx.app/firmware/ampx_open_energy_gateway.bin (first flash via USB with OTA partitions)
 
 //There will be two variants of this gateway, one working with Modbus over RS485 and the other
 //working with mobus over TCP/IP, this is setup here and used depeding on what is needed.
@@ -18,10 +20,19 @@
 
 //NB, Also remember to change the API server from local to live if needed...
 
+// Bump when publishing a new .bin to ampx.app/firmware/
+#define FIRMWARE_VERSION "1.0.7"
+//To publish OTA for gateways in the field
+//Bump FIRMWARE_VERSION
+//Use Sketch → Export compiled Binary (not the Upload / play button)
+//FTP Copy that .bin into ampx.app\firmware\ as ampx_open_energy_gateway.bin
+//Update version.json in that same folder and deploy
+
 //Defining custom partiotions.
 //Custom partitions is defined in the file partitions.csv
 //This file can be edited using the online tool: https://thelastoutpostworkshop.github.io/ESP32PartitionBuilder/
 //https://www.youtube.com/watch?v=EuHxodrye6E
+
 
 
 /*
@@ -79,8 +90,9 @@ for ESP32-WROVER-IE-N8R8-DEVKITC-VE Espressif / 8MB modules
 #include <HTTPUpdate.h>
 #include <WiFiClientSecure.h>
 
-// Bump when publishing a new .bin to ampx.app/firmware/
-#define FIRMWARE_VERSION "1.0.3"
+// Arduino loop() defaults to 8KB. HTTPS (mbedTLS) plus HTTPClient on that task
+// overflowed the stack and caused TG1WDT_SYS_RESET during OTA manifest fetch.
+SET_LOOP_TASK_STACK_SIZE(16384);
 
 //Time library for NTP synchronization
 #include <time.h>
@@ -278,19 +290,21 @@ struct FirmwareManifest {
 };
 
 // Cached OTA status — filled in loop(), never via HTTPClient inside a WebServer handler.
+// Do not fetch from a FreeRTOS side task: WiFiClientSecure + Arduino String across cores
+// caused LoadProhibited / corrupted backtrace reboot loops on 1.0.3.
 struct OtaStatusCache {
   bool ready = false;
   bool ok = false;
-  String available = "Checking…";
-  String status = "Checking…";
+  String available = "Not checked yet";
+  String status = "Not checked yet";
   bool upToDate = false;
   bool updateAvailable = false;
   String error = "";
 };
 OtaStatusCache otaStatusCache;
-volatile bool otaManifestCheckRequested = true;
+// Only GET /ota_status?refresh (Check for update) requests a check — not Admin page load, not boot.
+volatile bool otaManifestCheckRequested = false;
 unsigned long otaManifestLastCheckMs = 0;
-TaskHandle_t otaManifestTaskHandle = NULL;
 
 //Function prototypes, it needs to be here because it is used in the setup function.
 //one needs to add a forward declaration for this function as well, as it is defined in a seperate .ino file:functions.ino
@@ -315,9 +329,9 @@ void saveOtaStatus(const String& status);
 String getOtaStatusText();
 String getOtaTimeText();
 bool fetchFirmwareManifest(FirmwareManifest& out);
+bool isNewerVersion(const String& serverVer, const String& deviceVer);
 void serviceOtaManifestCheck();
 void requestOtaManifestCheck();
-void otaManifestTask(void* param);
 void setup() {
   // initialize LED status pins as outputs.
   pinMode(LED_1_POWER, OUTPUT);
@@ -377,17 +391,7 @@ void setup() {
   //Detect number of meters and set global variable, numberOfMeters.
   detectNumberOfMeters();
 
-  // OTA manifest checks on a side task so HTTPClient never blocks the web server loop.
-  xTaskCreatePinnedToCore(
-      otaManifestTask,
-      "otaManifest",
-      8192,
-      NULL,
-      1,
-      &otaManifestTaskHandle,
-      0);
-
-  //Do Over the air update for firmware updates
+  // OTA: manifest checks run in loop() when Admin requests them (see serviceOtaManifestCheck).
   //initOTA();
 }
 
@@ -489,6 +493,9 @@ void loop() {
     counter3 = now;
   }
 
+
+  // OTA manifest refresh on loop task (same core as WebServer) — avoids cross-core String/HTTPS crashes.
+  serviceOtaManifestCheck();
 
   //These functions must run continuesly, so one can not include a delay in the main loop.
   server.handleClient();  //Handle webserver requests from client

@@ -20,13 +20,13 @@ open_energy_gateway.ino (main)
 ├── functions_meter.ino (register definitions)
 ├── functions_api.ino (AmpX Portal uploads)
 ├── functions_ntp.ino (time sync)
-└── functions_ota.ino (disabled for size)
+└── functions_ota.ino (HTTP pull OTA — Admin Check + Update)
 ```
 
 ### Memory Management Rules
 - Use `DynamicJsonDocument JsonDoc(2048)` as primary data store
 - Enable/disable features via `#define DEBUG 1` for size optimization
-- OTA: Admin HTTP pull from `https://ampx.app/firmware/ampx_open_energy_gateway.bin` (`HTTPUpdate`); ArduinoOTA disabled; needs 8MB dual-app partitions (`partitions.csv` custom)
+- OTA: Admin HTTP pull from `https://ampx.app/firmware/ampx_open_energy_gateway.bin` (`HTTPUpdate`); ArduinoOTA disabled; needs 8MB dual-app partitions (`partitions.csv` custom); `SET_LOOP_TASK_STACK_SIZE(16384)`; static `WiFiClientSecure` (never a local on `loop()` — 1.0.5 `TG1WDT_SYS_RESET`); manifest check in `loop()` only after Check for update (never FreeRTOS side task — 1.0.3 reboot loop; never auto-fetch on Admin page load)
 - Web interface via header files (webpage.h, web_settings.h, web_admin.h), SPIFFS option available for future
 
 ### Data Processing Pipeline
@@ -75,7 +75,7 @@ open_energy_gateway.ino (main)
 3. **Libraries**: WiFiManager, ArduinoJson, WebSocketsServer (Markus Sattler)
 4. **Custom Libraries**: AmpXModbus from https://github.com/Johannf78/AmpXModbus
 5. **SPIFFS Tools**: Use create_spiffs.bat and upload_spiffs.bat (future option)
-6. **Debug**: Serial 9600 baud, conditional compilation for production
+6. **Debug**: Serial **115200** baud, conditional compilation for production
 
 ### Code Quality Standards
 - **Function Placement**: Match domain-specific .ino files
@@ -261,6 +261,28 @@ This is a mature, production-ready industrial IoT project with excellent archite
 - Rough cost at 200 gateways × 30s posts is material — longer upload intervals cut Serverless spend sharply
 - Keep Influx tokens out of git/docs; org metadata (host/org id) is fine to document
 
+#### Session 12: OTA reboot-loop fix → firmware 1.0.4 (August 2026)
+- ❌ **1.0.3**: FreeRTOS `otaManifestTask` on core 0 fetched HTTPS `version.json` at boot → `EXCCAUSE 0x02` LoadProhibited, corrupted backtrace, reboot loop after a few seconds
+- ✅ **1.0.4**: Removed side task; `serviceOtaManifestCheck()` in `loop()` only; Admin-triggered (no boot auto-fetch); 5‑min refresh only after prior check
+- ✅ Verified stable on hardware (gateway 100008) Aug 17, 2026
+
+**Key Learnings**:
+- Never run `WiFiClientSecure` / `HTTPClient` OTA manifest fetches on a FreeRTOS side task with shared Arduino `String` cache
+- Handlers still must not block on outbound HTTP — cache + `/ota_status` poll remains correct; fill the cache from `loop()`
+- Do not ship or OTA **1.0.3**; later baseline **1.0.7** (1.0.4 still had Check WDT)
+
+#### Session 13: Live HTTPS OTA + WDT/stack fix → firmware 1.0.7 (August 2026)
+- ❌ **1.0.4/1.0.5**: Admin Checking… / Check for update → `rst:0x8 (TG1WDT_SYS_RESET)` ~3s after `Fetching firmware manifest:` (local `WiFiClientSecure` on 8KB `loop()` stack)
+- ✅ **1.0.6+**: `SET_LOOP_TASK_STACK_SIZE(16384)`; static `otaTlsClient` / `otaPlainClient`; Check button only (no TLS on Admin load; no 5‑min auto-fetch)
+- ✅ Numeric `isNewerVersion()` so older server bin does not show Update available
+- ✅ Live E2E Aug 18, 2026: gateway **100008** OTA to **1.0.7**; Check shows Up to date
+
+**Key Learnings**:
+- Never put `WiFiClientSecure` on the `loop()` stack; Espressif HTTPS examples heap-allocate `NetworkClientSecure`
+- `TG1WDT_SYS_RESET` with no Guru Meditation often means stack smash (IWDT stage 2), not a slow timeout
+- Opening Admin must not start HTTPS; use `/ota_status?refresh=1` from a button
+- Compare semver numerically, not `==` / `!=`
+
 ### Current Status
 - **5+ Meters Supported**: Array-based backend; HTML scaled for more meters as configured ✅
 - **WebSocket Servicing**: Required around meter reads to keep handshakes responsive ✅
@@ -268,9 +290,12 @@ This is a mature, production-ready industrial IoT project with excellent archite
 - **Local API Key Auth**: Enforced and Postman-verified (August 2026) ✅
 - **Local Portal Meter Data UX**: Scroll + 1000/30d limits + full-window CSV ✅
 - **Live API + Portal E2E**: Verified gateway 100007 on https://ampx.app (Meters + View Data) ✅
-- **Live API Key**: Not deployed yet — coordinate with firmware 1.0.3+ ⏳
+- **Firmware**: **1.0.7** stable (API key + live HTTPS OTA); do not use 1.0.3 / 1.0.4 / 1.0.5 ✅
+- **Live OTA**: `https://ampx.app/firmware/` 1.0.7 `.bin` + `version.json` verified ✅
+- **Live API Key**: Not deployed yet — coordinate with firmware 1.0.7+ ⏳
 - **Live Portal UX deploy**: Theme 1.0.9 + plugin 1.1.4 pending ⏳
 - **Influx Cloud Serverless**: Org created (Frankfurt); AmpX cutover pending ⏳
+- **Next project**: Ship-mode — clear stored WiFi so customer first boot is AP / config portal ⏳
 - **Modern UI**: Professional sidebar navigation with summary tables
 - **Clean Navigation**: Home shows summaries, Meters page shows details
 - **Admin Features**: Gateway reboot with countdown timer implemented

@@ -31,6 +31,7 @@ Industrial and commercial facilities need comprehensive energy monitoring across
 - **Auto-Discovery**: Automatic meter detection and configuration
 - **Intuitive Interface**: Clean web dashboard showing all meter data
 - **Portal Meter Data**: Scrollable wide tables; clear 1000-row / 30-day display limits; CSV export of full 30-day window
+- **Field firmware updates**: Admin Check for update + HTTP OTA from `ampx.app/firmware/` (no USB after first flash)
 - **Mobile-Friendly**: Responsive design for smartphone/tablet access
 - **Status Visibility**: LED indicators for system health monitoring
 

@@ -25,6 +25,7 @@ Create a comprehensive ESP32-based energy monitoring gateway that communicates w
 - **Data collection**: Voltage, current, power, and energy readings per phase
 - **Web interface**: Live dashboard with WebSocket updates
 - **API integration**: Automatic ~30-second uploads to AmpX Portal (local or live) authenticated with shared API key header; time-series target is managed InfluxDB Cloud Serverless (SQL), with current production still on InfluxDB 2
+- **Field updates**: HTTP OTA from Admin after first USB flash (8MB dual-app partitions); current field firmware **1.0.7**
 - **Auto-discovery**: Automatic detection of connected meters
 
 ### Data Management

@@ -1,16 +1,49 @@
 # Active Context - AmpX Open Energy Gateway
 
 ## Current Focus
-**Paused end of day Aug 10, 2026.** Next session: **build AmpX API v3** and **cut over writes/reads to InfluxDB Cloud Serverless** (v3 storage; InfluxQL/SQL path), keeping API v2 + `influxdb2.ampx.app` until verified.
+**Aug 18, 2026:** Firmware **1.0.7** is the field/OTA baseline. Live HTTPS OTA verified on gateway **100008**.
+
+**Next project:** **Ship-mode / clear stored WiFi** so a unit sent to a customer boots WiFiManager **AP mode** (no workshop SSID). Then resume API v3 / Cloud Serverless cutover.
 
 **Ready for next session:**
-- Cloud Serverless org/bucket/token + DBRP + write/query spike done
-- Shared API key on local v2; firmware 1.0.3 sends `X-AmpX-Api-Key`
-- Plan: `influxdb3_hosting_choice` (phases: api-v3 → portal queries → firmware cutover)
+- Implement clear-WiFi (likely Admin button + `WiFiManager.resetSettings()`; already commented in `functions_wifi.ino`) — bump `FIRMWARE_VERSION` if shipped via OTA
+- Cloud Serverless spike done; local API key; live OTA 1.0.7
+- Later: `influxdb3_hosting_choice` (api-v3 → portal queries → firmware cutover)
 
-Previous: Cloud Serverless spike verified; Portal Meter Data UX (local); API key auth (local); HTTP OTA.
+Previous: Live HTTPS OTA (1.0.7); OTA WDT/stack fix; Admin Check button; 1.0.4 reboot-loop fix; Cloud Serverless spike; Portal Meter Data UX; API key auth.
 
 ## Recent Major Achievements
+
+### Live HTTPS OTA + WDT fix (August 2026) — firmware 1.0.7
+**Symptoms (on 1.0.4/1.0.5):** Admin stuck on **Checking…**; opening Admin or **Check for update** rebooted. Serial: `Fetching firmware manifest: https://ampx.app/firmware/version.json` then `rst:0x8 (TG1WDT_SYS_RESET)` (~3s), no Guru Meditation.
+
+**Root cause:** Local `WiFiClientSecure` on the Arduino `loop()` stack (default **8KB**) during TLS handshake. IWDT stage-2 hard-reset when the panic handler could not run. Opening Admin also auto-called `requestOtaManifestCheck()`, so merely loading `/admin` started HTTPS. Version compare was string equality, so device **1.0.6** vs server **1.0.5** showed “Update available”.
+
+**Fix (1.0.6/1.0.7):**
+- `SET_LOOP_TASK_STACK_SIZE(16384)` in `open_energy_gateway.ino`
+- Static `otaTlsClient` / `otaPlainClient` in `functions_ota.ino` (BSS, not stack)
+- Admin: **Check for update** → `GET /ota_status?refresh=1`; page load does **not** start TLS; no 5‑minute auto-refresh
+- `isNewerVersion()` numeric `major.minor.patch`; Update Firmware only if server **>** device (`doOTAUpdate` / `handleUpdate` same guard)
+
+**Verified Aug 18, 2026** (gateway **100008**):
+- Check: `Manifest HTTP 200` / `OTA manifest OK: 1.0.5` without reboot
+- Live OTA install: **OK: update applied (1.0.7)**; after Check, Current = Available **1.0.7**, status **Up to date**, Update disabled
+- Live files: `https://ampx.app/firmware/version.json` + `.bin`
+
+Do **not** ship **1.0.3** (reboot loop), **1.0.4/1.0.5** (Admin/Check WDT), or put `WiFiClientSecure` as a local in `loop()`. Field baseline is **1.0.7**.
+
+### OTA FreeRTOS reboot-loop fix (August 2026) — firmware 1.0.4
+**Symptom**: After flashing **1.0.3**, gateway reboot-looped a few seconds after boot. Serial showed `EXCCAUSE: 0x02` (LoadProhibited), `Backtrace: … |<-CORRUPTED`. Gateway ID (e.g. 100008) loaded from NVS, then panic.
+
+**Root cause**: 1.0.3 ran `otaManifestTask` on a FreeRTOS side task (core 0) that immediately fetched the **HTTPS** manifest (`USE_LOCAL_SERVER false` → `https://ampx.app/firmware/version.json`). Unsafe combo: `WiFiClientSecure` / `HTTPClient` off the Arduino loop task + Arduino `String` fields in `otaStatusCache` shared with WebServer handlers on core 1 → heap/stack corruption.
+
+**Fix (1.0.4)**:
+- Removed `xTaskCreatePinnedToCore(otaManifestTask, …)`
+- `serviceOtaManifestCheck()` runs only from `loop()` (same core as WebServer)
+- No boot-time auto-fetch: `otaManifestCheckRequested` starts `false`; first check only when Admin opens (`requestOtaManifestCheck`); 5‑minute refresh only after a prior check
+- Handlers still must not call outbound `HTTPClient` (cache + `/ota_status` poll only)
+
+**Verified**: USB flash 1.0.4; stable run past WiFi/meters (Aug 17, 2026). Do **not** put `WiFiClientSecure` or shared Arduino `String` caches on a FreeRTOS side task again.
 
 ### InfluxDB Cloud Serverless account (August 2026)
 **Decision**: Use **managed Cloud Serverless** (not self-hosted Influx on Hetzner). Path later: Serverless → Cloud Dedicated if quotas/isolation require it. **InfluxDB 3 Cloud** (managed Enterprise) is early-access / separate product — not used yet.
@@ -66,7 +99,7 @@ Previous: Cloud Serverless spike verified; Portal Meter Data UX (local); API key
 
 **Implementation**:
 - Server: `AMPX_API_KEY` in `api/config/config.php`; gate in `api/v2/index.php` after Content-Type check (`hash_equals`; empty config → 500; bad/missing → 401)
-- Firmware: hardcoded `ampxportal_api_key` next to API URLs; `HTTPClient` sends `X-AmpX-Api-Key` in `postToAmpXPortal2()`; `FIRMWARE_VERSION` **1.0.3**
+- Firmware: hardcoded `ampxportal_api_key` next to API URLs; `HTTPClient` sends `X-AmpX-Api-Key` in `postToAmpXPortal2()`; introduced in **1.0.3**, current stable **1.0.7**
 - Docs/tests: `api/README.md`, `test_api_v2.php`, gateway README
 
 **Verified local**:
@@ -75,7 +108,7 @@ Previous: Cloud Serverless spike verified; Portal Meter Data UX (local); API key
 
 **Ops / live cutover**:
 - Same secret in local and live `config.php`; do not put real key in public docs (use `YOUR_KEY`)
-- Flash/OTA gateways with matching key **before** enabling the check on live, or production uploads get 401
+- Flash/OTA gateways with matching key **before** enabling the check on live, or production uploads get 401 (use firmware **1.0.7+**, not 1.0.3)
 - Out of scope for now: per-gateway keys, NVS/Admin key UI, rate limits, upload jitter
 
 **Breaking change note (user confirmed Aug 2026):**
@@ -86,8 +119,8 @@ Previous: Cloud Serverless spike verified; Portal Meter Data UX (local); API key
 **Objective**: Enable Admin firmware updates without USB after the first OTA-capable flash.
 
 **Implementation**:
-- `HTTPUpdate` + `WiFiClientSecure` (`setInsecure`) for HTTPS; plain `WiFiClient` for HTTP (local test)
-- Admin shows `FIRMWARE_VERSION`, last OTA status/time (NVS `ota_status` / `ota_time`), Update Firmware button
+- `HTTPUpdate` + static `WiFiClientSecure` (`setInsecure`) for HTTPS; static `WiFiClient` for HTTP (local test)
+- Admin: Check for update + Update Firmware; last OTA status/time in NVS (`ota_status` / `ota_time`)
 - `POST /update` sends status page then downloads/flashes; success → NVS + reboot
 - Board: **ESP32 Dev Module**, Flash **8MB**, partition **custom** (`partitions.csv` dual OTA app slots)
 - Host path: `D:\xampp\htdocs\ampx.app\firmware\` + junction `htdocs\firmware` for LAN IP access
@@ -98,7 +131,7 @@ Previous: Cloud Serverless spike verified; Portal Meter Data UX (local); API key
 - Positive: local `http://{LAN_IP}/firmware/...` OTA 1.0.1 → **1.0.2**, Home/Settings OK after reboot
 - USB baseline flash on COM5 with custom 8MB partitions
 
-**Ops**: Publish identical `.bin` to live `public_html/firmware/` before field devices can OTA from ampx.app.
+**Ops**: Live `public_html/firmware/` hosts **1.0.7** `.bin` + `version.json` (verified Aug 18). Keep both files in sync when publishing.
 ### Live Portal Meters Fix + Live API E2E (July 2026)
 **Objective**: Prove gateway uploads work against live AmpX API and appear on https://ampx.app; fix Meters critical error for gateway 100007.
 
@@ -153,18 +186,19 @@ One meter per 1s interval; sub-3s WebSocket connections; progressive UI updates.
 Sidebar UI, meters page, WebSocket architecture, 5-meter expansion — see progress.md / .cursorrules Sessions 1–5.
 
 ## Next Development Opportunities
-1. **Next session:** AmpX **API v3** → Cloud Serverless (`INFLUXDB_CLOUD_*`); same payload + API key; keep v2
-2. Portal: switch Meter Data queries from Flux/Influx2 to InfluxQL (or SQL) against Cloud
-3. Firmware: point to `/api/v3/`, bump `FIRMWARE_VERSION` (breaking-change policy), then sunset v2/Influx2
-4. Deploy portal UX + API key + OTA `.bin` to live Hetzner as needed
-5. Scale HTML meters; Windows mDNS; optional NVS API key
+1. **Next project:** Clear stored WiFi before customer ship — gateway must enter AP / config portal on first boot at the site (WiFiManager `resetSettings()`; do not leave workshop credentials on the device)
+2. AmpX **API v3** → Cloud Serverless (`INFLUXDB_CLOUD_*`); same payload + API key; keep v2
+3. Portal: switch Meter Data queries from Flux/Influx2 to InfluxQL (or SQL) against Cloud
+4. Firmware: point to `/api/v3/`, bump `FIRMWARE_VERSION` (breaking-change policy), then sunset v2/Influx2
+5. Deploy portal UX + live API key; OTA hosting already live at **1.0.7**
+6. Scale HTML meters; Windows mDNS; optional NVS API key
 
 ## System Health Status
-- **Firmware**: Production-ready; API key send path in **1.0.3**; **HTTP OTA working** (local E2E)
+- **Firmware**: **1.0.7** stable (API key + live HTTPS OTA); do not flash 1.0.3 (reboot loop) or 1.0.4/1.0.5 (Check WDT)
 - **Local API**: Shared key enforced; Postman/curl verified 401/201
 - **Live API**: Still open (no key gate) until Hetzner deploy
 - **Influx (production)**: Still `influxdb2.ampx.app` (v2 + Flux portal)
 - **Influx (target)**: Cloud Serverless org **Energy Gateway** created; not wired to AmpX yet
 - **Local portal**: Meter Data scroll + 1000/30d limits + full-window CSV export verified (`ampx-app.local`)
 - **Live portal**: Meters/View Data working for 100007; UX fixes not deployed yet
-- **OTA hosting**: Local ready; live URL still needs `.bin` upload
+- **OTA hosting**: Live `https://ampx.app/firmware/` serving **1.0.7** `.bin` + `version.json` ✅
