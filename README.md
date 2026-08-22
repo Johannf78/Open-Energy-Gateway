@@ -416,6 +416,7 @@ This project is designed for industrial and commercial energy monitoring applica
 
 ## 📞 Support
 
+- **Contact AmpX**: <a href="https://ampx.co/contact/" target="_blank" rel="noopener noreferrer">ampx.co/contact</a> — product questions, quotes, and commercial support
 - **Issues**: [GitHub Issues](https://github.com/Johannf78/Open-Energy-Gateway/issues)
 - **Documentation**: See `memory-bank/` folder for detailed technical documentation
 - **Hardware Support**: Compatible with Meatrol Brand energy meters
