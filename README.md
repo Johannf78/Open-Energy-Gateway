@@ -6,7 +6,7 @@
 
 A comprehensive ESP32-based energy monitoring gateway that communicates with Meatrol Brand energy meters via Modbus protocols (RS485 and TCP/IP). The system collects data from up to 32 meters simultaneously, displays it through a web interface, and uploads measurements to a remote API for centralized monitoring.
 
-**Buy ready-built hardware:** [AmpX Energy Gateway](https://ampx.co/product/ampx-energy-gateway/) on ampx.co — DIN-rail unit with WiFi, RS485 or TCP/IP Modbus, and uploads to [ampx.app](https://ampx.app).
+**Buy ready-built hardware:** <a href="https://ampx.co/product/ampx-energy-gateway/" target="_blank" rel="noopener noreferrer">AmpX Energy Gateway</a> on ampx.co — DIN-rail unit with WiFi, RS485 or TCP/IP Modbus, and uploads to <a href="https://ampx.app" target="_blank" rel="noopener noreferrer">ampx.app</a>.
 
 ## 🌟 Features
 
