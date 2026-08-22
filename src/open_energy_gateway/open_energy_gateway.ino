@@ -22,7 +22,7 @@
 //NB, Also remember to change the API server from local to live if needed...
 
 // Bump when publishing a new .bin to ampx.app/firmware/
-#define FIRMWARE_VERSION "1.0.9"
+#define FIRMWARE_VERSION "1.1.1"
 //To publish OTA for gateways in the field
 //Bump FIRMWARE_VERSION
 //Use Sketch → Export compiled Binary (not the Upload / play button)
@@ -266,11 +266,11 @@ const char* api_key = "c0526f06893d1063800d3bb966927711"; //your_API_KEY
 //AmpX Energy Portal, Remote energy logging. Use IP address of the server if using local server(no dns server).
 // LAN IP of PC running XAMPP (port 80). Do not use :8080 unless Docker API is running.
 // Note: https://ampx.app is the public site; local vhost is ampx-app.local (ESP should use IP).
-const char* ampxportal_server_local = "http://192.168.2.120/api/v2/";
-const char* ampxportal_server_live = "https://ampx.app/api/v2/";
-//"https://ampx.app/api/v2/"; //old "https://portal.ampx.app/api/v2/"; //old "https://app.ampx.co/api/v2/";
+const char* ampxportal_server_local = "http://192.168.2.120/api/v3/";
+const char* ampxportal_server_live = "https://ampx.app/api/v3/";
+// Both local and live URLs are /api/v3/ (Cloud Serverless). /api/v2/ remains on Hetzner for Influx 2 until sunset.
 
-// Shared secret for AmpX Portal API v2 (header X-AmpX-Api-Key). Must match AMPX_API_KEY in api/config/config.php.
+// Shared secret for AmpX Portal API (header X-AmpX-Api-Key). Must match AMPX_API_KEY in api/config/config.php.
 const char* ampxportal_api_key = "b9e96dfb8f9c722b917f1c536ec67c373e5644eee75f267dce94b7294f0274b7";
 
 // Which API to use local or live? - set to true for local development, false for live

@@ -110,24 +110,24 @@ JsonDocument MeterRegisterDefs;           // Register definitions
 ### API Endpoints
 ```cpp
 // Local: PC LAN IP + XAMPP on port 80 (update IP when DHCP changes)
-const char* ampxportal_server_local = "http://192.168.2.120/api/v2/";
-const char* ampxportal_server_live = "https://ampx.app/api/v2/";
+const char* ampxportal_server_local = "http://192.168.2.120/api/v3/";
+const char* ampxportal_server_live = "https://ampx.app/api/v3/";
 const char* ampxportal_api_key = "...";  // must match AMPX_API_KEY in api/config/config.php
-#define USE_LOCAL_SERVER true  // Development flag
+#define USE_LOCAL_SERVER false  // 1.1.1 production Cloud path; true → LAN /api/v3/
 ```
 
 ### Local AmpX stack (July–August 2026)
-- **API code**: `D:\xampp\htdocs\ampx.app\api\` (v2 endpoint `POST /api/v2/`) — docs: `api/README.md`
-- **Auth**: Required header `X-AmpX-Api-Key` (local verified August 2026); value from `AMPX_API_KEY` / `ampxportal_api_key`
+- **API code**: `D:\xampp\htdocs\ampx.app\api\` — v2 `POST /api/v2/` (Influx 2); v3 `POST /api/v3/` (Cloud Serverless, local + live) — docs: `api/README.md`
+- **Auth**: Required header `X-AmpX-Api-Key` (local + live v3 verified August 2026); value from `AMPX_API_KEY` / `ampxportal_api_key`
 - **Portal (WordPress)**: http://ampx-app.local/ (hosts → 127.0.0.1; Apache vhost DocumentRoot `htdocs/ampx.app`)
 - **LAN access to API**: junction `D:\xampp\htdocs\api` → `ampx.app\api` so `http://{LAN_IP}/api/v2/` works
 - **LAN access to firmware**: junction `D:\xampp\htdocs\firmware` → `ampx.app\firmware` so `http://{LAN_IP}/firmware/*.bin` works
-- **InfluxDB (current production)**: `https://influxdb2.ampx.app`, org `ampx`, bucket `energy_metrics`, measurement `meter_readings_detailed` (InfluxDB 2 + Flux portal reads)
+- **InfluxDB (legacy v2)**: `https://influxdb2.ampx.app`, org `ampx`, bucket `energy_metrics`, measurement `meter_readings_detailed`
 - **Success**: HTTP **201** + portal meters page for the gateway; **401** if key missing/wrong
 - **Postman**: Local URL `http://ampx-app.local/api/v2/` or `http://127.0.0.1/api/v2/`; enable `X-AmpX-Api-Key` header
 - **Do not use**: `:8080` unless a Docker API container is running; public DNS `ampx.app` ≠ local vhost
 
-### InfluxDB Cloud Serverless (target — August 2026)
+### InfluxDB Cloud Serverless (production portal + v3 — August 2026)
 - **Product**: Managed InfluxDB Cloud Serverless (not self-hosted on Hetzner; not early-access “InfluxDB 3 Cloud”)
 - **Account**: AmpX · **Organization**: Energy Gateway · **Org ID**: `86a141bfd8d7f66a`
 - **Region**: AWS `eu-central-1` (EU Frankfurt)
@@ -139,14 +139,14 @@ const char* ampxportal_api_key = "...";  // must match AMPX_API_KEY in api/confi
 - **Queries (native SQL)**: Flight+gRPC client libraries (not used in spike)
 - **Token**: local `INFLUXDB_CLOUD_TOKEN` in `api/config/config.php` (v2 still uses legacy `INFLUXDB_*`); rotate if exposed
 - **Spike script**: `api/v2/tests/spike_cloud_serverless.php`
-- **AmpX wiring**: Pending API v3 + portal query cutover + firmware; never put Cloud token in README
+- **AmpX wiring**: Local + live `/api/v3/` writes + portal InfluxQL reads verified 22 Aug 2026 (100007 / 3423875005); never put Cloud token in README
 - **Upgrade path if needed**: Cloud Dedicated (sales), not DIY Core on the WP host
 
 ### Live AmpX portal (July 2026)
 - **Site**: https://ampx.app/ (Hetzner `dedivirt3789.your-server.de`, FTP `ampxapp`, PHP **8.4**)
-- **API**: `https://ampx.app/api/v2/` (same tree under `public_html/api`); shared-key gate not live until `AMPX_API_KEY` + `v2/index.php` deployed
-- **Portal plugin**: `ampx-portal-plugin` (**1.1.4** local) — meters shortcode reads Influx via `AMPX_Portal_InfluxDB_Detailed`
-- **Portal theme**: `ampx-portal-theme` (**1.0.9** local) — `assets/css/style-index.css` meter-data table scroll
+- **API**: `https://ampx.app/api/v3/` (Cloud); `https://ampx.app/api/v2/` still on Influx 2. Live v3 key gate verified GET **405**, POST no key **401**, keyed POST **201**.
+- **Portal plugin**: `ampx-portal-plugin` (**1.1.5**) — InfluxQL against Cloud (`AMPX_Portal_InfluxDB_Detailed`)
+- **Portal theme**: `ampx-portal-theme` (**1.0.9** local, **1.0.7** live) — table scroll CSS not on live yet
 - **Meter Data page**: `/meter-data/?meter_sn=&gateway_id=` — table ≤1000 newest / 30d; Export CSV = full 30d via `admin-post.php?action=ampx_export_meter_csv`
 - **Required in live `wp-config.php`** (before “stop editing”):
   - `AMPX_INFLUXDB_URL`, `AMPX_INFLUXDB_TOKEN`, `AMPX_INFLUXDB_ORG`, `AMPX_INFLUXDB_BUCKET`
@@ -188,7 +188,7 @@ const unsigned long REBOOT_INTERVAL = 86400000;         // 24 hours
 
 ### Flash / OTA (August 2026)
 - Target: **8MB** modules — Arduino IDE **ESP32 Dev Module**, Flash **8MB**, Partition **custom** (`src/open_energy_gateway/partitions.csv` dual OTA apps) or **8M with spiffs**
-- Current firmware: **`FIRMWARE_VERSION` 1.0.9** (ship-mode). Do not ship 1.0.3 reboot loop, or 1.0.4/1.0.5 Check WDT. Live OTA last verified **1.0.7** until 1.0.9 is published.
+- Current firmware: **`FIRMWARE_VERSION` 1.1.1** (`ampxportal_server_live` = `/api/v3/`, `USE_LOCAL_SERVER false` on 100007). Do not ship 1.0.3 reboot loop, or 1.0.4/1.0.5 Check WDT. Live OTA `version.json` still **1.0.9** (v2) — next publish **1.1.1**, never 1.0.9.
 - `SET_LOOP_TASK_STACK_SIZE(16384)` — default 8KB `loop()` stack overflows during HTTPS TLS
 - Admin HTTP pull: `https://ampx.app/firmware/ampx_open_energy_gateway.bin` via `HTTPUpdate` + **static** `WiFiClientSecure`
 - Manifest check: `serviceOtaManifestCheck()` from **`loop()` only** after **Check for update**; no FreeRTOS OTA task; no Admin-load or boot-time HTTPS fetch

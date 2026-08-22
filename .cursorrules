@@ -58,7 +58,7 @@ open_energy_gateway.ino (main)
 
 ### API Integration Patterns
 - **Dual Endpoints**: Local development vs live production server
-- **Auth**: Shared header `X-AmpX-Api-Key` = sketch `ampxportal_api_key` = `AMPX_API_KEY` in `api/config/config.php` (local enforced; live pending deploy)
+- **Auth**: Shared header `X-AmpX-Api-Key` = sketch `ampxportal_api_key` = `AMPX_API_KEY` in `api/config/config.php` (local + live `/api/v3/` enforced Aug 2026)
 - **JSON Format**: gateway_id, meter_id, serial_number, timestamp, values{}
 - **Error Handling**: HTTP status checking with LED feedback (401 = bad/missing key)
 - **Timing**: 30-second intervals, non-blocking upload
@@ -253,7 +253,7 @@ This is a mature, production-ready industrial IoT project with excellent archite
 - ✅ Decision: managed Serverless (not self-host Influx on Hetzner); company email for org ownership
 - ✅ API token → `INFLUXDB_CLOUD_*` in local `api/config/config.php` only
 - ✅ Spike: write **204**; InfluxQL **200** after DBRP; script `api/v2/tests/spike_cloud_serverless.php`
-- ⏳ Not wired to AmpX yet — production remains `influxdb2.ampx.app` until API v3 + portal cutover
+- ✅ Local `/api/v3/` writes wired Aug 22; production gateways/portal remain `influxdb2.ampx.app` until portal + firmware cutover
 - Note: **InfluxDB 3 Cloud** (early-access managed Enterprise) ≠ **Cloud Serverless**
 
 **Key Learnings**:
@@ -297,20 +297,75 @@ This is a mature, production-ready industrial IoT project with excellent archite
 - `ESP.restart()` leaves GPIO high — turn status LEDs off first
 - Do not uncomment `resetSettings()` in `initWiFi()`
 
+#### Session 15: API v3 Cloud Serverless writes (August 2026)
+- ✅ Isolated clone `api/v3/` (`AmpX\ApiV3`); same JSON + `X-AmpX-Api-Key`; `api_version` **3.0**
+- ✅ Writes `INFLUXDB_CLOUD_*` with org ID; v2 files untouched
+- ✅ Verified local: GET **405**, no/wrong key **401**, valid POST **201**, InfluxQL `v3_plan_test` / 100008 matches `voltage_L1=231.77`
+- ✅ v2 still **201** to `influxdb2.ampx.app`
+- ✅ Portal InfluxQL local reads (Session 16)
+- ✅ Firmware local `/api/v3/` (Session 17)
+- ⏳ Live Hetzner `/api/v3/` completed Session 18
+- Plan: `ampx.app/docs/superpowers/plans/2026-08-22-api-v3-cloud-serverless.md`
+
+**Key Learnings**:
+- Missing `/api/v3/` on `ampx-app.local` is rewritten by WordPress `.htaccess` to a 200 HTML page — create the real directory/file before judging 404
+- Cloud write URL must use org **ID** (spike-proven), not the org display name
+
+#### Session 16: Portal InfluxQL Cloud reads (August 2026)
+- ✅ `AMPX_Portal_InfluxDB_Detailed` Flux → InfluxQL `/query`; wide JSON parser
+- ✅ Local `wp-config` `AMPX_INFLUXDB_*` → Cloud Serverless; plugin **1.1.5**
+- ✅ CLI: 100001/`SN-1234567890` (2 rows), 100008/`v3_plan_test` (1); v2 serial 3423875005 → 0
+- ⏳ Live portal completed Session 18
+- Plan: `ampx.app/docs/superpowers/plans/2026-08-22-portal-influxql-cloud.md`
+
+**Key Learnings**:
+- Cloud Data Explorer SQL ≠ plugin InfluxQL `/query`; both work against the same bucket
+- Local Meters only show v3/Cloud points; WP gateway must be assigned to the logged-in user (100001 is unassigned)
+
+#### Session 17: Firmware local `/api/v3/` (August 2026)
+- ✅ Sketch **1.1.0**: `ampxportal_server_local` = `/api/v3/`; live still `/api/v2/`; `USE_LOCAL_SERVER true`
+- ✅ USB flash gateway **100007**; Serial **201** + `api_version` **3.0** for SN **3423875005**
+- ✅ Local portal Meter Data: Cloud rows for 100007 / 3423875005
+- ✅ ESP32 3.3.11 Windows: stub `OpenThread/bits/align.h` → `#include_next`; merge-bin `--pad-to-size 8MB` can `MemoryError` (app `.bin` still built)
+- ⏳ Live USB 1.1.1 completed Session 18; do not OTA 1.0.9
+- Plan: `ampx.app/docs/superpowers/plans/2026-08-22-firmware-api-v3.md`
+
+**Key Learnings**:
+- Arduino15 under `Program Files\Arduino IDE` + Matter include prefix breaks `<bits/align.h>` on Windows
+- Verify/Upload can fail after a good `.bin` if only `merge-bin` pad fails
+
+#### Session 18: Live Cloud / API v3 cutover (August 2026)
+- ✅ Live `wp-config` `AMPX_INFLUXDB_*` → Cloud Serverless; org **Energy Gateway** (not account AmpX, not Influx 2 `ampx`)
+- ✅ Plugin **1.1.5** InfluxQL on Hetzner; OPcache flush required after wp-config
+- ✅ Live `/api/v3/`: GET **405** `X-API-Version: 3.0`; POST no key **401**; keyed POST **201**
+- ✅ Sketch **1.1.1**: `ampxportal_server_live` = `/api/v3/`; `USE_LOCAL_SERVER false`; USB **100007** posting ~30s
+- ✅ Live Meter Data: 100007 / 3423875005 Cloud rows (377→395); leftover Kadence example 100001 removed
+- ⏳ OTA `version.json` still **1.0.9** (v2) — next publish **1.1.1**; do not publish 1.0.9
+- ⏳ Theme **1.0.7** live (1.0.9 local); sunset v2/Influx 2 after fleet migrates
+- Plan: `ampx.app/docs/superpowers/plans/2026-08-22-live-cloud-cutover.md`
+
+**Key Learnings**:
+- Cloud **account** AmpX ≠ **organization** Energy Gateway; one-org quota — rename in place only, never a second org
+- Live portal InfluxQL never queries until the user can access the gateway; logged-out meter-data is not a Cloud check
+- GET `/api/v3/` **405** means the PHP API exists; WordPress rewrite of a missing folder is **200** HTML
+- Live Meter Data page can contain Kadence sample HTML above `[ampx_meter_data]` — edit the WP page, not the plugin
+- Voltages 0 on 100007 are Modbus/meter, not API/Cloud failure
+- Do not OTA **1.0.9** after the portal is on Cloud — that firmware still posts v2
+
 ### Current Status
 - **5+ Meters Supported**: Array-based backend; HTML scaled for more meters as configured ✅
 - **WebSocket Servicing**: Required around meter reads to keep handshakes responsive ✅
 - **Local API E2E**: Verified against XAMPP + Influx + ampx-app.local portal ✅
 - **Local API Key Auth**: Enforced and Postman-verified (August 2026) ✅
 - **Local Portal Meter Data UX**: Scroll + 1000/30d limits + full-window CSV ✅
-- **Live API + Portal E2E**: Verified gateway 100007 on https://ampx.app (Meters + View Data) ✅
-- **Firmware**: Sketch **1.0.9** (ship-mode); do not use 1.0.3 / 1.0.4 / 1.0.5 ✅
-- **Live OTA**: Last verified `https://ampx.app/firmware/` **1.0.7**; local `version.json` **1.0.9** pending live publish ⏳
-- **Live API Key**: Not deployed yet — coordinate with firmware 1.0.7+ ⏳
-- **Live Portal UX deploy**: Theme 1.0.9 + plugin 1.1.4 pending ⏳
-- **Influx Cloud Serverless**: Org created (Frankfurt); AmpX cutover pending ⏳
+- **Live API v3 + Portal Cloud E2E**: 100007 / 3423875005 on https://ampx.app View Data ✅
+- **Firmware**: Sketch **1.1.1** on 100007 (live `/api/v3/`); do not use 1.0.3 / 1.0.4 / 1.0.5 ✅
+- **Live OTA**: `version.json` **1.0.9** (v2). Next publish **1.1.1**. Do not publish 1.0.9 ⏳
+- **Live API Key**: `/api/v3/` gated 401/201 ✅
+- **Live Portal UX**: Plugin 1.1.5 live; theme 1.0.9 still pending ⏳
+- **Influx Cloud Serverless**: Local + live v3 writes + portal InfluxQL ✅; v2/Influx 2 still on Hetzner ⏳
 - **Ship-mode**: Admin Clear WiFi → AP `energy-gateway-{ID}` ✅
-- **Next project**: API v3 / Cloud Serverless cutover ⏳
+- **Next project**: Publish OTA **1.1.1**; migrate remaining live gateways; then theme 1.0.9 + sunset v2 ⏳
 - **Modern UI**: Professional sidebar navigation with summary tables
 - **Clean Navigation**: Home shows summaries, Meters page shows details
 - **Admin Features**: Gateway reboot (LEDs off), OTA, Clear WiFi, Gateway ID

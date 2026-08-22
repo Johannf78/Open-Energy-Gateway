@@ -1,8 +1,8 @@
 //API to post data to the AmpX Portal and EmonCMS
 
-//Post data to the AmpX Portal API v2
+//Post data to the AmpX Portal API (local /api/v3/ or live /api/v2/)
 void postToAmpXPortal2(int meterNumber = 1) {
-    debugln("postToAmpXPortal2 function called - Docker API");
+    debugln("postToAmpXPortal2 function called");
   
     String meterPrefix = "m" + String(meterNumber) + "_";
     
@@ -107,7 +107,7 @@ void postToAmpXPortal2(int meterNumber = 1) {
   
       // Check the response code
       if (httpResponseCode == 201) {
-        debugln("✅ SUCCESS: Data sent to Docker API v2!");
+        debugln("✅ SUCCESS: Data sent to AmpX Portal API!");
         digitalWrite(LED_4_INTERNET, HIGH);
         digitalWrite(LED_5_SERVER, HIGH);
       } else {

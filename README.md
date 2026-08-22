@@ -6,6 +6,8 @@
 
 A comprehensive ESP32-based energy monitoring gateway that communicates with Meatrol Brand energy meters via Modbus protocols (RS485 and TCP/IP). The system collects data from up to 32 meters simultaneously, displays it through a web interface, and uploads measurements to a remote API for centralized monitoring.
 
+**Buy ready-built hardware:** [AmpX Energy Gateway](https://ampx.co/product/ampx-energy-gateway/) on ampx.co — DIN-rail unit with WiFi, RS485 or TCP/IP Modbus, and uploads to [ampx.app](https://ampx.app).
+
 ## 🌟 Features
 
 ### Core Capabilities
@@ -150,10 +152,10 @@ Meters are automatically discovered during startup. The system supports:
 The system supports dual API endpoints (configurable in `open_energy_gateway.ino`):
 ```cpp
 // Local: LAN IP of the PC running XAMPP (port 80). Update when the PC IP changes.
-const char* ampxportal_server_local = "http://192.168.2.120/api/v2/";
-const char* ampxportal_server_live = "https://ampx.app/api/v2/";
+const char* ampxportal_server_local = "http://192.168.2.120/api/v3/";
+const char* ampxportal_server_live = "https://ampx.app/api/v3/";
 const char* ampxportal_api_key = "...";  // must match AMPX_API_KEY in api/config/config.php
-#define USE_LOCAL_SERVER true  // Set to false for production
+#define USE_LOCAL_SERVER false  // true = LAN XAMPP /api/v3/; false = live /api/v3/
 ```
 
 Every upload sends header `X-AmpX-Api-Key` (firmware **1.0.3+**). Full API docs: `ampx.app/api/README.md`.
@@ -161,21 +163,21 @@ Every upload sends header `X-AmpX-Api-Key` (firmware **1.0.3+**). Full API docs:
 **Breaking changes:** If the portal/API contract changes so older flashed gateways fail, bump `FIRMWARE_VERSION` in the same change and publish OTA before (or with) the live API cutover. The API key requirement is one such break (pre-1.0.3 → 401).
 
 **Local development stack (verified July–August 2026):**
-- API: XAMPP at `D:\xampp\htdocs\ampx.app\api\` — `POST /api/v2/` with `X-AmpX-Api-Key` (see that folder’s `README.md`)
+- API: XAMPP at `D:\xampp\htdocs\ampx.app\api\` — firmware posts `POST /api/v3/` (Cloud). Header `X-AmpX-Api-Key` (see that folder’s `README.md`)
 - Portal UI: http://ampx-app.local/ (WordPress vhost; not the public Cloudflare `ampx.app` host)
-- InfluxDB (current): `influxdb2.ampx.app` via `api/config/config.php`; success = HTTP **201**; missing/wrong key = **401**
-- InfluxDB (target): managed **Cloud Serverless** org AmpX / Energy Gateway — host `https://eu-central-1-1.aws.cloud2.influxdata.com` (AWS Frankfurt); API v3 cutover pending — see `ampx.app/api/README.md`
+- InfluxDB (legacy v2 path): `influxdb2.ampx.app` via `POST /api/v2/`
+- InfluxDB (portal + v3): managed **Cloud Serverless** — account AmpX / org **Energy Gateway** — host `https://eu-central-1-1.aws.cloud2.influxdata.com` (AWS Frankfurt); see `ampx.app/api/README.md`
 - Postman: `http://ampx-app.local/api/v2/` or `http://127.0.0.1/api/v2/` — enable header `X-AmpX-Api-Key`
 - ESP must reach the PC on TCP **80**; Windows Wi‑Fi profile should be **Private** with Apache firewall allow rules
 - Do not use port **8080** unless a separate Docker API is running
 
-**Live stack (verified July 2026; API key gate pending Hetzner deploy):**
-- API: `https://ampx.app/api/v2/` — set `#define USE_LOCAL_SERVER false`
-- When enabling the key on live: deploy `api/config/config.php` + `v2/index.php` and flash/OTA gateways with matching `ampxportal_api_key` together
-- Portal UI: https://ampx.app/ → Meters → gateway → View Data
-- WordPress `wp-config.php` must define `AMPX_INFLUXDB_URL`, `AMPX_INFLUXDB_TOKEN`, `AMPX_INFLUXDB_ORG`, `AMPX_INFLUXDB_BUCKET` (portal plugin requires them)
-- After editing live `wp-config.php` on Hetzner: flush PHP OPcache or constants may appear missing
+**Live stack (verified August 2026 Cloud cutover):**
+- API: `https://ampx.app/api/v3/` — `#define USE_LOCAL_SERVER false` (v2 still on Influx 2 until sunset)
+- Portal UI: https://ampx.app/ → Meters → gateway → View Data (Cloud / InfluxQL, plugin 1.1.5)
+- WordPress `wp-config.php` `AMPX_INFLUXDB_*` → Cloud Serverless; **ORG** = `Energy Gateway` (not AmpX)
+- After editing live `wp-config.php` on Hetzner: flush PHP OPcache
 - Create/assign the gateway in WP Admin; Influx data alone does not register it in the portal list
+- OTA: live `version.json` is **1.0.9** (v2). Next publish is **1.1.1**. Do not publish 1.0.9.
 
 ## 💻 Usage
 
@@ -280,7 +282,7 @@ The project includes infrastructure for future SPIFFS implementation:
 - **Active Meters**: Currently configured for 5 meters (backend expandable; HTML rows needed beyond that)
 - **Server URLs**: API and OTA hosts (`ampxportal_server_local` / `_live`, `USE_LOCAL_SERVER`, firmware URLs) require a firmware rebuild
 - **Gateway ID**: Changeable from Admin; stored in NVS (`DEFAULT_GATEWAY_ID` is first-boot only)
-- **OTA Updates**: Admin HTTP pull from `https://ampx.app/firmware/` (Check + Update); first flash USB with 8MB dual-OTA partitions; sketch **1.0.9**; live hosting last verified **1.0.7** until 1.0.9 is published
+- **OTA Updates**: Admin HTTP pull from `https://ampx.app/firmware/` (Check + Update); first flash USB with 8MB dual-OTA partitions; sketch **1.1.1** (live `/api/v3/`); next OTA publish **1.1.1** — do not publish **1.0.9** (still v2)
 - **Admin Interface**: Gateway reboot (LEDs off first) + OTA + Clear WiFi (ship-mode); Gateway ID change with password
 
 ### Shipping a gateway
@@ -348,7 +350,7 @@ On first boot (or when no WiFi credentials are saved), the gateway creates an op
 - Serial success looks like: `HTTP Response Code: 201` and `Data stored successfully`
 - HTTP **401**: `ampxportal_api_key` must match `AMPX_API_KEY` in `api/config/config.php` (local already enforces this)
 - `connection refused` (-1) to the PC IP: check Windows Firewall / Wi‑Fi **Private** profile; Apache must accept LAN inbound on port 80 (not only localhost)
-- Confirm `ampxportal_server_local` matches the PC’s current LAN IP and uses `/api/v2/` on port 80
+- Confirm `ampxportal_server_local` matches the PC’s current LAN IP and uses `/api/v3/` on port 80 (local Cloud path)
 - Confirm InfluxDB is healthy (`https://influxdb2.ampx.app/health`) — API returns 500 if storage fails
 - View data (local): http://ampx-app.local/ → Meters → gateway → View Data
 - View data (live): https://ampx.app/ → Meters → gateway → View Data (needs WP gateway assignment + `AMPX_INFLUXDB_*` in live `wp-config.php`)

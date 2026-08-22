@@ -24,7 +24,7 @@ Industrial and commercial facilities need comprehensive energy monitoring across
 2. **Scalable**: Monitor up to 32 meters from single gateway
 3. **Flexible**: Support for both RS485 and TCP/IP communication
 4. **Real-Time**: Live web interface with WebSocket updates (staggered meter reads; network stack serviced around Modbus)
-5. **Cloud-Ready**: Automatic data upload to AmpX Portal API (local XAMPP or live `ampx.app`) with shared `X-AmpX-Api-Key`; portal Meters/View Data read Influx (today: InfluxDB 2; target: managed Cloud Serverless + SQL)
+5. **Cloud-Ready**: Automatic data upload to AmpX Portal API (local XAMPP or live `ampx.app`) with shared `X-AmpX-Api-Key`; firmware **1.1.1** posts `/api/v3/`; portal Meters/View Data read Cloud Serverless via InfluxQL (Influx 2 remains on `/api/v2/` until sunset)
 
 ### User Experience Goals
 - **Plug-and-Play Setup**: WiFiManager for easy network configuration; Admin Clear WiFi (ship-mode) so a boxed unit boots AP at the customer site

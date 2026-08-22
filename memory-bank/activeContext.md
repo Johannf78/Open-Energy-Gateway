@@ -1,18 +1,63 @@
 # Active Context - AmpX Open Energy Gateway
 
 ## Current Focus
-**Aug 22, 2026:** Firmware sketch **1.0.9** — ship-mode Clear WiFi is in Admin. Local `firmware/version.json` is **1.0.9**. Live `ampx.app/firmware/` was last verified at **1.0.7** — publish the 1.0.9 `.bin` + `version.json` together when ready.
-
-**Next project:** AmpX **API v3** / Cloud Serverless cutover (keep v2 until verified). Then live portal UX + live API key.
+**Aug 22, 2026 (end of day):** Live Cloud cutover complete for gateway **100007**. Sketch **1.1.1**, `USE_LOCAL_SERVER false`, live URL `/api/v3/`. Live plugin **1.1.5** + Cloud `AMPX_INFLUXDB_*` (org **Energy Gateway**). Portal View Data shows Cloud rows (~395 at 16:27 SAST). Kadence example 100001 HTML removed from live Meter Data page.
 
 **Ready for next session:**
-- Ship-mode done (Admin Clear WiFi; LEDs off on reboot; WiFiManager save-page copy)
-- Publish live OTA **1.0.9** when you want field devices to get the button
-- Later: `influxdb3_hosting_choice` (api-v3 → portal queries → firmware cutover)
+- Publish OTA **1.1.1** (`.bin` + `version.json`). Live `version.json` is still **1.0.9** (v2). Do **not** publish 1.0.9.
+- USB/OTA any other live gateway still on `/api/v2/` — live portal only shows Cloud.
+- Then: theme **1.0.9**, sunset v2 / Influx 2, optional meter-zero debug on 100007.
 
-Previous: Ship-mode 1.0.9; live HTTPS OTA (1.0.7); OTA WDT/stack fix; Admin Check button; 1.0.4 reboot-loop fix; Cloud Serverless spike; Portal Meter Data UX; API key auth.
+Previous: Live Cloud cutover (1.1.1); firmware local v3 (1.1.0); portal InfluxQL; API v3; ship-mode 1.0.9; live HTTPS OTA (1.0.7).
 
 ## Recent Major Achievements
+
+### Live Cloud / API v3 cutover (August 2026) — Session 18
+**Objective:** Point live Hetzner + firmware + portal at Cloud Serverless. Keep `/api/v2/` until the fleet is on 1.1.1.
+
+**Deployed:**
+- Live `wp-config.php` `AMPX_INFLUXDB_*` → Cloud host / Cloud token / org **Energy Gateway** / bucket `energy_metrics` (not account name AmpX, not Influx 2 org `ampx`)
+- Plugin **1.1.5** InfluxQL; flush OPcache after wp-config
+- Live `/api/v3/` (GET **405** `api_version` 3.0; no key **401**; keyed POST **201**; test serial `live_verify_20260822` landed in Cloud)
+- Sketch **1.1.1**: both URLs `/api/v3/`; `USE_LOCAL_SERVER false`
+- Meter Data page: deleted Kadence **Example Meter Info** (100001 / Test / 2724193001)
+
+**Verified live UI (admin, 22 Aug):** 100007 / 3423875005 — 377 then 395 readings, newest ~14:17 UTC, oldest 10:52 UTC (first Cloud point). Voltages mostly 0 (meter read, not API).
+
+**Not done:** OTA publish 1.1.1; theme 1.0.9; sunset v2; other field units still on v2 are invisible on live portal.
+
+**Org naming:** Cloud **account** = AmpX; Cloud **organization** = Energy Gateway (ID `86a141bfd8d7f66a`). One-org quota — do not create a second org.
+
+### Portal InfluxQL / Cloud reads (August 2026)
+**Objective:** Meters / View Data / CSV read Cloud Serverless instead of Flux on `influxdb2.ampx.app`.
+
+**Implementation:**
+- `AMPX_Portal_InfluxDB_Detailed` uses `GET /query?db=energy_metrics` (InfluxQL) and parses wide JSON rows
+- `wp-config.php` `AMPX_INFLUXDB_*` → Cloud host / `INFLUXDB_CLOUD_TOKEN` / org Energy Gateway (local + live)
+- Plugin **1.1.5**
+
+**Verified CLI (22 Aug 2026, local):**
+- `100001` / `SN-1234567890`: 2 readings
+- `100008` / `v3_plan_test`: 1 reading
+
+**Verified live UI:** 100007 / 3423875005 Cloud table (Session 18)
+
+### API v3 Cloud Serverless writes (August 2026)
+**Objective:** Isolated `/api/v3/` clone of v2 that writes `meter_readings_detailed` to Cloud Serverless. Keep v2 on `influxdb2.ampx.app`.
+
+**Implementation:**
+- `api/v3/index.php`, `src/DataValidator.php`, `src/InfluxDBHandlerDetailed.php` (`AmpX\ApiV3`)
+- Same JSON + `X-AmpX-Api-Key`; `api_version` **3.0**
+- Write URL uses `INFLUXDB_CLOUD_*` with **org ID**
+- Plan: `ampx.app/docs/superpowers/plans/2026-08-22-api-v3-cloud-serverless.md`
+
+**Verified local + live (22 Aug 2026):** GET **405**; no/wrong key **401**; valid POST **201** `"api_version":"3.0"`
+
+### Firmware `/api/v3/` (August 2026)
+**1.1.0** local USB; **1.1.1** live USB on **100007**. Plan: `ampx.app/docs/superpowers/plans/2026-08-22-firmware-api-v3.md` (local slice) and `2026-08-22-live-cloud-cutover.md`.
+
+**Compile note (ESP32 3.3.11 Windows):** stub `OpenThread/bits/align.h` → `#include_next`; merge-bin `--pad-to-size 8MB` can `MemoryError` (app `.bin` still built).
+
 
 ### Ship-mode / Clear WiFi (August 2026) — firmware 1.0.9
 **Objective:** Before boxing a unit, erase workshop WiFi so first boot at the customer site starts WiFiManager AP mode (open AP `energy-gateway-{GATEWAY_ID}`).
@@ -88,7 +133,7 @@ Do **not** ship **1.0.3** (reboot loop), **1.0.4/1.0.5** (Admin/Check WDT), or p
 - Helper script: `api/v2/tests/spike_cloud_serverless.php`
 - Note: Cloud Serverless HTTP reads for PHP are easiest via **InfluxQL `/query`** (needs DBRP). Native **SQL** is Flight/gRPC (client libs), not simple curl for AmpX portal yet.
 
-**Not done yet**: AmpX `api/v3`, firmware URL switch, portal Flux→SQL/InfluxQL against Cloud, cutover from `influxdb2.ampx.app`
+**Not done yet**: Sunset `/api/v2/` and `influxdb2.ampx.app`; publish OTA 1.1.1; deploy theme 1.0.9
 
 ### Portal Meter Data UX (August 2026)
 **Objective**: Wide readings table usable in-viewport; clarify 1000/30-day limits; export must not be limited to the table rows.
@@ -201,18 +246,16 @@ One meter per 1s interval; sub-3s WebSocket connections; progressive UI updates.
 Sidebar UI, meters page, WebSocket architecture, 5-meter expansion — see progress.md / .cursorrules Sessions 1–5.
 
 ## Next Development Opportunities
-1. **Next project:** AmpX **API v3** → Cloud Serverless (`INFLUXDB_CLOUD_*`); same payload + API key; keep v2
-2. Portal: switch Meter Data queries from Flux/Influx2 to InfluxQL (or SQL) against Cloud
-3. Firmware: point to `/api/v3/`, bump `FIRMWARE_VERSION` (breaking-change policy), then sunset v2/Influx2
-4. Publish live OTA **1.0.9** (`.bin` + `version.json`); deploy portal UX + live API key
-5. Scale HTML meters; Windows mDNS; optional NVS API key
+1. **Next:** Publish live OTA **1.1.1** (`.bin` + `version.json`). Do not publish **1.0.9** (v2).
+2. Move remaining live gateways off `/api/v2/` (USB or OTA 1.1.1)
+3. Deploy theme **1.0.9**; then sunset v2 / Influx 2
+4. Optional: 100007 voltage zeros (Modbus); scale HTML meters; Windows mDNS
 
 ## System Health Status
-- **Firmware**: Sketch **1.0.9** (ship-mode); do not flash 1.0.3 (reboot loop) or 1.0.4/1.0.5 (Check WDT)
-- **Local API**: Shared key enforced; Postman/curl verified 401/201
-- **Live API**: Still open (no key gate) until Hetzner deploy
-- **Influx (production)**: Still `influxdb2.ampx.app` (v2 + Flux portal)
-- **Influx (target)**: Cloud Serverless org **Energy Gateway** created; not wired to AmpX yet
-- **Local portal**: Meter Data scroll + 1000/30d limits + full-window CSV export verified (`ampx-app.local`)
-- **Live portal**: Meters/View Data working for 100007; UX fixes not deployed yet
-- **OTA hosting**: Local `version.json` **1.0.9**; live `https://ampx.app/firmware/` last verified **1.0.7** until 1.0.9 is published
+- **Firmware**: Sketch **1.1.1** on **100007** (live `/api/v3/`, 30s Cloud posts); do not flash 1.0.3 or 1.0.4/1.0.5
+- **Local + live API v3**: Key enforced; Cloud writes 201 verified
+- **API v2**: Still on Hetzner → Influx 2; live portal does not read it
+- **Influx (portal)**: Cloud Serverless org **Energy Gateway**
+- **Portal**: Plugin **1.1.5** InfluxQL; live + local Meter Data for 100007 / 3423875005
+- **Theme**: 1.0.9 local, **1.0.7** live
+- **OTA hosting**: Live `version.json` **1.0.9**; next publish **1.1.1**

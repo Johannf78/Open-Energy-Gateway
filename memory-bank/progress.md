@@ -41,7 +41,7 @@
 ### API Integration
 - [x] **AmpX Portal Integration**: Structured JSON uploads every 30 seconds
 - [x] **Dual Server Support**: Local development and live production endpoints
-- [x] **Shared API Key Auth**: `X-AmpX-Api-Key` required on local `/api/v2/` (firmware 1.0.3); live cutover pending
+- [x] **Shared API Key Auth**: `X-AmpX-Api-Key` on `/api/v2/` and `/api/v3/` (local + live v3 verified August 2026)
 - [x] **Data Formatting**: Proper timestamp and meter identification in API calls
 - [x] **Error Handling**: HTTP client error management and retry logic
 
@@ -82,8 +82,8 @@
 - **Server URLs**: Local/live API and OTA URLs are compile-time (`USE_LOCAL_SERVER`, `ampxportal_server_*`, `firmwareURL`); Gateway ID is Admin + NVS, not hardcoded after first boot
 - **Admin Interface**: Gateway reboot + HTTP OTA (Check + Update) + Clear WiFi (ship-mode); Gateway ID change with password
 - **Windows mDNS**: .local domain resolution not working on Windows (use IP address as workaround)
-- **Live OTA binary**: Local `firmware/version.json` is **1.0.9**; live `https://ampx.app/firmware/` last verified **1.0.7** — publish `.bin` and `version.json` together
-- **Live API key**: Local enforces `AMPX_API_KEY`; live `ampx.app/api/v2/` not yet gated — deploy with matching firmware to avoid 401s
+- **Live OTA binary**: Live `https://ampx.app/firmware/version.json` is **1.0.9** (v2 firmware). Sketch is **1.1.1** (v3). Next publish is **1.1.1** — do not publish 1.0.9 as the live update.
+- **Live API key**: Live `/api/v3/` gated (401/201). `/api/v2/` still present for Influx 2.
 
 ### Technical Debt
 - **HTML Templates**: Static meter sections (5 meters) in web files - need dynamic generation for scaling beyond 5
@@ -106,7 +106,11 @@
 - ✅ **Live meters critical error**: Added `AMPX_INFLUXDB_*` to live `wp-config.php`; flushed OPcache; PHP 8.4 CSV/`str_getcsv` harden in portal plugin
 - ✅ **HTTP Pull OTA (August 2026)**: Admin `POST /update` via `HTTPUpdate`; NVS last status; local E2E 1.0.1→1.0.2; ArduinoOTA left disabled
 - ✅ **Shared API Key (August 2026)**: Local `X-AmpX-Api-Key` / `AMPX_API_KEY`; firmware `ampxportal_api_key` + 1.0.3; Postman/curl 401/201 verified
-- ✅ **InfluxDB Cloud Serverless org (August 2026)**: AmpX / Energy Gateway / AWS Frankfurt (`eu-central-1-1.aws.cloud2.influxdata.com`); AmpX code still on `influxdb2.ampx.app` until v3 cutover
+- ✅ **InfluxDB Cloud Serverless org (August 2026)**: AmpX / Energy Gateway / AWS Frankfurt (`eu-central-1-1.aws.cloud2.influxdata.com`)
+- ✅ **API v3 local writes (August 2026)**: Isolated `/api/v3/` → Cloud Serverless; 201 + InfluxQL (`v3_plan_test`); v2 still 201 to `influxdb2.ampx.app`
+- ✅ **Portal InfluxQL local reads (August 2026)**: Plugin 1.1.5; local `AMPX_INFLUXDB_*` → Cloud; CLI verified 100001 / SN-1234567890 and 100008 / v3_plan_test
+- ✅ **Firmware local `/api/v3/` (August 2026)**: Sketch 1.1.0; USB 100007 Serial 201; local portal Cloud rows for 3423875005
+- ✅ **Live Cloud cutover (August 2026)**: Live `/api/v3/` + plugin 1.1.5 + Cloud wp-config; firmware **1.1.1** on 100007; live Meter Data Cloud rows; example 100001 page HTML removed
 - ✅ **Portal Meter Data UX (August 2026)**: Theme horizontal scroll (max-height viewport); plugin display 1000/30d with clear copy; server CSV export full 30d (`admin_post`); local verified gateway 100008
 - ✅ **OTA reboot-loop fix (August 2026)**: 1.0.3 FreeRTOS HTTPS manifest task → LoadProhibited reboot loop; **1.0.4** manifest check on `loop()` only
 - ✅ **Live HTTPS OTA (August 2026)**: 1.0.4/1.0.5 Check → `TG1WDT_SYS_RESET` (stack `WiFiClientSecure`); **1.0.7** static TLS client + 16KB loop stack + Check button + numeric version compare; live OTA on gateway 100008 Aug 18
@@ -119,14 +123,16 @@
 - Live portal: after editing `wp-config.php` on Hetzner, flush PHP OPcache (constants can look “missing” until then)
 - Live debug: Debug Log Manager path in `WP_DEBUG_LOG`, not `wp-content/debug.log`
 - Do not reintroduce FreeRTOS OTA / `WiFiClientSecure` side tasks, cross-core Arduino `String` caches, or a **local** `WiFiClientSecure` on `loop()`
+- After Cloud portal cutover: do not publish OTA **1.0.9** (v2). Next OTA is **1.1.1**.
+- 100007 Cloud rows can show voltage 0 — Modbus/meter, not API.
 
 ## 🎯 Immediate Development Opportunities
 
 ### High Priority
-1. **API v3 + Cloud Serverless cutover**: Wire writes to `INFLUXDB_CLOUD_*`; portal InfluxQL/SQL; keep v2 until verified
-2. **Publish live OTA 1.0.9**: Deploy `.bin` + `version.json` together (live still last verified at 1.0.7)
-3. **Deploy portal UX to live**: Theme 1.0.9 + plugin 1.1.4 (meter-data scroll, limits copy, full-window CSV)
-4. **Live API key cutover**: Deploy `AMPX_API_KEY` + `v2/index.php` to Hetzner with matching firmware **1.0.7+**
+1. **Publish live OTA 1.1.1**: `.bin` + `version.json` together. Do not publish 1.0.9 (still v2; live portal would go blank for that unit).
+2. **Migrate remaining live gateways** to 1.1.1 (USB or OTA after publish)
+3. **Deploy theme 1.0.9** (meter-data table scroll)
+4. **Sunset v2 / Influx 2** after no gateway posts `/api/v2/`
 5. **Scale to 10 Meters**: Add HTML sections for meters 6-10 (backend already supports this)
 6. **Windows mDNS Resolution**: Troubleshoot and fix .local domain access on Windows
 
@@ -173,8 +179,8 @@
 - ✅ Industrial-grade reliability patterns
 
 ### Next Milestones
+- 🎯 Publish OTA 1.1.1 and migrate remaining live units
+- 🎯 Sunset Influx 2 / `/api/v2/`
 - 🎯 32-meter capacity utilization
-- 🎯 Complete admin interface
-- 🎯 Zero-configuration deployment
 - 🎯 Enhanced fault tolerance
 - 🎯 Extended meter manufacturer support
