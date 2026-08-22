@@ -31,6 +31,14 @@ A comprehensive ESP32-based energy monitoring gateway that communicates with Mea
 - **JSON Data Format**: Structured data exchange and storage
 - **Meter Identification**: Unique serial number tracking for each meter
 
+## ☁️ AmpX Energy Portal
+
+View gateway and meter data in the cloud at <a href="https://ampx.app/" target="_blank" rel="noopener noreferrer">https://ampx.app/</a>.
+
+The portal lets you manage gateways, inspect live and historical readings (voltage, current, power, and energy per phase), and export CSV for reporting. The firmware uploads a timestamped snapshot about every 30 seconds.
+
+The portal can be **white-labelled** for your company or resellers (your branding, your domain). Data can also be **customised** and sent to **any portal or platform**, in **any format** you require. Contact AmpX if you need a branded instance or a custom integration.
+
 ## 🏗️ Architecture
 
 ```
