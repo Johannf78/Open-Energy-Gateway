@@ -19,10 +19,26 @@ void initWiFi() {
 
   WiFiManager wifiManager;
 
+  String portalHead = "<script>document.addEventListener('DOMContentLoaded',function(){";
+  portalHead += "var m=document.querySelector('.msg');";
+  portalHead += "if(!m||m.textContent.indexOf('Trying to connect')===-1)return;";
+  portalHead += "m.innerHTML='<h2>WiFi saved</h2>'";
+  portalHead += "+'<p>The AmpX Energy Gateway is connecting to your network. This setup hotspot will close.</p>'";
+  portalHead += "+'<p>Connect this phone or computer to the same WiFi, then open:</p>'";
+  portalHead += "+'<p><strong>http://energy-gateway-";
+  portalHead += String(GATEWAY_ID);
+  portalHead += ".local</strong></p>'";
+  portalHead += "+'<p>(or the IP of the gateway you got from your WiFi router)</p>'";
+  portalHead += "+'<p>If it does not connect, reconnect to the gateway hotspot and try again.</p>';";
+  portalHead += "});</script>";
+  wifiManager.setCustomHeadElement(portalHead.c_str());
+  wifiManager.setTitle("AmpX Energy Gateway");
+
   /*If you've previously connected to your WiFi with this ESP32,
   WiFi manager will more than likely not do anything.
   Uncomment this if you want to force it to delete your old WiFi details.*/
   //wifiManager.resetSettings();
+
 
   //Non blocking mode
   //wifiManager.setConfigPortalBlocking(true);
@@ -60,6 +76,12 @@ void initWiFi() {
   debugln("");
 
 }
+
+  // Staff: Admin → Clear WiFi (before Shiping).
+  void clearStoredWifi() {
+    WiFiManager wifiManager;
+    wifiManager.resetSettings();
+  }
 
 
 //Initialize mDNS service for .local domain access

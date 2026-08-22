@@ -280,8 +280,15 @@ The project includes infrastructure for future SPIFFS implementation:
 - **Active Meters**: Currently configured for 5 meters (backend expandable; HTML rows needed beyond that)
 - **Server URLs**: API and OTA hosts (`ampxportal_server_local` / `_live`, `USE_LOCAL_SERVER`, firmware URLs) require a firmware rebuild
 - **Gateway ID**: Changeable from Admin; stored in NVS (`DEFAULT_GATEWAY_ID` is first-boot only)
-- **OTA Updates**: Admin HTTP pull from `https://ampx.app/firmware/` (Check + Update); first flash USB with 8MB dual-OTA partitions; baseline **1.0.7**
-- **Admin Interface**: Gateway reboot + OTA; Gateway ID change with password
+- **OTA Updates**: Admin HTTP pull from `https://ampx.app/firmware/` (Check + Update); first flash USB with 8MB dual-OTA partitions; sketch **1.0.9**; live hosting last verified **1.0.7** until 1.0.9 is published
+- **Admin Interface**: Gateway reboot (LEDs off first) + OTA + Clear WiFi (ship-mode); Gateway ID change with password
+
+### Shipping a gateway
+1. Set Gateway ID on Admin (if not already assigned in the portal).
+2. Open **Admin → Clear WiFi (Ship Mode)**, enter the admin password, confirm.
+3. Confirm the open AP `energy-gateway-{ID}` appears (no workshop SSID).
+4. Box the unit. At the site, the customer joins that AP, opens **http://192.168.4.1**, saves their WiFi, then opens `http://energy-gateway-{ID}.local` or the IP from their router.
+5. Do not leave workshop WiFi stored on a unit that will be shipped.
 
 ## 🔍 Troubleshooting
 

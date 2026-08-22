@@ -98,7 +98,7 @@ Also keep `server.handleClient()` / `webSocket.loop()` at the end of `loop()`. U
 - Local = XAMPP API on LAN IP port 80; live = `https://ampx.app/api/v2/` (key gate on live only after Hetzner deploy)
 - Portal reads Influx via plugin (`class-ampx-portal-influxdb-detailed.php`); UI at `/meters/?gateway_id=`
 
-### HTTP OTA Pattern (August 2026; field baseline 1.0.7)
+### HTTP OTA Pattern (August 2026; sketch 1.0.9, live last verified 1.0.7)
 - Admin HTML must **not** call outbound `HTTPClient` in web handlers — that caused `ERR_CONNECTION_RESET` / hangs
 - Flow: **Check for update** → `GET /ota_status?refresh=1` sets `otaManifestCheckRequested` → `loop()` runs `serviceOtaManifestCheck()` → fills `otaStatusCache` → JS polls `/ota_status` (no `refresh`). Opening `/admin` does **not** start TLS
 - **Never** fetch the manifest from a FreeRTOS side task: 1.0.3 used `otaManifestTask` on core 0 with boot-time HTTPS → LoadProhibited reboot loop (**1.0.4** moved check to `loop()`)
@@ -107,8 +107,18 @@ Also keep `server.handleClient()` / `webSocket.loop()` at the end of `loop()`. U
 - Compare versions with `isNewerVersion()` (`major.minor.patch` numeric). Update only if server **>** device. Equal or older server → “Up to date”, button **disabled**
 - Manifest fetch fail → “Unavailable”; button may stay enabled for a manual attempt
 - `POST /update` re-checks; refuses if server is not newer; download URL from manifest `url` (local mode forces `firmwareURL`); flash via `HTTPUpdate`
-- Host both `ampx_open_energy_gateway.bin` and `version.json` under `/firmware/` (live verified 1.0.7)
+- Host both `ampx_open_energy_gateway.bin` and `version.json` under `/firmware/` (keep in sync on publish)
 - ArduinoOTA not used; first flash via USB with dual OTA partitions, then field updates via Admin
+
+### Ship-mode / Clear WiFi (August 2026)
+- Admin **Clear WiFi (Ship Mode)** → `POST /clear_wifi` with `ADMIN_PASSWORD` (same as Gateway ID)
+- `clearStoredWifi()` → `WiFiManager.resetSettings()` then LEDs off then `ESP.restart()`
+- Do **not** call `resetSettings()` from `initWiFi()` — that wipes credentials on every boot
+- Clears WiFi only; Gateway ID / meter names / OTA NVS stay
+- After reboot, `autoConnect` starts open AP `energy-gateway-{GATEWAY_ID}`; portal `http://192.168.4.1`
+- Standalone status HTML: use ASCII `-` not a UTF-8 em dash unless `<meta charset="UTF-8">` is present (`—` became `â€"`)
+- Admin Reboot (`handleRebootGateway`) also turns all five LEDs `LOW` before `ESP.restart()`
+- WiFiManager `/wifisave` message: `setCustomHeadElement()` JS replaces `.msg` when it contains “Trying to connect”; tell the customer to open `http://energy-gateway-{ID}.local` or the IP from their router. `setCustomHeadElement` stores a **pointer** — the `String` must stay in scope until `autoConnect()` returns
 
 ### Portal Influx Config Pattern (WordPress)
 - Plugin never hardcodes Influx credentials; `AMPX_Portal_Config` requires `AMPX_INFLUXDB_*` constants in `wp-config.php`

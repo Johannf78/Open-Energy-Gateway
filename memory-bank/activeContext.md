@@ -1,18 +1,33 @@
 # Active Context - AmpX Open Energy Gateway
 
 ## Current Focus
-**Aug 18, 2026:** Firmware **1.0.7** is the field/OTA baseline. Live HTTPS OTA verified on gateway **100008**.
+**Aug 22, 2026:** Firmware sketch **1.0.9** — ship-mode Clear WiFi is in Admin. Local `firmware/version.json` is **1.0.9**. Live `ampx.app/firmware/` was last verified at **1.0.7** — publish the 1.0.9 `.bin` + `version.json` together when ready.
 
-**Next project:** **Ship-mode / clear stored WiFi** so a unit sent to a customer boots WiFiManager **AP mode** (no workshop SSID). Then resume API v3 / Cloud Serverless cutover.
+**Next project:** AmpX **API v3** / Cloud Serverless cutover (keep v2 until verified). Then live portal UX + live API key.
 
 **Ready for next session:**
-- Implement clear-WiFi (likely Admin button + `WiFiManager.resetSettings()`; already commented in `functions_wifi.ino`) — bump `FIRMWARE_VERSION` if shipped via OTA
-- Cloud Serverless spike done; local API key; live OTA 1.0.7
+- Ship-mode done (Admin Clear WiFi; LEDs off on reboot; WiFiManager save-page copy)
+- Publish live OTA **1.0.9** when you want field devices to get the button
 - Later: `influxdb3_hosting_choice` (api-v3 → portal queries → firmware cutover)
 
-Previous: Live HTTPS OTA (1.0.7); OTA WDT/stack fix; Admin Check button; 1.0.4 reboot-loop fix; Cloud Serverless spike; Portal Meter Data UX; API key auth.
+Previous: Ship-mode 1.0.9; live HTTPS OTA (1.0.7); OTA WDT/stack fix; Admin Check button; 1.0.4 reboot-loop fix; Cloud Serverless spike; Portal Meter Data UX; API key auth.
 
 ## Recent Major Achievements
+
+### Ship-mode / Clear WiFi (August 2026) — firmware 1.0.9
+**Objective:** Before boxing a unit, erase workshop WiFi so first boot at the customer site starts WiFiManager AP mode (open AP `energy-gateway-{GATEWAY_ID}`).
+
+**Implementation:**
+- Admin card **Clear WiFi (Ship Mode)** → `POST /clear_wifi` with shared `ADMIN_PASSWORD` (same secret as Gateway ID)
+- `clearStoredWifi()` calls `WiFiManager.resetSettings()` — do **not** call this from `initWiFi()` (that would wipe every boot)
+- Erases WiFi credentials only; Gateway ID, meter names, and OTA NVS stay
+- Status page uses ASCII hyphen (`WiFi Cleared - Rebooting`); standalone HTML has no `charset`, so a UTF-8 em dash showed as `â€"`
+- All five status LEDs `LOW` before `ESP.restart()` on Clear WiFi **and** Admin Reboot (`handleRebootGateway`)
+- WiFiManager `/wifisave` copy via `setCustomHeadElement()`: next steps are `http://energy-gateway-{ID}.local` or the IP from the customer router; `setCustomHeadElement` stores a pointer — keep the `String` alive until `autoConnect()` returns
+
+**Verified:** Gateway **100007** — wrong password 403; correct password reboots into AP; save page at `192.168.4.1/wifisave`.
+
+**Ops:** Live OTA still **1.0.7** until 1.0.9 `.bin` + `version.json` are deployed together.
 
 ### Live HTTPS OTA + WDT fix (August 2026) — firmware 1.0.7
 **Symptoms (on 1.0.4/1.0.5):** Admin stuck on **Checking…**; opening Admin or **Check for update** rebooted. Serial: `Fetching firmware manifest: https://ampx.app/firmware/version.json` then `rst:0x8 (TG1WDT_SYS_RESET)` (~3s), no Guru Meditation.
@@ -30,7 +45,7 @@ Previous: Live HTTPS OTA (1.0.7); OTA WDT/stack fix; Admin Check button; 1.0.4 r
 - Live OTA install: **OK: update applied (1.0.7)**; after Check, Current = Available **1.0.7**, status **Up to date**, Update disabled
 - Live files: `https://ampx.app/firmware/version.json` + `.bin`
 
-Do **not** ship **1.0.3** (reboot loop), **1.0.4/1.0.5** (Admin/Check WDT), or put `WiFiClientSecure` as a local in `loop()`. Field baseline is **1.0.7**.
+Do **not** ship **1.0.3** (reboot loop), **1.0.4/1.0.5** (Admin/Check WDT), or put `WiFiClientSecure` as a local in `loop()`. **1.0.7** was the live HTTPS OTA baseline; current sketch is **1.0.9** (ship-mode).
 
 ### OTA FreeRTOS reboot-loop fix (August 2026) — firmware 1.0.4
 **Symptom**: After flashing **1.0.3**, gateway reboot-looped a few seconds after boot. Serial showed `EXCCAUSE: 0x02` (LoadProhibited), `Backtrace: … |<-CORRUPTED`. Gateway ID (e.g. 100008) loaded from NVS, then panic.
@@ -186,19 +201,18 @@ One meter per 1s interval; sub-3s WebSocket connections; progressive UI updates.
 Sidebar UI, meters page, WebSocket architecture, 5-meter expansion — see progress.md / .cursorrules Sessions 1–5.
 
 ## Next Development Opportunities
-1. **Next project:** Clear stored WiFi before customer ship — gateway must enter AP / config portal on first boot at the site (WiFiManager `resetSettings()`; do not leave workshop credentials on the device)
-2. AmpX **API v3** → Cloud Serverless (`INFLUXDB_CLOUD_*`); same payload + API key; keep v2
-3. Portal: switch Meter Data queries from Flux/Influx2 to InfluxQL (or SQL) against Cloud
-4. Firmware: point to `/api/v3/`, bump `FIRMWARE_VERSION` (breaking-change policy), then sunset v2/Influx2
-5. Deploy portal UX + live API key; OTA hosting already live at **1.0.7**
-6. Scale HTML meters; Windows mDNS; optional NVS API key
+1. **Next project:** AmpX **API v3** → Cloud Serverless (`INFLUXDB_CLOUD_*`); same payload + API key; keep v2
+2. Portal: switch Meter Data queries from Flux/Influx2 to InfluxQL (or SQL) against Cloud
+3. Firmware: point to `/api/v3/`, bump `FIRMWARE_VERSION` (breaking-change policy), then sunset v2/Influx2
+4. Publish live OTA **1.0.9** (`.bin` + `version.json`); deploy portal UX + live API key
+5. Scale HTML meters; Windows mDNS; optional NVS API key
 
 ## System Health Status
-- **Firmware**: **1.0.7** stable (API key + live HTTPS OTA); do not flash 1.0.3 (reboot loop) or 1.0.4/1.0.5 (Check WDT)
+- **Firmware**: Sketch **1.0.9** (ship-mode); do not flash 1.0.3 (reboot loop) or 1.0.4/1.0.5 (Check WDT)
 - **Local API**: Shared key enforced; Postman/curl verified 401/201
 - **Live API**: Still open (no key gate) until Hetzner deploy
 - **Influx (production)**: Still `influxdb2.ampx.app` (v2 + Flux portal)
 - **Influx (target)**: Cloud Serverless org **Energy Gateway** created; not wired to AmpX yet
 - **Local portal**: Meter Data scroll + 1000/30d limits + full-window CSV export verified (`ampx-app.local`)
 - **Live portal**: Meters/View Data working for 100007; UX fixes not deployed yet
-- **OTA hosting**: Live `https://ampx.app/firmware/` serving **1.0.7** `.bin` + `version.json` ✅
+- **OTA hosting**: Local `version.json` **1.0.9**; live `https://ampx.app/firmware/` last verified **1.0.7** until 1.0.9 is published

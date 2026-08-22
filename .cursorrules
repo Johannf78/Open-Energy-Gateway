@@ -283,6 +283,20 @@ This is a mature, production-ready industrial IoT project with excellent archite
 - Opening Admin must not start HTTPS; use `/ota_status?refresh=1` from a button
 - Compare semver numerically, not `==` / `!=`
 
+#### Session 14: Ship-mode / Clear WiFi → firmware 1.0.9 (August 2026)
+- ✅ Admin **Clear WiFi (Ship Mode)** → `POST /clear_wifi` + `ADMIN_PASSWORD`; `clearStoredWifi()` / `WiFiManager.resetSettings()`
+- ✅ WiFi credentials only (Gateway ID, meter names, OTA NVS kept); never `resetSettings()` inside `initWiFi()`
+- ✅ LEDs off before `ESP.restart()` on Clear WiFi and Admin Reboot
+- ✅ WiFiManager `/wifisave` next-step copy via `setCustomHeadElement()` (`.local` or router IP)
+- ✅ Standalone HTML: ASCII hyphen, not UTF-8 em dash (no charset → `â€"`)
+- ✅ Verified on gateway **100007** (AP `energy-gateway-100007`)
+- ⏳ Live OTA publish of 1.0.9 (`.bin` + `version.json`) not assumed done — local `version.json` is 1.0.9
+
+**Key Learnings**:
+- `setCustomHeadElement()` stores a pointer; keep the `String` until `autoConnect()` returns
+- `ESP.restart()` leaves GPIO high — turn status LEDs off first
+- Do not uncomment `resetSettings()` in `initWiFi()`
+
 ### Current Status
 - **5+ Meters Supported**: Array-based backend; HTML scaled for more meters as configured ✅
 - **WebSocket Servicing**: Required around meter reads to keep handshakes responsive ✅
@@ -290,15 +304,16 @@ This is a mature, production-ready industrial IoT project with excellent archite
 - **Local API Key Auth**: Enforced and Postman-verified (August 2026) ✅
 - **Local Portal Meter Data UX**: Scroll + 1000/30d limits + full-window CSV ✅
 - **Live API + Portal E2E**: Verified gateway 100007 on https://ampx.app (Meters + View Data) ✅
-- **Firmware**: **1.0.7** stable (API key + live HTTPS OTA); do not use 1.0.3 / 1.0.4 / 1.0.5 ✅
-- **Live OTA**: `https://ampx.app/firmware/` 1.0.7 `.bin` + `version.json` verified ✅
+- **Firmware**: Sketch **1.0.9** (ship-mode); do not use 1.0.3 / 1.0.4 / 1.0.5 ✅
+- **Live OTA**: Last verified `https://ampx.app/firmware/` **1.0.7**; local `version.json` **1.0.9** pending live publish ⏳
 - **Live API Key**: Not deployed yet — coordinate with firmware 1.0.7+ ⏳
 - **Live Portal UX deploy**: Theme 1.0.9 + plugin 1.1.4 pending ⏳
 - **Influx Cloud Serverless**: Org created (Frankfurt); AmpX cutover pending ⏳
-- **Next project**: Ship-mode — clear stored WiFi so customer first boot is AP / config portal ⏳
+- **Ship-mode**: Admin Clear WiFi → AP `energy-gateway-{ID}` ✅
+- **Next project**: API v3 / Cloud Serverless cutover ⏳
 - **Modern UI**: Professional sidebar navigation with summary tables
 - **Clean Navigation**: Home shows summaries, Meters page shows details
-- **Admin Features**: Gateway reboot with countdown timer implemented
+- **Admin Features**: Gateway reboot (LEDs off), OTA, Clear WiFi, Gateway ID
 - **Production Ready**: Successfully tested and deployed on ESP32 hardware
 - **Scaling Path Clear**: Change constants + HTML rows for additional meters
 - **Clean Codebase**: No hardcoded meter-specific variables in backend

@@ -1,5 +1,5 @@
 //Before compiling....
-//1. Make sure the correct connection type is set, either RS485 or TCPIP 
+//1. Make sure the correct connection type is set for the gateway, either RS485 or TCPIP 
 //2. Set the flash size correctly to 8MB
 //3. Partition scheme: custom (partitions.csv — dual OTA app slots). Alternative: "8M with spiffs (3MB APP/1.5MB SPIFFS)"
 //4. Set the API to use the local server or the remote server. #define USE_LOCAL_SERVER true or false
@@ -8,6 +8,7 @@
 //7. Set the serial port baud rate to: 115200 baud.
 //8. Select the correct board: ESP32 Dev Module
 //9. OTA: Admin pulls https://ampx.app/firmware/ampx_open_energy_gateway.bin (first flash via USB with OTA partitions)
+
 
 //There will be two variants of this gateway, one working with Modbus over RS485 and the other
 //working with mobus over TCP/IP, this is setup here and used depeding on what is needed.
@@ -21,7 +22,7 @@
 //NB, Also remember to change the API server from local to live if needed...
 
 // Bump when publishing a new .bin to ampx.app/firmware/
-#define FIRMWARE_VERSION "1.0.7"
+#define FIRMWARE_VERSION "1.0.9"
 //To publish OTA for gateways in the field
 //Bump FIRMWARE_VERSION
 //Use Sketch → Export compiled Binary (not the Upload / play button)
@@ -34,6 +35,16 @@
 //https://www.youtube.com/watch?v=EuHxodrye6E
 
 
+//Unique Gateway ID for each gateway manufactured. To be used when adding it to a the portal under a specific user.
+//This is set when manufactured and will be unique for each gateway.
+//Format: 100001 increment.
+
+//Default value - can be changed via admin web interface
+#define DEFAULT_GATEWAY_ID 100001
+
+//Global variable to store the current gateway ID (loaded from NVS)
+int GATEWAY_ID = DEFAULT_GATEWAY_ID;
+const char* ADMIN_PASSWORD = "1000";
 
 /*
 The following .ino files should be in the same directory as this main .ino file (AmpX-Energy-Gateway.ino).
@@ -130,15 +141,7 @@ SET_LOOP_TASK_STACK_SIZE(16384);
 //Define the meter registers and datatypes here in json format.
 #include "meter_registers.h"
 
-//Unique Gateway ID for each gateway manufactured. To be used when adding it to a the portal under a specific user.
-//This is set when manufactured and will be unique for each gateway.
-//Format: 100001 increment.
 
-//Default value - can be changed via admin web interface
-#define DEFAULT_GATEWAY_ID 100001
-
-//Global variable to store the current gateway ID (loaded from NVS)
-int GATEWAY_ID = DEFAULT_GATEWAY_ID;
 
 
 
@@ -332,6 +335,9 @@ bool fetchFirmwareManifest(FirmwareManifest& out);
 bool isNewerVersion(const String& serverVer, const String& deviceVer);
 void serviceOtaManifestCheck();
 void requestOtaManifestCheck();
+void handleClearWifi();
+void clearStoredWifi();
+
 void setup() {
   // initialize LED status pins as outputs.
   pinMode(LED_1_POWER, OUTPUT);
@@ -339,10 +345,15 @@ void setup() {
   pinMode(LED_3_WIFI, OUTPUT);
   pinMode(LED_4_INTERNET, OUTPUT);
   pinMode(LED_5_SERVER, OUTPUT);
-  
 
   //Indicate that the power is on with a LED
   digitalWrite(LED_1_POWER, HIGH);
+  //Turn off all the other LEDs (It could happen that the LED got stuck on the on state after last reset).
+  digitalWrite(LED_2_METER, LOW);
+  digitalWrite(LED_3_WIFI, LOW);
+  digitalWrite(LED_4_INTERNET, LOW);
+  digitalWrite(LED_5_SERVER, LOW);
+
 
   Serial.begin(115200); // Debug serial
   while (!Serial) {

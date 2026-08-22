@@ -32,6 +32,16 @@ String webpage_admin = R"(
   </form>
   </div>
 
+<div class="card">
+<h2>Clear WiFi (Ship Mode)</h2>
+<p>Erases saved WiFi only. Gateway ID is kept. After reboot, connect to AP <strong>energy-gateway-m_gateway_id</strong> (no password) and open <code>http://192.168.4.1</code>.</p>
+<form action='/clear_wifi' method='post' enctype='application/x-www-form-urlencoded' onsubmit="return confirm('Erase stored WiFi and reboot into setup mode?');">
+  <label for='clear_wifi_password'>Password: </label>
+  <input type='password' id='clear_wifi_password' name='admin_password' autocomplete='off'>
+  <br><br>
+  <input type='submit' value='Clear WiFi and Reboot'>
+</form>
+</div>
 
   <div class="card">
   <h2>Gateway ID Management</h2>

@@ -100,10 +100,12 @@ JsonDocument MeterRegisterDefs;           // Register definitions
 ## Network Configuration
 
 ### WiFi Setup
-- **AP Mode**: `AmpX-Energy-Gateway-AP` (no password)
-- **Hostname**: `AmpX-Energy-Gateway`
+- **AP Mode**: `energy-gateway-{GATEWAY_ID}` (open / no password) — first boot and after Admin Clear WiFi
+- **Hostname / mDNS**: `energy-gateway-{GATEWAY_ID}` (`.local` often fails on Windows; use IP)
+- **Config portal**: `http://192.168.4.1` (WiFiManager); save-page copy customized in `initWiFi()`
 - **Web Server**: Port 80
 - **WebSocket**: Port 81
+- **Admin password**: `ADMIN_PASSWORD` in `open_energy_gateway.ino` (Gateway ID + Clear WiFi); do not put the value in public docs
 
 ### API Endpoints
 ```cpp
@@ -186,7 +188,7 @@ const unsigned long REBOOT_INTERVAL = 86400000;         // 24 hours
 
 ### Flash / OTA (August 2026)
 - Target: **8MB** modules — Arduino IDE **ESP32 Dev Module**, Flash **8MB**, Partition **custom** (`src/open_energy_gateway/partitions.csv` dual OTA apps) or **8M with spiffs**
-- Current firmware: **`FIRMWARE_VERSION` 1.0.7** (do not ship 1.0.3 reboot loop, or 1.0.4/1.0.5 Check WDT)
+- Current firmware: **`FIRMWARE_VERSION` 1.0.9** (ship-mode). Do not ship 1.0.3 reboot loop, or 1.0.4/1.0.5 Check WDT. Live OTA last verified **1.0.7** until 1.0.9 is published.
 - `SET_LOOP_TASK_STACK_SIZE(16384)` — default 8KB `loop()` stack overflows during HTTPS TLS
 - Admin HTTP pull: `https://ampx.app/firmware/ampx_open_energy_gateway.bin` via `HTTPUpdate` + **static** `WiFiClientSecure`
 - Manifest check: `serviceOtaManifestCheck()` from **`loop()` only** after **Check for update**; no FreeRTOS OTA task; no Admin-load or boot-time HTTPS fetch

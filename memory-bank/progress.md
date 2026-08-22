@@ -50,7 +50,8 @@
 - [x] **Multi-Meter Support**: Currently configured for 5 active meters, tested and operational
 - [x] **Status Monitoring**: Continuous health checking with LED feedback
 - [x] **Automatic Reboot**: 24-hour reboot cycle for system stability
-- [x] **Gateway Reboot Function**: Web-based reboot button with countdown and auto-redirect
+- [x] **Gateway Reboot Function**: Web-based reboot button with countdown, auto-redirect, and LEDs off before restart
+- [x] **Ship-mode / Clear WiFi**: Admin password + confirm; `resetSettings()`; reboot into AP; WiFi only (Gateway ID kept)
 - [x] **WebSocket Event Handling**: Complete event handler with connection/disconnection tracking
 - [x] **Staggered Meter Reading**: Sequential 1-second reads for <3-second WebSocket connections
 - [x] **Optimized Performance**: Sub-3-second initial connection, progressive data updates
@@ -79,9 +80,9 @@
 ### Current Constraints
 - **Active Meter Limit**: 5 meters actively configured and operational (vs 32 theoretical maximum)
 - **Server URLs**: Local/live API and OTA URLs are compile-time (`USE_LOCAL_SERVER`, `ampxportal_server_*`, `firmwareURL`); Gateway ID is Admin + NVS, not hardcoded after first boot
-- **Admin Interface**: Gateway reboot + HTTP OTA (Check + Update) implemented; other admin functions pending
+- **Admin Interface**: Gateway reboot + HTTP OTA (Check + Update) + Clear WiFi (ship-mode); Gateway ID change with password
 - **Windows mDNS**: .local domain resolution not working on Windows (use IP address as workaround)
-- **Live OTA binary**: Live `https://ampx.app/firmware/` serving **1.0.7** (keep `.bin` and `version.json` in sync on publish)
+- **Live OTA binary**: Local `firmware/version.json` is **1.0.9**; live `https://ampx.app/firmware/` last verified **1.0.7** — publish `.bin` and `version.json` together
 - **Live API key**: Local enforces `AMPX_API_KEY`; live `ampx.app/api/v2/` not yet gated — deploy with matching firmware to avoid 401s
 
 ### Technical Debt
@@ -109,6 +110,7 @@
 - ✅ **Portal Meter Data UX (August 2026)**: Theme horizontal scroll (max-height viewport); plugin display 1000/30d with clear copy; server CSV export full 30d (`admin_post`); local verified gateway 100008
 - ✅ **OTA reboot-loop fix (August 2026)**: 1.0.3 FreeRTOS HTTPS manifest task → LoadProhibited reboot loop; **1.0.4** manifest check on `loop()` only
 - ✅ **Live HTTPS OTA (August 2026)**: 1.0.4/1.0.5 Check → `TG1WDT_SYS_RESET` (stack `WiFiClientSecure`); **1.0.7** static TLS client + 16KB loop stack + Check button + numeric version compare; live OTA on gateway 100008 Aug 18
+- ✅ **Ship-mode / Clear WiFi (August 2026)**: Admin `POST /clear_wifi` + `ADMIN_PASSWORD`; `clearStoredWifi()` / `resetSettings()`; LEDs off before reboot (Clear WiFi and Admin Reboot); WiFiManager save-page next-step copy; sketch **1.0.9**
 
 ### Remaining Performance / Ops Notes
 - Handshake still waits for the duration of an in-progress `handlePowerMeter()` call (acceptable with staggered single-meter reads)
@@ -121,13 +123,12 @@
 ## 🎯 Immediate Development Opportunities
 
 ### High Priority
-1. **Ship-mode / clear WiFi (next):** Before sending a gateway to a customer, erase stored WiFi credentials so first boot at the site starts WiFiManager **AP mode** (no workshop SSID). Likely Admin “Clear WiFi / factory network reset” calling `wifiManager.resetSettings()` (already commented in `functions_wifi.ino`). Confirm reboot into AP; bump firmware if delivered by OTA.
-2. **API v3 + Cloud Serverless cutover**: Wire writes to `INFLUXDB_CLOUD_*`; portal InfluxQL/SQL; keep v2 until verified
+1. **API v3 + Cloud Serverless cutover**: Wire writes to `INFLUXDB_CLOUD_*`; portal InfluxQL/SQL; keep v2 until verified
+2. **Publish live OTA 1.0.9**: Deploy `.bin` + `version.json` together (live still last verified at 1.0.7)
 3. **Deploy portal UX to live**: Theme 1.0.9 + plugin 1.1.4 (meter-data scroll, limits copy, full-window CSV)
 4. **Live API key cutover**: Deploy `AMPX_API_KEY` + `v2/index.php` to Hetzner with matching firmware **1.0.7+**
-5. **Field OTA**: Live **1.0.7** published; OTA remaining 1.0.4 devices (never 1.0.3)
-6. **Scale to 10 Meters**: Add HTML sections for meters 6-10 (backend already supports this)
-7. **Windows mDNS Resolution**: Troubleshoot and fix .local domain access on Windows
+5. **Scale to 10 Meters**: Add HTML sections for meters 6-10 (backend already supports this)
+6. **Windows mDNS Resolution**: Troubleshoot and fix .local domain access on Windows
 
 ### Medium Priority
 1. **Additional Meter Support**: Extend beyond Meatrol to other manufacturers

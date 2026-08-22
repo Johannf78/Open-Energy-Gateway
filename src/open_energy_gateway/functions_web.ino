@@ -9,6 +9,7 @@ void initServer() {
   server.on("/update_meters_name", HTTP_POST, handleChangeMetersName);
   server.on("/update_gateway_id", HTTP_POST, handleUpdateGatewayId);  // Add this line
   server.on("/reboot_gateway", HTTP_POST, handleRebootGateway); 
+  server.on("/clear_wifi", HTTP_POST, handleClearWifi);
   server.begin();
   
   //Handle the websocket events, this is used to handle the connection/disconnection events.
@@ -345,9 +346,9 @@ void handleChangeMetersName() {
 
 //Handle the gateway ID update form submission
 void handleUpdateGatewayId() {
+
   // Simple shared password — only AmpX staff should change Gateway ID in the field
-  const char* gatewayIdAdminPassword = "1000";
-  if (!server.hasArg("admin_password") || server.arg("admin_password") != gatewayIdAdminPassword) {
+  if (!server.hasArg("admin_password") || server.arg("admin_password") != ADMIN_PASSWORD) {
     String denyPage = R"(
       <!DOCTYPE html>
       <html>
@@ -460,8 +461,86 @@ void handleRebootGateway() {
   
   //Delay briefly to ensure the response is sent
   delay(500);
+
+  debugln("Turning off all the LEDs before rebooting...");
+  digitalWrite(LED_1_POWER, LOW);
+  digitalWrite(LED_2_METER, LOW);
+  digitalWrite(LED_3_WIFI, LOW);
+  digitalWrite(LED_4_INTERNET, LOW);
+  digitalWrite(LED_5_SERVER, LOW);
+  delay(300);
   
   //Reboot the ESP32
   debugln("Rebooting gateway...");
+  ESP.restart();
+}
+
+
+void handleClearWifi() {
+  if (!server.hasArg("admin_password") || server.arg("admin_password") != ADMIN_PASSWORD) {
+    String denyPage = R"(
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Access Denied</title>
+        <meta name='viewport' content='width=device-width, initial-scale=1'>
+        <style>
+          body { background-color: #EEEEEE; font-family: Arial, sans-serif; }
+          main { margin: auto; border: 3px solid black; padding: 20px; max-width: 600px; }
+          .error { color: red; font-weight: bold; }
+        </style>
+      </head>
+      <body>
+        <main>
+          <h1>Access Denied</h1>
+          <p class="error">Incorrect password. WiFi was not cleared.</p>
+          <p><a href="/admin">Back to Admin</a></p>
+        </main>
+      </body>
+      </html>
+    )";
+    server.send(403, "text/html", denyPage);
+    return;
+  }
+
+  String apName = "energy-gateway-" + String(GATEWAY_ID);
+  String successPage = R"(
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>WiFi Cleared</title>
+      <meta name='viewport' content='width=device-width, initial-scale=1'>
+      <style>
+        body { background-color: #EEEEEE; font-family: Arial, sans-serif; }
+        main { margin: auto; border: 3px solid black; padding: 20px; max-width: 600px; }
+        .warning { color: orange; font-weight: bold; }
+      </style>
+    </head>
+    <body>
+      <main>
+        <h1>WiFi Cleared - Rebooting</h1>
+        <p class="warning">Stored WiFi has been erased. This browser will lose the current network.</p>
+        <p>Connect to WiFi access point <strong>)" + apName + R"(</strong> (no password).</p>
+        <p>Then open <code>http://192.168.4.1</code> to set the customer WiFi.</p>
+      </main>
+    </body>
+    </html>
+  )";
+
+  server.send(200, "text/html", successPage);
+  server.client().flush();
+  delay(500);
+
+  debugln("Clearing stored WiFi and rebooting into AP mode...");
+  clearStoredWifi();
+
+  //Turn off all the LEDs
+  digitalWrite(LED_1_POWER, LOW);
+  digitalWrite(LED_2_METER, LOW);
+  digitalWrite(LED_3_WIFI, LOW);
+  digitalWrite(LED_4_INTERNET, LOW);
+  digitalWrite(LED_5_SERVER, LOW);
+  
+  delay(300);
   ESP.restart();
 }
