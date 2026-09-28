@@ -17,7 +17,7 @@ open_energy_gateway.ino (main)
 ├── functions_web.ino (HTTP + WebSocket)
 ├── functions_wifi.ino (WiFiManager)
 ├── functions_ethernet.ino (W5500 TCP/IP)
-├── functions_meter.ino (register definitions)
+├── functions_meter.ino (serviceMeters, discovery, registers)
 ├── functions_api.ino (AmpX Portal uploads)
 ├── functions_ntp.ino (time sync)
 └── functions_ota.ino (HTTP pull OTA — Admin Check + Update)
@@ -80,9 +80,18 @@ open_energy_gateway.ino (main)
 ### Code Quality Standards
 - **Function Placement**: Match domain-specific .ino files
 - **Memory Safety**: Check JSON document size before adding data
-- **Error Recovery**: Always implement reconnection logic for network failures
+- **Error Recovery**: Always implement reconnection logic on communication failures
 - **Status Feedback**: Update LEDs for all system state changes
-- **Timing**: Use const unsigned long for all intervals
+- **Timing**: Use const unsigned long for all intervals; never `delay()` in `loop()` / the 1s meter path
+
+### Preferred coding style (user, Aug 2026)
+- **Clear, logical, simple.** If it takes nested if/else or a dangling `#endif else` to read, extract functions instead.
+- **Early returns** on failure. Do not bury the success path in `else`. Invalid state must **skip** the next work (LED off must not still read meters).
+- **One job per function.** Cable/link, Modbus test, read, and reconnect are separate. `loop()` only times work; helpers do the work (`serviceMeters`).
+- **Do not AND unrelated checks** (`ethernetReady && modbus_test_connection()`). Two steps.
+- **Naming:** `handle*` = HTTP/WS (`handleMeters` is `/meters` — do not reuse); `service*` = periodic from `loop()`; `init*` = setup/reconnect. Match existing names.
+- **`#if MODBUS_TYPE`:** wrap hardware-only calls; keep the `#if` **inside** a named function so it does not look like file-scope code. RS485 must not compile `Ethernet`.
+- Do not call `initEthernet()` on LinkOFF (`delay(2000)` stalls the UI).
 
 ### Known Constraints
 - **Active Meters**: Currently configured for 5 meters, expandable to 10+ with simple config changes
@@ -111,8 +120,9 @@ open_energy_gateway.ino (main)
 
 ### Performance Considerations
 - **Real-Time**: Staggered 1-second meter reads with immediate WebSocket broadcast
-- **Critical**: Always call `server.handleClient()` and `webSocket.loop()` before AND after `handlePowerMeter()` — end-of-loop alone is not enough; UI “Connecting…” = waiting on WS port 81
-- **Connection Speed**: Sub-3-second initial connection, progressive data updates
+- **Critical**: Call `server.handleClient()` and `webSocket.loop()` before each register read inside `handlePowerMeter()`, and around the sweep in `readNextMeter()`. End-of-loop alone is not enough. UI “Connecting…” = waiting on WS port 81. Broadcast JSON only after the sweep (`handleWebSocket()`).
+- **TCP/IP meter interval**: `loop()` → `serviceMeters()`. Cable check is `Ethernet.linkStatus() == LinkOFF` in `meterTransportReady()` (sketch), **not** in `ampx_modbus_tcpip.cpp`. Link off → skip Modbus and do **not** call `initEthernet()` / `reconnectMeter()`. Do not name this `handleMeters()` (that is the web page). TCP: **one socket per sweep** — `modbus_test_connection()` connects and leaves port 502 open; `modbus_read_response()` closes only on a short/incomplete frame; `handlePowerMeter()` calls `modbusClient.stop()` once at the end. No per-register `delay(100)`. RS485 test still `return true`.
+- **Connection Speed**: TCP Meter Details ~5 s on 28 Sep 2026 before the 100 ms pause was removed (was up to ~40 s with connect/stop per register)
 - **Refresh Cycle**: Each meter reads every 5 seconds (5 meters × 1s interval)
 - **API Batching**: 30-second uploads, could batch multiple meters
 - **Memory**: 2048-byte JSON document limit, monitor usage
@@ -352,6 +362,41 @@ This is a mature, production-ready industrial IoT project with excellent archite
 - Voltages 0 on 100007 are Modbus/meter, not API/Cloud failure
 - Do not OTA **1.0.9** after the portal is on Cloud — that firmware still posts v2
 
+#### Session 19: TCP/IP meter connection test (August 2026)
+- TCP `modbus_test_connection()` is **not** always-true in code (unlike RS485 stub). It only opens TCP 502 then `stop()` — a live meter (or anything accepting 502) still looks “connected”
+- Do **not** put `Ethernet.linkStatus()` in `ampx_modbus_tcpip.cpp` — IDE reports undeclared `LinkOFF` / `Ethernet`
+- ✅ Sketch: `meterTransportReady()` + `serviceMeters()` + `readNextMeter()` / `reconnectMeter()` in `functions_meter.ino`
+- ✅ `loop()` interval only calls `serviceMeters()`; no nested meter if/else
+- ✅ Hardware verified 23 Aug 2026: cable out → link off, LED 2 off, no read; cable in → test succeeds
+- ⏳ Optional: Modbus register probe (70–71) in the TCP library; implement RS485 `modbus_test_connection()`
+
+**Key Learnings**:
+- Check W5500 link in the sketch (Arduino include graph). Keep AmpX TCP library as connect/send/read
+- `handleMeters()` is `/meters` — use `serviceMeters()` for loop work (same idea as `serviceOtaManifestCheck`)
+- Link OFF must skip `initEthernet()` (it has `delay(2000)`)
+
+#### Session 21: TCP sweep socket (28 Sep 2026)
+- Meter Details “Connecting…” was the WebSocket on port 81 waiting out ~20 Modbus TCP connect/stop cycles plus `delay(100)` each. Up to ~40 s.
+- ✅ One socket for the sweep in `ampx_modbus_tcpip.cpp`: test connects and stays open; send reuses it; read `stop()`s only if `bytesRead < 9` or the register bytes are missing; no `delay(100)`.
+- ✅ Sketch: `webSocket.loop()` + `handleClient()` inside the register loop; `modbusClient.stop()` once at the end of `handlePowerMeter()` (TCP only). `reconnectMeter()` stays commented out.
+- ✅ Bench before removing `delay(100)`: ~5 s to Connected and values. Pause removed after that; not re-timed.
+- Sketch `FIRMWARE_VERSION` **1.2.1**. Live `version.json` **1.2.1** (28 Sep 2026). Cloudflare bypasses `/firmware/`. Confirm 100007 Admin shows 1.2.1 (a cached 1.0.9 bin booted once).
+- UI strings in `web_home.h` / `web_meters.h` / `web_settings.h`: “a few seconds”, not “up to 30 seconds”.
+
+**Key Learnings**:
+- A full Modbus TCP reply is at least 9 bytes (7-byte MBAP + function code + byte count). Shorter means timeout or a fragment — close the socket or the next register reads the leftover bytes.
+- Do not `stop()` after every successful read. Do not put `Ethernet.linkStatus()` in the TCP library.
+
+#### Session 20: Multi-chip OTA plan saved (August 2026)
+- ✅ Spec + plan written; **not implemented** (except sketch `CHIP_OTA_KEY` + version string `1.2.0`)
+- Spec: `ampx.app/docs/superpowers/specs/2026-08-23-multi-chip-ota-design.md`
+- Plan: `ampx.app/docs/superpowers/plans/2026-08-23-multi-chip-ota.md` and `memory-bank/plans/2026-08-23-multi-chip-ota.md`
+- Chip-aware `targets` still not parsed. Live catalog is single-url **1.2.1** (28 Sep 2026) because that is what `fetchFirmwareManifest()` reads. Do not publish 1.0.9. Never S3 `.bin` at the legacy root URL.
+
+**Key Learnings**:
+- OTA cannot change silicon (ESP32 vs S3). USB after a chip/PCB swap.
+- 1.1.1 `doOTAUpdate()` falls back to hardcoded `firmwareURL` if the manifest fails — that is the brick path if an S3 image is at the old URL.
+
 ### Current Status
 - **5+ Meters Supported**: Array-based backend; HTML scaled for more meters as configured ✅
 - **WebSocket Servicing**: Required around meter reads to keep handshakes responsive ✅
@@ -359,13 +404,14 @@ This is a mature, production-ready industrial IoT project with excellent archite
 - **Local API Key Auth**: Enforced and Postman-verified (August 2026) ✅
 - **Local Portal Meter Data UX**: Scroll + 1000/30d limits + full-window CSV ✅
 - **Live API v3 + Portal Cloud E2E**: 100007 / 3423875005 on https://ampx.app View Data ✅
-- **Firmware**: Sketch **1.1.1** on 100007 (live `/api/v3/`); do not use 1.0.3 / 1.0.4 / 1.0.5 ✅
-- **Live OTA**: `version.json` **1.0.9** (v2). Next publish **1.1.1**. Do not publish 1.0.9 ⏳
+- **Firmware**: Sketch **1.2.1** (TCP/IP 100007, frequency + PF L1–L3). Do not use 1.0.3 / 1.0.4 / 1.0.5 / republish 1.0.9 ✅
+- **Live OTA**: `version.json` **1.2.1** + Cloudflare `/firmware/` bypass. Confirm booted version on 100007. `targets` parse still unshipped ⏳
 - **Live API Key**: `/api/v3/` gated 401/201 ✅
 - **Live Portal UX**: Plugin 1.1.5 live; theme 1.0.9 still pending ⏳
 - **Influx Cloud Serverless**: Local + live v3 writes + portal InfluxQL ✅; v2/Influx 2 still on Hetzner ⏳
 - **Ship-mode**: Admin Clear WiFi → AP `energy-gateway-{ID}` ✅
-- **Next project**: Publish OTA **1.1.1**; migrate remaining live gateways; then theme 1.0.9 + sunset v2 ⏳
+- **TCP/IP connection test**: `serviceMeters()` + sketch `LinkOFF` check verified Aug 23 2026 ✅
+- **Next project**: Confirm 100007 is running **1.2.1** and portal frequency/PF; then chip-aware `targets` parse. Theme 1.0.9 + sunset v2 still open ⏳
 - **Modern UI**: Professional sidebar navigation with summary tables
 - **Clean Navigation**: Home shows summaries, Meters page shows details
 - **Admin Features**: Gateway reboot (LEDs off), OTA, Clear WiFi, Gateway ID

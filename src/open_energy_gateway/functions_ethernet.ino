@@ -3,10 +3,26 @@
   void initEthernet(){
     debugln("Starting Ethernet connection...");
 
-    //Set the CS pin, required for ESP32 as the arduino default is different
-    Ethernet.init(ETH_SPI_SCS_PIN); 
+    //Pin the SPI bus to the board pin map (ESP32: VSPI 18/19/23, ESP32-S3: FSPI 12/13/11).
+    //The Arduino Ethernet library uses the global SPI object; on the S3 the core's default
+    //pins happen to match, but calling begin() explicitly makes the wiring the same on every board.
+    //SS is passed as -1 on purpose: the Ethernet library drives CS itself (Ethernet.init below);
+    //attaching hardware CS as well would let the SPI peripheral toggle the pin between bytes.
+    SPI.begin(ETH_SPI_SCK_PIN, ETH_SPI_MISO_PIN, ETH_SPI_MOSI_PIN, -1);
 
-    
+    #ifdef ETH_SPI_RST_PIN
+      //Optional hardware reset of the W5500 (only if RST is wired). Datasheet: RST low >= 500us, then wait for PLL.
+      pinMode(ETH_SPI_RST_PIN, OUTPUT);
+      digitalWrite(ETH_SPI_RST_PIN, LOW);
+      delay(2);
+      digitalWrite(ETH_SPI_RST_PIN, HIGH);
+      delay(150);
+    #endif
+
+    //Set the CS pin, required for ESP32 as the arduino default is different
+    Ethernet.init(ETH_SPI_SCS_PIN);
+
+
     debugln("\nStarting Custom Modbus TCP Implementation");
     
     // Initialize ethernet

@@ -12,7 +12,7 @@ open_energy_gateway.ino     # Main application & coordination
 ├── functions_web.ino       # Web server & WebSocket handling
 ├── functions_wifi.ino      # WiFi management with WiFiManager
 ├── functions_ethernet.ino  # Ethernet initialization (TCP/IP variant)
-├── functions_meter.ino     # Meter management & register definitions
+├── functions_meter.ino     # Meter service (serviceMeters), discovery, registers
 ├── functions_api.ino       # Remote API communication
 ├── functions_ntp.ino       # Time synchronization
 └── functions_ota.ino       # HTTP pull OTA (Admin Check + Update)
@@ -63,20 +63,36 @@ Global `DynamicJsonDocument` serves as central data store:
 - All dynamic content updates via WebSocket (no server-side string replacement)
 
 ### Non-Blocking Network Servicing (Critical)
-Blocking Modbus (`modbus_test_connection`, `handlePowerMeter`) prevents WebSocket handshakes if the network stack is not serviced. **Required pattern** in the meter-read path:
+Blocking Modbus (`modbus_test_connection`, each register read) prevents WebSocket handshakes if the network stack is not serviced. **Required pattern:**
 
-```cpp
-server.handleClient();
-webSocket.loop();
-handlePowerMeter(currentMeterIndex);
-handleWebSocket();   // broadcast JSON
-server.handleClient();
-webSocket.loop();
-```
+- Around the sweep in `readNextMeter()`: `server.handleClient()` / `webSocket.loop()`, then `handlePowerMeter()`, then `handleWebSocket()` (one JSON broadcast), then service again.
+- **Inside** the register loop in `handlePowerMeter()`, before each Modbus read: `server.handleClient()` + `webSocket.loop()` only. Do not broadcast there.
 
 Also keep `server.handleClient()` / `webSocket.loop()` at the end of `loop()`. UI “Connecting…” = waiting on port 81; HTTP page load does not imply WebSocket is up.
 
-**Boot note**: `setup()` does not service clients until it returns — NTP sync and full meter discovery can delay first connection.
+**Boot note**: `setup()` does not service clients until it returns — NTP sync (up to ~15 s) can delay the first page. That is separate from the meter sweep.
+
+### One Modbus TCP socket per sweep (September 2026)
+About 20 Meatrol values used to each `connect()` + `stop()` on port 502, plus a fixed `delay(100)` and a test connection that also closed the socket. The WebSocket handshake waited on that, so Meter Details stayed on Connecting for up to ~40 s.
+
+Current TCP library (`ampx_modbus_tcpip.cpp`):
+- `modbus_test_connection()` opens port 502 and **leaves it open** (already connected → return true). Still not a Modbus PDU.
+- `modbus_send_request()` writes on that socket; connects only if it dropped.
+- `modbus_read_response()` keeps the socket on a full reply. `stop()` only when `bytesRead < 9` (7-byte MBAP + function code + byte count) or the header arrived without the register bytes.
+- No `delay(100)` before the read. The response function already polls for up to 2 s and returns when the frame arrives.
+
+Sketch closes once, at the end of `handlePowerMeter()` (`#if MODBUS_TYPE_TCPIP`). RS485 `modbus_test_connection()` is still `return true`.
+
+Bench (28 Sep 2026), before removing `delay(100)`: about **5 seconds** to Connected plus values. Do not go back to connect/stop per register.
+
+### Meter interval / TCP link check (August 2026)
+`loop()` only times the work (`METER_CONNECTION_INTERVAL`); `serviceMeters()` in `functions_meter.ino` uses early returns:
+
+1. `meterTransportReady()` — `#if MODBUS_TYPE_TCPIP`: `Ethernet.linkStatus() == LinkOFF` → LED 2 off, **return** (no Modbus, no `initEthernet()`). RS485: always true.
+2. `modbus_test_connection()` fail → LED 2 off, return. Do **not** call `reconnectMeter()` / `initEthernet()` here (`delay(2000)` freezes HTTP/WebSocket).
+3. Success → LED 2 on, `readNextMeter()`.
+
+Do **not** call `Ethernet.linkStatus()` from `ampx_modbus_tcpip.cpp` (Cursor/clangd: undeclared `Ethernet` / `LinkOFF`). Do **not** name the loop helper `handleMeters()` — that is the `/meters` web handler.
 
 ### Breaking-change versioning
 - If a change makes previously flashed gateways fail against the portal/API, bump `FIRMWARE_VERSION` in the same change (and publish matching `version.json` for OTA).
@@ -98,7 +114,13 @@ Also keep `server.handleClient()` / `webSocket.loop()` at the end of `loop()`. U
 - Local = XAMPP API on LAN IP port 80 `/api/v3/`; live = `https://ampx.app/api/v3/` (key gate verified 401/201 Aug 22). v2 URLs still work for Influx 2 writes.
 - Portal reads Cloud via plugin InfluxQL (`class-ampx-portal-influxdb-detailed.php`); UI at `/meters/?gateway_id=` and `/meter-data/?meter_sn=&gateway_id=`
 
-### HTTP OTA Pattern (August 2026; sketch 1.1.1, live `version.json` still 1.0.9)
+### HTTP OTA Pattern (live catalog **1.2.1** since 28 Sep 2026)
+
+**Live catalog** is still top-level `version` + `url` (not `targets`). Chip-keyed `targets.esp32` / `targets.esp32s3` remains a plan: `ampx.app/docs/superpowers/specs/2026-08-23-multi-chip-ota-design.md`. This firmware reads `doc["version"]` and `doc["url"]` only.
+
+**Cloudflare:** `ampx.app` is proxied. Cache rule **Bypass firmware OTA** (URI Path starts with `/firmware/`) must stay on. Without it the gateway can flash a cached older `.bin` while `version.json` is already newer. `OK: update applied (X)` stores the manifest version, then reboots; **Current firmware version** is the string inside the image that booted.
+
+**Publish:** ESP32 Dev Module (not S3) → Export Compiled Binary → `open_energy_gateway.ino.bin` renamed to `public_html/firmware/ampx_open_energy_gateway.bin`, plus `version.json` with the same `FIRMWARE_VERSION`. Export the application `.bin`, not the merged or bootloader file.
 - Admin HTML must **not** call outbound `HTTPClient` in web handlers — that caused `ERR_CONNECTION_RESET` / hangs
 - Flow: **Check for update** → `GET /ota_status?refresh=1` sets `otaManifestCheckRequested` → `loop()` runs `serviceOtaManifestCheck()` → fills `otaStatusCache` → JS polls `/ota_status` (no `refresh`). Opening `/admin` does **not** start TLS
 - **Never** fetch the manifest from a FreeRTOS side task: 1.0.3 used `otaManifestTask` on core 0 with boot-time HTTPS → LoadProhibited reboot loop (**1.0.4** moved check to `loop()`)

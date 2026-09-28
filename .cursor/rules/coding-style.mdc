@@ -1,0 +1,45 @@
+---
+description: Preferred firmware coding style — simple functions, early returns, no nested if/else
+alwaysApply: true
+---
+
+# Coding style (AmpX firmware)
+
+Prefer **clear, logical, simple**. If a block is hard to read, extract functions. Do not clever-nest.
+
+## Control flow
+- **Early return** on failure. Do not nest success work inside `else`.
+- **One job per function.** Example: cable/link vs Modbus test vs read meters vs reconnect.
+- `loop()` only **times** work (`millis()` interval). Helpers decide **what** to do.
+- Do not combine unrelated checks with `&&` (e.g. Ethernet AND Modbus). Two steps, two functions or two `if` + return.
+- Do not chain `#endif` onto a dangling `else`. After `#if MODBUS_TYPE`, keep a complete `if { }`.
+- Invalid state must **skip** the next work (no LED-off then still read meters).
+
+```cpp
+void serviceMeters() {
+  if (!meterTransportReady()) {
+    digitalWrite(LED_2_METER, LOW);
+    return;
+  }
+  if (!modbus_test_connection()) {
+    digitalWrite(LED_2_METER, LOW);
+    return;  // do not call reconnectMeter(); initEthernet() delays and freezes the page
+  }
+  digitalWrite(LED_2_METER, HIGH);
+  readNextMeter();
+}
+```
+
+## Naming
+- `handle*` = HTTP/WebSocket handlers (`handleMeters` = `/meters` page — do not reuse).
+- `service*` = periodic work from `loop()` (`serviceMeters`, `serviceOtaManifestCheck`).
+- `init*` = setup / reconnect (`initEthernet`, `initRS485`).
+- Match existing names before inventing new prefixes.
+
+## Hardware variants
+- `#if MODBUS_TYPE == …` around hardware-only calls (`Ethernet`, `initRS485`). RS485 must not compile `Ethernet`.
+- Keep variant `#if` **inside** a named function so it does not look like file-scope code.
+
+## Timing
+- No `delay()` in `loop()` or in the 1s meter path (`initEthernet()` has a 2s delay — do not call it when the cable is already unplugged).
+- Service `server.handleClient()` and `webSocket.loop()` around blocking Modbus.

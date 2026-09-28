@@ -319,21 +319,13 @@ The project includes infrastructure for future SPIFFS implementation:
 
 The page is served over HTTP (port 80). **Connection status: Connecting…** means the browser is waiting for the WebSocket on **port 81** (`ws://hostname:81/`). The HTTP page can load while the WebSocket is still down.
 
-**Cause:** Modbus meter reads are blocking. If `webSocket.loop()` and `server.handleClient()` are not called around each meter read, the ESP32 cannot complete WebSocket handshakes until that work finishes — the UI can stay on Connecting for a long time (sometimes ~1–2 minutes).
+**Cause:** Modbus reads block the ESP32. The WebSocket on port 81 is only accepted when `webSocket.loop()` runs. On TCP, each register used to open and close port 502, so the first page could sit on Connecting for up to about 40 seconds.
 
-**Required pattern** in the main loop (around each `handlePowerMeter()` call):
-```cpp
-server.handleClient();
-webSocket.loop();
-handlePowerMeter(currentMeterIndex);
-handleWebSocket();
-server.handleClient();
-webSocket.loop();
-```
+**Current pattern (Sep 2026):** one Modbus TCP socket for the whole sweep, closed once at the end of `handlePowerMeter()`. `server.handleClient()` and `webSocket.loop()` run before every register read, and `handleWebSocket()` sends the JSON once after the sweep. Bench measurement before a leftover 100 ms pause was removed: about 5 seconds. There is no per-register `delay(100)`; `modbus_read_response()` already waits up to 2 seconds for the frame.
 
-Also keep `server.handleClient()` / `webSocket.loop()` at the end of `loop()`.
+Also keep `server.handleClient()` / `webSocket.loop()` at the end of `loop()`. Do not call `reconnectMeter()` / `initEthernet()` from the 1-second meter path (`initEthernet()` waits 2 seconds and freezes the page).
 
-**Boot delay (separate from WebSocket):** Before `loop()` runs, `setup()` may wait on NTP (up to ~20 seconds) and meter discovery (each missing Modbus address can take ~1 second). The web server does not handle clients until `setup()` finishes.
+**Boot delay (separate from the meter sweep):** Before `loop()` runs, `setup()` may wait on NTP (up to about 15 seconds). The web server does not handle clients until `setup()` finishes.
 
 **Cannot Connect to Setup Hotspot (Windows)**
 

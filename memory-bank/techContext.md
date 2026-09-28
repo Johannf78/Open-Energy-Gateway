@@ -77,7 +77,9 @@ IPAddress meter_ip(192, 168, 1, 55);
 ### Custom Libraries
 - **Repository**: [AmpXModbus](https://github.com/Johannf78/AmpXModbus)
 - **RS485 Variant**: `ampx_modbus_rs485.h` (custom AmpX library)
-- **TCP/IP Variant**: `ampx_modbus_tcpip.h` (custom AmpX library)
+- **TCP/IP Variant**: `ampx_modbus_tcpip.h` (custom AmpX library at `Documents/Arduino/libraries/ampx_modbus_tcpip`)
+- **TCP socket (Sep 2026)**: one connection per sweep. `modbus_test_connection()` is `connect(meter_ip, 502)` and **leaves it open** (not a Modbus PDU). `modbus_send_request()` reuses it. `modbus_read_response()` `stop()`s only on a short frame (`< 9` bytes) or a header without register bytes. Sketch `handlePowerMeter()` closes once at the end. No per-register `delay(100)`.
+- **Ethernet link check**: `Ethernet.linkStatus() == LinkOFF` in sketch `meterTransportReady()` (`functions_meter.ino`), not in the TCP library (IDE cannot see `Ethernet` / `LinkOFF` there)
 - **Installation**: Clone repository and copy to `Documents/Arduino/libraries/` folder
 
 ## Data Structures
@@ -188,7 +190,7 @@ const unsigned long REBOOT_INTERVAL = 86400000;         // 24 hours
 
 ### Flash / OTA (August 2026)
 - Target: **8MB** modules — Arduino IDE **ESP32 Dev Module**, Flash **8MB**, Partition **custom** (`src/open_energy_gateway/partitions.csv` dual OTA apps) or **8M with spiffs**
-- Current firmware: **`FIRMWARE_VERSION` 1.1.1** (`ampxportal_server_live` = `/api/v3/`, `USE_LOCAL_SERVER false` on 100007). Do not ship 1.0.3 reboot loop, or 1.0.4/1.0.5 Check WDT. Live OTA `version.json` still **1.0.9** (v2) — next publish **1.1.1**, never 1.0.9.
+- Sketch string is **`FIRMWARE_VERSION` 1.2.1**. Live `version.json` is **1.2.1** with top-level `url` (published 28 Sep 2026). `fetchFirmwareManifest()` does not read `targets` yet. Cloudflare cache rule bypasses `/firmware/`. Confirm the booted image on **100007** (a cached 1.0.9 bin was flashed once while the status line said 1.2.1). Never an S3 `.bin` at the legacy URL. Do not ship 1.0.3, 1.0.4/1.0.5, or put **1.0.9** back. Plan for chip-aware catalogs: `memory-bank/plans/2026-08-23-multi-chip-ota.md`.
 - `SET_LOOP_TASK_STACK_SIZE(16384)` — default 8KB `loop()` stack overflows during HTTPS TLS
 - Admin HTTP pull: `https://ampx.app/firmware/ampx_open_energy_gateway.bin` via `HTTPUpdate` + **static** `WiFiClientSecure`
 - Manifest check: `serviceOtaManifestCheck()` from **`loop()` only** after **Check for update**; no FreeRTOS OTA task; no Admin-load or boot-time HTTPS fetch

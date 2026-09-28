@@ -33,7 +33,7 @@ void setupMeterRegisters() {
   void detectNumberOfMeters(){
     debugln("detectNumberOfMeters...");
     debug("MODBUS_TYPE: " );
-    if (MODBUS_TYPE_RS485) {
+    if (MODBUS_TYPE == MODBUS_TYPE_RS485) {
       debugln("MODBUS_TYPE_RS485");
     }else{
       debugln("MODBUS_TYPE_TCPIP");
@@ -91,6 +91,11 @@ void setupMeterRegisters() {
 
     // Loop through all register definitions in the JSON document
     for (JsonPair kv : MeterRegisterDefs.as<JsonObject>()) {
+      
+      //Handle WebSocket and HTTP requests, before reading the registers
+      server.handleClient();
+      webSocket.loop();
+      
       JsonArray registerDef = kv.value().as<JsonArray>();
       
       int registerNumber = registerDef[0];
@@ -98,7 +103,7 @@ void setupMeterRegisters() {
       int dataType = registerDef[2];
       String friendlyName = registerDef[3];
       String jsonKey = registerDef[4];
-      bool read_success;
+      bool read_success = false;
   
   
       #if MODBUS_TYPE == MODBUS_TYPE_RS485
@@ -148,5 +153,93 @@ void setupMeterRegisters() {
     Serial.println("=== JSON Size: " + String(JsonDoc.memoryUsage()) + " bytes ===");
     Serial.println();
     */
+
+  #if MODBUS_TYPE == MODBUS_TYPE_TCPIP
+    // One TCP session for the whole sweep. stop() can block while the socket closes,
+    // so do it once here instead of after every register.
+    if (modbusClient.connected()) {
+      modbusClient.stop();
+    }
+  #endif
+
   }
-  
+
+#if MODBUS_TYPE == MODBUS_TYPE_TCPIP
+// Runs while the meter reply is still arriving, so a slow register cannot
+// block the WebSocket handshake on port 81 for the whole wait.
+void serviceNetworkWhileModbusWaits() {
+  server.handleClient();
+  webSocket.loop();
+}
+#endif
+
+bool meterTransportReady() {
+#if MODBUS_TYPE == MODBUS_TYPE_TCPIP
+  if (Ethernet.linkStatus() == LinkOFF) {
+    debugln("Ethernet link is OFF. Check LAN cable.");
+    return false;
+  }
+#endif
+  return true;  // RS485 has no Ethernet link to check
+}
+
+// Not used from serviceMeters(). initEthernet() has delay(2000); calling it
+// every 1s when the meter is down (cable still in) freezes HTTP/WebSocket.
+// setup() already calls initEthernet() / initRS485(). A failed TCP test only
+// means the meter did not accept port 502 — skip the read, try again next interval.
+// If W5500 recovery is needed later, do it once on link off→on, without delay()
+// in the 1s path — do not hook this back into the failed-test branch.
+/*
+void reconnectMeter() {
+#if MODBUS_TYPE == MODBUS_TYPE_RS485
+  initRS485(&Serial1, RX_PIN, TX_PIN);
+  debugln("RS485 Modbus initialized");
+#else
+  initEthernet();
+  debugln("TCPIP Modbus initialized");
+#endif
+}
+  */
+
+void readNextMeter() {
+  if (numberOfMeters == 0) {
+    return;
+  }
+
+  debug("Reading Meter ");
+  debugln(currentMeterIndex);
+
+  server.handleClient();
+  webSocket.loop();
+  handlePowerMeter(currentMeterIndex);
+  handleWebSocket();
+  server.handleClient();
+  webSocket.loop();
+
+  currentMeterIndex++;
+  if (currentMeterIndex > numberOfMeters) {
+    currentMeterIndex = 1;
+  }
+}
+
+void serviceMeters() {
+  if (!meterTransportReady()) {
+    digitalWrite(LED_2_METER, LOW);
+    return;
+  }
+
+  if (!modbus_test_connection()) {
+    debugln("Connection test failed!");
+    digitalWrite(LED_2_METER, LOW);
+    //reconnectMeter();
+    return;
+  }
+
+#if MODBUS_TYPE == MODBUS_TYPE_RS485
+  debugln("Connection test successful! We are able to communicate with the meter with modbus over RS485!");
+#else
+  debugln("Connection test successful! We are able to communicate with the meter with modbus over TCPIP!");
+#endif
+  digitalWrite(LED_2_METER, HIGH);
+  readNextMeter();
+}

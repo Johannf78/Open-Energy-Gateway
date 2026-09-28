@@ -1,13 +1,19 @@
 //Before compiling....
-//1. Make sure the correct connection type is set for the gateway, either RS485 or TCPIP 
+//1. Make sure the correct connection type is set for the gateway, either RS485 or TCPIP, MODBUS_TYPE
 //2. Set the flash size correctly to 8MB
 //3. Partition scheme: custom (partitions.csv — dual OTA app slots). Alternative: "8M with spiffs (3MB APP/1.5MB SPIFFS)"
 //4. Set the API to use the local server or the remote server. #define USE_LOCAL_SERVER true or false
 //5. Set debug to enabled or disabled. Disable for live to increase speed, but one also lose the debug info.
 //6. Select the correct COM port, check by using the function "Get Board Info"
 //7. Set the serial port baud rate to: 115200 baud.
-//8. Select the correct board: ESP32 Dev Module
+//8. Select the correct board: "ESP32 Dev Module" (WROOM-32U / WROVER field units) or "ESP32S3 Dev Module" (S3-WROOM-1U bench port)
+//   ESP32S3 Dev Module settings: USB CDC On Boot = Disabled (use the "UART" USB socket of the DevKitC-1U for flashing + monitor),
+//   USB Mode = Hardware CDC and JTAG, Flash Size = 8MB or 16MB (match module: N8R8 / N16R8), PSRAM = OPI PSRAM (R8 modules),
+//   Partition Scheme = Custom (sketch partitions.csv is picked up automatically), Flash Mode = QIO 80MHz, Upload Speed 921600.
+//   First flash of a new S3 board: Tools -> Erase All Flash Before Sketch Upload = Enabled, then set it back to Disabled.
+//   Pin map is selected automatically from the board (CONFIG_IDF_TARGET_*) - see "Board pin map" below.
 //9. OTA: Admin pulls https://ampx.app/firmware/ampx_open_energy_gateway.bin (first flash via USB with OTA partitions)
+//   An S3 build must never be published at that single URL - S3 images go under targets.esp32s3 in version.json (see CHIP_OTA_KEY).
 
 
 //There will be two variants of this gateway, one working with Modbus over RS485 and the other
@@ -22,12 +28,22 @@
 //NB, Also remember to change the API server from local to live if needed...
 
 // Bump when publishing a new .bin to ampx.app/firmware/
-#define FIRMWARE_VERSION "1.1.1"
+#define FIRMWARE_VERSION "1.2.2"
 //To publish OTA for gateways in the field
 //Bump FIRMWARE_VERSION
 //Use Sketch → Export compiled Binary (not the Upload / play button)
 //FTP Copy that .bin into ampx.app\firmware\ as ampx_open_energy_gateway.bin
 //Update version.json in that same folder and deploy
+
+// OTA catalog key must match targets.<chip> in firmware/version.json.
+// Derived from the board you compiled for so an ESP32 build never downloads an S3 image (and the reverse).
+#if CONFIG_IDF_TARGET_ESP32S3
+#define CHIP_OTA_KEY "esp32s3"
+#elif CONFIG_IDF_TARGET_ESP32
+#define CHIP_OTA_KEY "esp32"
+#else
+#error "Unsupported chip for OTA; add CHIP_OTA_KEY"
+#endif
 
 //Defining custom partiotions.
 //Custom partitions is defined in the file partitions.csv
@@ -160,39 +176,73 @@ SET_LOOP_TASK_STACK_SIZE(16384);
 
 
 
+//=====================================================================================
+// Board pin map - selected by the chip you compile for (Tools -> Board).
+//   ESP32    : "ESP32 Dev Module"   -> ESP32-WROOM-32U / ESP32-WROVER-IE DevKitC (V2 PCB, field units)
+//   ESP32-S3 : "ESP32S3 Dev Module" -> ESP32-S3-WROOM-1U DevKitC-1U (bench port, Sep 2026)
+// Same sketch, same OTA catalog key logic (CHIP_OTA_KEY above). Do not mix the two maps.
+//=====================================================================================
+#if CONFIG_IDF_TARGET_ESP32S3
+  // ESP32-S3-DevKitC-1U. Avoid: 0/3/45/46 (strapping), 19/20 (USB), 26-32 (flash),
+  // 35/36/37 (octal PSRAM on N8R8/N16R8), 38 and 48 (on-board RGB LED on v1.1 / v1.0), 43/44 (UART0).
+  // Status LEDs - all on the J1 header side, contiguous, so one 6-way ribbon (5 LED + GND) reaches the front board.
+  #define LED_1_POWER     4
+  #define LED_2_METER     5
+  #define LED_3_WIFI      6
+  #define LED_4_INTERNET  7
+  #define LED_5_SERVER    15
+  // W5500 / W5500-Lite on FSPI (the S3 default SPI pins: SCK 12, MISO 13, MOSI 11, SS 10)
+  #define ETH_SPI_SCK_PIN   12  // Yellow
+  #define ETH_SPI_MISO_PIN  13  // Orange
+  #define ETH_SPI_MOSI_PIN  11  // Blue
+  #define ETH_SPI_SCS_PIN   10  // Green  (nSS on the module)
+  //#define ETH_SPI_RST_PIN 14  // Optional: module RST. Leave COMMENTED OUT unless RST is physically wired -
+                                // defining it makes initEthernet() pulse the pin. The W5500 has its own pull-up.
+  // RS485 (MAX485) - UART1. Reserved now so the combined RS485+Ethernet board needs no re-pinning.
+  #define MAX485_DE       16  // White
+  #define MAX485_RE_NEG   16
+  #define RX_PIN          18  // RO Orange
+  #define TX_PIN          17  // DI Yellow
+#else
+  // Classic ESP32 (ESP32-WROOM-32U / WROVER DevKitC) - unchanged field pin map.
+  #define LED_1_POWER     12 //Indicates Power is on
+  #define LED_2_METER     14 //Indicates Meter is connected via Modbus
+  #define LED_3_WIFI      27 //Indicates WiFi is connected
+  #define LED_4_INTERNET  26 //Indicates Internet is connected, this is the green LED
+  #define LED_5_SERVER    25 //Indicates succesfull communication with the Server
+  // W5500 on VSPI (hardware SPI default pins: SCK 18, MISO 19, MOSI 23)
+  #define ETH_SPI_SCK_PIN   18  // Yellow
+  #define ETH_SPI_MISO_PIN  19  // Orange
+  #define ETH_SPI_MOSI_PIN  23  // Blue
+  #define ETH_SPI_SCS_PIN   5   // Green  (nSS on the module)
+  // RS485 (MAX485)
+  #define MAX485_DE       4   // White
+  #define MAX485_RE_NEG   4
+  #define RX_PIN          16  // RO Orange
+  #define TX_PIN          17  // DI Yellow
+#endif
+//Modbus A, Positive, Green.  Modbus B, Negative, Blue.  W5500: Red VCC 3V3, Black GND.
+
+
 //Include AmpX custom written libraries for Modbus
 //Saved in the D:\OneDrive\JF Data\UserData\Documents\Arduino\libraries folder
 #if MODBUS_TYPE == MODBUS_TYPE_RS485
-  
+
   //Custom written AmpX Modbus library for RS485
-  //Saved in libary folder. On my pc: 
-  //On Windows: D:\OneDrive\JF Data\UserData\Documents\Arduino\libraries\ampx_modbus_rs485\src\ampx_modbus_rs485.cpp  
+  //Saved in libary folder. On my pc:
+  //On Windows: D:\OneDrive\JF Data\UserData\Documents\Arduino\libraries\ampx_modbus_rs485\src\ampx_modbus_rs485.cpp
   //On Linux: /home/username/Arduino/libraries/ampx_modbus_tcpip-main/src
   #include <ampx_modbus_rs485.h>
-
-  //1.Define the RS485 control pins
-  #define MAX485_DE 4 //White
-  #define MAX485_RE_NEG 4
-  #define RX_PIN 16   //RO Orange
-  #define TX_PIN 17   //DI Yellow
-  //Modbus A, Positive, Green
-  //Modbus B, Negative, Blue
+  // RS485 pins: see board pin map above (MAX485_DE / MAX485_RE_NEG / RX_PIN / TX_PIN)
 
 #else
 
   //Custom written AmpX Modbus library for TCPIP
-  //Saved in libary folder. On my pc: D:\OneDrive\JF Data\UserData\Documents\Arduino\libraries\ampx_modbus_tcpip\src\ampx_modbus_tcpip.cpp  
+  //Saved in libary folder. On my pc: D:\OneDrive\JF Data\UserData\Documents\Arduino\libraries\ampx_modbus_tcpip\src\ampx_modbus_tcpip.cpp
   #include <ampx_modbus_tcpip.h>
-
-  //Define Ethernet Pins
-  //SPI Interface Pin definitions for XIAO AND ESP32 WROOM 32U - Node32S, For W5500 and W5500-Lite
-                                  //XIAO      WROOM
-  #define ETH_SPI_SCS_PIN     5   //21,D6     5     // CS (Chip Select), nSS (On Datasheet) - Green wire - GPIO0 (any GPIO works for CS)
-  //#define ETH_SPI_SCK_PIN   8   //8,D8      18    // SCK (SCLK), Clock - Yellow wire (hardware SPI)
-  //#define ETH_SPI_MISO_PIN  9   //9,D9      19    // (MISO) - Orange wire (hardware SPI)
-  //#define ETH_SPI_MOSI_PIN  10  //10,D10    23    // (MOSI) - Blue wire  (hardware SPI)
-  //Red     VCC   3V
-  //Black   GND   On row two for ground
+  #include <SPI.h>
+  // Ethernet pins: see board pin map above (ETH_SPI_*). SPI.begin(SCK, MISO, MOSI, CS) is called
+  // explicitly in initEthernet() so the bus pins are the same on every board, not whatever the core's default is.
 
   //Define Ethernet Settings, Mac and IPs
   byte mac[] = {0x90, 0xA2, 0xDA, 0x0E, 0x94, 0xB5};
@@ -205,13 +255,7 @@ SET_LOOP_TASK_STACK_SIZE(16384);
 #endif
 
 
-//Define the status indicating LEDs pins
-//                        //C3  //WROOM
-#define LED_1_POWER     12 //2   //12 //Indicates Power is on 
-#define LED_2_METER     14 //3   //14 //Indicates Meter is connected via Modbus
-#define LED_3_WIFI      27 //4   //27 //Indicates WiFi is connected
-#define LED_4_INTERNET  26 //5   //26 //Indicates Internet is connected, this is the green LED
-#define LED_5_SERVER    25 //6   //25 //Indicates succesfull communication with the Server
+//Status LED pins: see board pin map above (LED_1_POWER .. LED_5_SERVER).
 
 
 //Constant data types, used in the processRegisters function.
@@ -337,6 +381,11 @@ void serviceOtaManifestCheck();
 void requestOtaManifestCheck();
 void handleClearWifi();
 void clearStoredWifi();
+void serviceMeters();
+#if MODBUS_TYPE == MODBUS_TYPE_TCPIP
+void serviceNetworkWhileModbusWaits();
+#endif
+
 
 void setup() {
   // initialize LED status pins as outputs.
@@ -362,6 +411,9 @@ void setup() {
   delay(1200); //Wait some more for the serial port to become ready...
                 //1200 Ok, but increase if debugging and resetting by cycling the power.
   debugln("Serial port ready. Begin setup...");
+  debug("Firmware version: ");
+  debugln(FIRMWARE_VERSION);
+
   
   // Initialize NVS  Non-Volatile Storage (Local Permanent Storage)
   initNvs();  
@@ -396,6 +448,11 @@ void setup() {
   //Initialise the local web server.
   initServer();
 
+#if MODBUS_TYPE == MODBUS_TYPE_TCPIP
+  // Meter reads wait up to 2s. Service HTTP/WebSocket during that wait.
+  modbus_set_idle_callback(serviceNetworkWhileModbusWaits);
+#endif
+
   // Initialize meter register definitions
   setupMeterRegisters();
 
@@ -428,63 +485,10 @@ void loop() {
   //If onBoot is true, read and send data immediately on boot.
   if (onBoot == true || now - counter1 > METER_CONNECTION_INTERVAL) {
     onBoot = false;
-    //Test if the meter is still connected.
-    //modbus_test_connection() is defined in ampx_modbus_rs485.h or ampx_modbus_tcpip.h
-    // TODO: Implement this function
-    if (modbus_test_connection()) {
-      #if MODBUS_TYPE == MODBUS_TYPE_RS485
-        debugln("Connection test successful! We are able to communicate with the meter with modbus over RS485!");
-      #else
-        debugln("Connection test successful! We are able to communicate with the meter with modbus over TCPIP!");
-      #endif
-     
-      //Turn on LED 2 to indicate successful connection to energy meter.
-      digitalWrite(LED_2_METER, HIGH);
-
-      //Read ONE meter per iteration (staggered approach for faster WebSocket response)
-      if (numberOfMeters > 0) {
-        debug("Reading Meter ");
-        debugln(currentMeterIndex);
-
-        //Handle webserver requests from client, this is important to do here to ensure the web page is updated immediately.
-        server.handleClient();
-        webSocket.loop();
-        
-        //JF: New fuction to handle both RS485 and TCPIP
-        handlePowerMeter(currentMeterIndex);
-        
-        // Broadcast updated data immediately after reading this meter
-        handleWebSocket();
-
-        //Handle webserver requests from client again, this is important to do here to ensure the web page is updated immediately.
-        server.handleClient();
-        webSocket.loop();
-        
-        // Move to next meter (cycle: 1→2→3→4→5→1...)
-        currentMeterIndex++;
-        if (currentMeterIndex > numberOfMeters) {
-          currentMeterIndex = 1;
-        }
-      }
-
-  
-    } else {
-      debugln("Connection test failed!");
-      //Turn off LED 2 to indicate unsuccessful connection to energy meter.
-      digitalWrite(LED_2_METER, LOW);  
-      //Try and reconnect...
-      //Depending on the Modbus type set, initialise either RS485 or TCPIP
-      #if MODBUS_TYPE == MODBUS_TYPE_RS485
-        initRS485(&Serial1, RX_PIN, TX_PIN);
-        debugln("RS485 Modbus initialized");
-      #else
-        initEthernet();
-        debugln("TCPIP Modbus initialized");
-      #endif
-    }
-    //Reset the counter
+    serviceMeters();
     counter1 = now;
   }
+ 
 
   // Post meter data to remote server every 5 minutes, 300000
   //TODO: JF 2025-06-08 for testing, i decreased it to 30 seconds (30000).

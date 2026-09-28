@@ -17,7 +17,7 @@ String webpage_home = R"(
     <p>Connection status: <span id="connection_status" style="color: gray;">Connecting...</span></p>
     <p>Last update: <span id="last_update">--:--:--</span></p>
     <br>
-    <p>Values updates every 5 seconds. Initial connection typically takes up to 30 seconds.</p>  
+    <p>Values updates every 5 seconds. Initial connection usually takes a few seconds.</p>  
   </div>
 
 
@@ -345,15 +345,9 @@ String webpage_home = R"(
       document.getElementById('connection_status').textContent = 'Disconnected';
       document.getElementById('connection_status').style.color = 'red';
 
-      // Try to reconnect to the WebSocket after 5 seconds
-      if (reconnectAttempts < maxReconnectAttempts) {
-      reconnectAttempts++;
-      console.log('Reconnecting... attempt ' + reconnectAttempts);
-      setTimeout(connectToWebSocket, 1000); //1 seconds delay between reconnection attempts
-    } else {
-      console.log('Max reconnection attempts reached');
-      // Optionally show error message to user
-    }
+      // Keep trying. Stopping after 10 attempts left the page on Disconnected
+      // when the first handshakes landed during a meter read.
+      setTimeout(connectToWebSocket, 1000);
     };
   };
   

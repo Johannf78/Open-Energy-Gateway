@@ -15,7 +15,7 @@ String webpage_meters = R"(
     <p>Connection status: <span id="connection_status" style="color: gray;">Connecting...</span></p>
     <p>Last update: <span id="last_update">--:--:--</span></p>
     <br>
-    <p>Values updates every 5 seconds. Initial connection typically takes up to 30 seconds.</p>  
+    <p>Values updates every 5 seconds. Initial connection usually takes a few seconds.</p>  
   </div>
 
 
@@ -65,6 +65,20 @@ String webpage_meters = R"(
       <td id='meter_current_L3'>0.00 A</td>
       <td id='meter_current_avg'>0.00 A</td>
     </tr>
+
+    <tr>
+      <td class='text-align-left'>Frequency</td>
+      <td colspan='3'></td>
+      <td id='meter_frequency'>0.00 Hz</td>
+    </tr>
+    <tr>
+      <td class='text-align-left'>Power Factor</td>
+      <td id='meter_power_factor_L1'>0.00</td>
+      <td id='meter_power_factor_L2'>0.00</td>
+      <td id='meter_power_factor_L3'>0.00</td>
+      <td></td>
+    </tr>
+
     <tr>
       <td class='text-align-left'>Active Power</td>
       <td id='meter_active_power_L1'>0.00 KW</td>
@@ -131,13 +145,9 @@ String webpage_meters = R"(
       document.getElementById('connection_status').textContent = 'Disconnected';
       document.getElementById('connection_status').style.color = 'red';
 
-      if (reconnectAttempts < maxReconnectAttempts) {
-        reconnectAttempts++;
-        console.log('Reconnecting... attempt ' + reconnectAttempts);
-        setTimeout(connectToWebSocket, 1000); //1 seconds delay between reconnection attempts
-      } else {
-        console.log('Max reconnection attempts reached');
-      }
+      // Keep trying. Stopping after 10 attempts left the page on Disconnected
+      // when the first handshakes landed during a meter read.
+      setTimeout(connectToWebSocket, 1000);
     };
   }
 
@@ -160,6 +170,10 @@ String webpage_meters = R"(
             value += ' V';
           else if (key.includes('current'))
             value += ' A';
+          else if (key.includes('frequency'))
+            value += ' Hz';
+          else if (key.includes('power_factor'))
+            value += '';
           else if (key.includes('power'))
             value += ' kW';
           else if (key.includes('energy'))

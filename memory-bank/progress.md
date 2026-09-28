@@ -55,6 +55,7 @@
 - [x] **WebSocket Event Handling**: Complete event handler with connection/disconnection tracking
 - [x] **Staggered Meter Reading**: Sequential 1-second reads for <3-second WebSocket connections
 - [x] **Optimized Performance**: Sub-3-second initial connection, progressive data updates
+- [x] **TCP/IP meter service (`serviceMeters`)**: Ethernet `LinkOFF` in the sketch; skip read and `initEthernet()` when the cable is down (verified Aug 23 2026)
 
 ## 🔄 Current Capabilities
 
@@ -88,6 +89,7 @@
 ### Technical Debt
 - **HTML Templates**: Static meter sections (5 meters) in web files - need dynamic generation for scaling beyond 5
 - **String Operations**: Some inefficient string concatenation in API functions
+- **TCP `modbus_test_connection()`**: still a TCP open on port 502, not a Modbus PDU. Sep 28 it leaves the socket open for the sweep. Cable check lives in `meterTransportReady()`. RS485 test is still `return true`.
 - **Error Recovery**: Basic retry logic, could be enhanced
 - **Configuration Management**: Gateway ID via Admin/NVS; WiFi via WiFiManager; API/OTA URLs still compile-time
 - **Documentation**: Some TODO comments indicate pending improvements
@@ -115,22 +117,28 @@
 - ✅ **OTA reboot-loop fix (August 2026)**: 1.0.3 FreeRTOS HTTPS manifest task → LoadProhibited reboot loop; **1.0.4** manifest check on `loop()` only
 - ✅ **Live HTTPS OTA (August 2026)**: 1.0.4/1.0.5 Check → `TG1WDT_SYS_RESET` (stack `WiFiClientSecure`); **1.0.7** static TLS client + 16KB loop stack + Check button + numeric version compare; live OTA on gateway 100008 Aug 18
 - ✅ **Ship-mode / Clear WiFi (August 2026)**: Admin `POST /clear_wifi` + `ADMIN_PASSWORD`; `clearStoredWifi()` / `resetSettings()`; LEDs off before reboot (Clear WiFi and Admin Reboot); WiFiManager save-page next-step copy; sketch **1.0.9**
+- ✅ **TCP/IP connection test (August 2026)**: `serviceMeters()` + `meterTransportReady()` (`LinkOFF` in sketch, not the AmpX TCP library); hardware verified 23 Aug; do not put `Ethernet.linkStatus()` in `ampx_modbus_tcpip.cpp`
+- ✅ **TCP sweep socket + WS between registers (28 Sep 2026)**: one port-502 session per `handlePowerMeter()`; `webSocket.loop()` inside the register loop; per-register `delay(100)` removed. Bench before that pause was removed: Meter Details ~5 s (was up to ~40 s).
+- ✅ **Meatrol frequency + power factor in the register map (28 Sep 2026)**: `frequency` 1024, `power_factor_L1`–`L3` 1052/1054/1056. No `power_factor_tot` (API v3 **400**s the whole post). `detectNumberOfMeters()` debug compares `MODBUS_TYPE`.
+- ✅ **Live OTA catalog 1.2.1 (28 Sep 2026)**: `public_html/firmware/version.json` + `.bin`. Downloaded bin **1,335,296** bytes, ASCII **1.2.1**. Cloudflare cache rule **Bypass firmware OTA** (`/firmware/` bypass). Earlier the same day a cached **1.0.9** image was flashed while the status line said 1.2.1. Confirm Admin on **100007** shows **1.2.1**.
 
 ### Remaining Performance / Ops Notes
-- Handshake still waits for the duration of an in-progress `handlePowerMeter()` call (acceptable with staggered single-meter reads)
+- Re-time Meter Details after the `delay(100)` removal (expected ~2 s faster than the 5 s measurement)
+- Page copy says “a few seconds”; values still arrive together when `handleWebSocket()` runs after the sweep
 - Update `ampxportal_server_local` when the PC LAN IP changes
 - Ensure Windows Wi‑Fi profile Private + Apache firewall allow so ESP can reach PC:80
 - Live portal: after editing `wp-config.php` on Hetzner, flush PHP OPcache (constants can look “missing” until then)
 - Live debug: Debug Log Manager path in `WP_DEBUG_LOG`, not `wp-content/debug.log`
 - Do not reintroduce FreeRTOS OTA / `WiFiClientSecure` side tasks, cross-core Arduino `String` caches, or a **local** `WiFiClientSecure` on `loop()`
-- After Cloud portal cutover: do not publish OTA **1.0.9** (v2). Next OTA is **1.1.1**.
-- 100007 Cloud rows can show voltage 0 — Modbus/meter, not API.
+- Do not publish OTA **1.0.9** (v2) or an S3 image at `ampx_open_energy_gateway.bin`. Live catalog is already single-url **1.2.1** because `fetchFirmwareManifest()` does not read `targets`. Chip-aware parse is still the plan: `memory-bank/plans/2026-08-23-multi-chip-ota.md`.
+- Purge or bypass Cloudflare for `/firmware/` on every publish. Admin “OK: update applied (X)” is the manifest version, not the booted image.
+- 100007 (TCP/IP, ME537 **3423875005**) showed real volts/amps on 26 Sep once the current coils were connected. Zeros before that were an unpowered meter, not the API.
 
 ## 🎯 Immediate Development Opportunities
 
 ### High Priority
-1. **Publish live OTA 1.1.1**: `.bin` + `version.json` together. Do not publish 1.0.9 (still v2; live portal would go blank for that unit).
-2. **Migrate remaining live gateways** to 1.1.1 (USB or OTA after publish)
+1. **Confirm 100007 booted 1.2.1**, then frequency/PF on the live portal. Chip-aware `targets` parse is still unshipped. Do not publish 1.0.9 or an S3 `.bin` at the legacy URL.
+2. **Migrate remaining live gateways** off `/api/v2/` (USB 1.2.0 after chip-aware firmware, not OTA 1.0.9)
 3. **Deploy theme 1.0.9** (meter-data table scroll)
 4. **Sunset v2 / Influx 2** after no gateway posts `/api/v2/`
 5. **Scale to 10 Meters**: Add HTML sections for meters 6-10 (backend already supports this)
@@ -179,7 +187,7 @@
 - ✅ Industrial-grade reliability patterns
 
 ### Next Milestones
-- 🎯 Publish OTA 1.1.1 and migrate remaining live units
+- 🎯 Confirm 100007 booted **1.2.1** (frequency/PF on the portal); then chip-aware `targets` parse
 - 🎯 Sunset Influx 2 / `/api/v2/`
 - 🎯 32-meter capacity utilization
 - 🎯 Enhanced fault tolerance
