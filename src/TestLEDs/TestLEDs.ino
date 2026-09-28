@@ -3,6 +3,12 @@
 
   Turns an LED on for one second, then off for one second, repeatedly.
   Test leds for the Open energy gateway.
+
+Before compiling
+1. Select the correct port and board.
+2. Set the correct serial port boad rate: 115200
+3. Set the correct flash size, 4MB or 8MB
+4. Set the correct partition format.
 */
 
 //Define the status indicating LEDs pins
