@@ -55,6 +55,16 @@
 
 
 
+// The portal identifies a meter by manufacturer + model + serial number.
+// This register map is Meatrol's, so every meter read with it is a Meatrol.
+// A different map needs its own manufacturer constant.
+#define METER_MANUFACTURER "Meatrol"
+
+// Model name (for example "ME537"): 10 words, two UTF-8 bytes per word, high byte first.
+// Read once per meter, outside the register map, so the 1 s sweep does not repeat it.
+#define METER_MODEL_REGISTER 60
+#define METER_MODEL_WORDS 10
+
 String meter_registers_meatrol = R"(
 {
   "serialNumber": [70, 2, 1, "Serial Number", "serial"],

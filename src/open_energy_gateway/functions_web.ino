@@ -10,6 +10,7 @@ void initServer() {
   server.on("/update_gateway_id", HTTP_POST, handleUpdateGatewayId);  // Add this line
   server.on("/reboot_gateway", HTTP_POST, handleRebootGateway); 
   server.on("/clear_wifi", HTTP_POST, handleClearWifi);
+  server.on("/debug", HTTP_GET, handleDebug);
   server.begin();
   
   //Handle the websocket events, this is used to handle the connection/disconnection events.
@@ -532,15 +533,23 @@ void handleClearWifi() {
   delay(500);
 
   debugln("Clearing stored WiFi and rebooting into AP mode...");
-  clearStoredWifi();
+  clearWifiAndRestart();
+}
 
-  //Turn off all the LEDs
-  digitalWrite(LED_1_POWER, LOW);
-  digitalWrite(LED_2_METER, LOW);
-  digitalWrite(LED_3_WIFI, LOW);
-  digitalWrite(LED_4_INTERNET, LOW);
-  digitalWrite(LED_5_SERVER, LOW);
-  
-  delay(300);
-  ESP.restart();
+// Reloads every 2 seconds and prints dbgBuf, filled by debug() and debugln().
+// Starts at dbgPos so the oldest surviving characters come first after the buffer wraps.
+void handleDebug() {
+  String page = F("<meta http-equiv='refresh' content='2'><pre>");
+  size_t i = dbgPos;
+  for (size_t n = 0; n < sizeof(dbgBuf); n++) {
+    char c = dbgBuf[i++];
+    if (i >= sizeof(dbgBuf)) {
+      i = 0;
+    }
+    if (c) {
+      page += c;
+    }
+  }
+  page += F("</pre>");
+  server.send(200, "text/html", page);
 }

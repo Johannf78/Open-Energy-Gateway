@@ -39,6 +39,7 @@ String webpage_meters = R"(
   <div class="card">
     <h2>Meter: <span id="meter_number">METER_NUMBER</span></h2>
     <p><strong>Serial Number:</strong> <span id='meter_serial_number'></span></p>
+    <p><strong>Model:</strong> <span id='meter_model'></span></p>
     <p><strong>Meter Name:</strong> <span id='meter_name'></span></p>
   </div>
 

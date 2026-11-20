@@ -60,7 +60,8 @@ String webpage_admin = R"(
   </div>
 
   
-  <p><a href="/">Home</a> | <a href="/settings">Settings</a></p>
+  <!-- LAN debug lines. Kept off the sidebar so Home, Meters, and Settings stay the customer pages. -->
+  <p><a href="/">Home</a> | <a href="/settings">Settings</a> | <a href="/debug">Debug</a></p>
 
   </div>
 </main>

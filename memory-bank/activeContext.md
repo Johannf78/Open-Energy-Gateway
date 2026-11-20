@@ -1,7 +1,57 @@
 # Active Context - AmpX Open Energy Gateway
 
 ## Current Focus
-**Sep 28, 2026 — Live OTA catalog is 1.2.1 (single `{version,url}`).** Sketch `FIRMWARE_VERSION` is **1.2.1**. `https://ampx.app/firmware/version.json` is **1.2.1**. The downloaded `ampx_open_energy_gateway.bin` is **1,335,296** bytes and contains the ASCII string **1.2.1** (not 1.0.9). Cloudflare cache rule **Bypass firmware OTA** is **Active**: URI Path starts with `/firmware/` → Bypass cache.
+**Nov 19, 2026 — Firmware 1.3.0: meter manufacturer + model in the portal post. Compiled, not flashed, not published.**
+
+The portal now identifies a meter by manufacturer + model + serial (portal ADR `AmpX-Portal/docs/adr/0002-meter-is-first-class.md`). Sketch `FIRMWARE_VERSION` is **"1.3.0"**.
+- `meter_registers.h`: `METER_MANUFACTURER "Meatrol"`, `METER_MODEL_REGISTER 60`, `METER_MODEL_WORDS 10` (UTF-8, two characters per word, high byte first)
+- `functions_meter.ino`: `readMeterRegisters()` (keeps the `#if MODBUS_TYPE` split inside), `decodeModbusString()` (stops at NUL; drops non-printable, `"` and `\`), `readMeterModelOnce()` — at most 3 attempts per meter, a blank answer stops retries. Called in `handlePowerMeter()` after the serial line, with `handleClient()` / `webSocket.loop()` first. Result in `meterModels[]` and `JsonDoc["m<N>_model"]`
+- `functions_api.ino`: top-level `"manufacturer"` always, `"meter_model"` when known. The values loop skips keys ending `_model` (the API would 400 the whole post)
+- `web_meters.h`: Model line on the meter details page
+- Compiles: TCP **1,343,473** bytes, RS485 **1,325,781** bytes. **Not flashed.** Next: USB-flash 100007 (TCP) and an RS485 unit, check Serial and the portal 201 has `"identity_defaulted": false`
+- The live API defaults old firmware to Meatrol / ME537, so 1.2.x keeps working. Not a breaking change; still a minor bump because the payload grew. Do not publish OTA until asked
+- **20 Nov 2026:** live `/api/v3/` accepts the 1.3.0 payload (test post 201, `identity_defaulted: false`). Flash deferred by user
+- **Security open item (20 Nov 2026):** `ampxportal_api_key` in `open_energy_gateway.ino` is the live gateway key, and this repo is **public** on GitHub (since commit `3e5aa2b`, Aug 2026). Fix later = move the key to a git-ignored header, rotate the key on the API, reflash every gateway in the same change (bump `FIRMWARE_VERSION`). Not started
+
+**Oct 13, 2026 — TestLEDs button does nothing. Next session: continuity, not more firmware.**
+
+`src/TestLEDs/TestLEDs.ino` holds all five LEDs on while GPIO 13 is high, and turns them off while GPIO 13 **or** DevKit BOOT (GPIO 0) is low. Serial 115200 prints `GPIO13=` on change and a 1 s heartbeat. User flashed it. Front-panel press still did nothing (no Serial result reported).
+
+Schematic (bottom PCB): J3 2×4 pin 1 = 3.3 V, 2 POWER, 3 METER, 4 WIFI, 5 INTERNET, 6 SERVER, **7 BUTTON**, **8 GND**. BUTTON is DevKit pin 15 **IO13**, with R1 10 kΩ to 3.3 V and C1 100 nF to GND. LEDs are IO25 SERVER, IO26 WIFI, IO27 INTERNET, IO12 POWER, IO14 METER.
+
+PCB screenshots (EasyEDA, silkscreen **AmpX Energy Gateway V 1.2**, one also shows **Ver 1.0**): J3 pin 1 triangle is top-left. LED stubs from the consecutive GPIO block look wired. **IO13 is on the far side of GND from IO12**, and R1/C1 sit by J3, not by IO13. The screenshot is one copper layer, so a bottom-layer track could exist. **Not confirmed.** Likely open between IO13 and J3 pin 7 — that matches “LEDs on, button does nothing.”
+
+**Start tomorrow:** power off, continuity from DevKit **IO13** (top row, 5th pad from the USB end) to **J3 pin 7** (bottom-left of the 8 pads, opposite the triangle). Open → PCB fault; add a wire IO13 → J3-7 / R1 BUTTON pad, or fix the layout. Beep → then DC volts, black on GND: J3-7 should be ~3.3 V at rest and ~0 V while the pinhole is held. J3-7 to J3-8 should beep only while pressed. Do not change production firmware for this. `TestLEDs.ino` is uncommitted diagnostic code.
+
+**Oct 5, 2026 — Front-panel WiFi reset button, firmware 1.2.5, tested.** Sketch `FIRMWARE_VERSION` is **"1.2.5"**. USB-flashed and the user confirmed it behaved correctly. Live catalog is still **1.2.4** (do not assume this image is published). Admin open earlier the same day was **100009** on 1.2.4; the flashed unit's ID was not restated after the test.
+
+Button is **GPIO 13**, `INPUT_PULLUP`, switch to GND (10 kΩ and 100 nF already on the board). The same pin numbers are now in both the classic ESP32 and ESP32-S3 maps (LEDs 12/14/27/26/25, SPI 18/19/23/5, RS485 4/16/17, button 13). `TestS3Bringup.ino` still has the old S3 pins (LEDs 4/5/6/7/15, SPI 12/13/11/10). GPIO 23 and 25 do not exist on the S3 die; GPIO 26 and 27 are inside the S3 module flash bus. A DevKitC-1U cannot be wired to this shared map.
+
+Hold behavior (`serviceWifiResetButton()` in `functions_wifi.ino`):
+- Sampled from the saved-WiFi wait in `initWiFi()`, from the bottom of `loop()`, before each register in `handlePowerMeter()`, and from `serviceNetworkWhileModbusWaits()`.
+- Ignore the first 2 s. Stay disarmed until the pin has been seen high (a ribbon stuck low must not wipe WiFi every boot).
+- Pin must stay low for **3 seconds**. A shorter press does nothing.
+- Then flash all five LEDs twice (off, on, off, on, ~200 ms), because they are already on in normal running. Then `clearWifiAndRestart()`: `clearStoredWifi()`, LEDs off, `ESP.restart()`.
+- Admin **Clear WiFi** sends its page first, then calls the same `clearWifiAndRestart()`. Gateway ID, meter names, and OTA NVS stay. Next boot opens `energy-gateway-{ID}` because nothing is saved.
+
+WiFi when the saved network is missing (`initWiFi()`):
+- `getWiFiIsSaved()` false (first boot, Admin Clear WiFi, or the button) → `autoConnect()` opens the hotspot.
+- Saved network present → `WiFi.mode(WIFI_STA)` + `WiFi.begin()` and wait until `WL_CONNECTED`. Do **not** open the hotspot on a failed try. The old `autoConnect()` failure path is commented out.
+- The button is polled every 200 ms inside that wait, because `setup()` has not reached `loop()` yet.
+
+Not done: blink the WiFi LED while in AP mode. 24 h reboot in `loop()` is still commented out. Publish **1.2.5** only when asked (`publish-firmware.ps1`, explicit FTP TLS). Do not publish 1.0.9, 1.2.2, or an S3 image at the legacy `.bin` URL.
+
+**Oct 5, 2026 — earlier the same day, before the button.** Meter path still matches the Aug 23 review. `modbus_read_registers_tcpip()` does not call `modbus_test_connection()`. Failed TCP test in `serviceMeters()` turns LED 2 off and returns. It does not call `reconnectMeter()` / `initEthernet()`. Confirming **100007** installed catalog 1.2.4 was not done.
+
+**Sep 29, 2026 — Live catalog is 1.2.4.** Sketch `FIRMWARE_VERSION` is **"1.2.4"**. `https://ampx.app/firmware/version.json` is version **1.2.4** with url `https://ampx.app/firmware/ampx_open_energy_gateway.bin`. The `.bin` is **1,341,696** bytes (Last-Modified 29 Sep 2026 08:55:05 GMT). Cloudflare `cf-cache-status` was **DYNAMIC**. Publish with `D:\xampp\htdocs\firmware\publish-firmware.ps1` after Arduino IDE **Sketch → Export compiled Binary** (ESP32 Dev Module, custom `partitions.csv`, 8 MB). The script copies the app `.bin` (not merged, bootloader, or partitions), writes `version.json` (UTF-8, no BOM), and uploads both with **explicit FTP over TLS** (`curl --ssl-reqd --ftp-pasv`) to `public_html/firmware/` on `dedivirt3789.your-server.de` as `ampxapp`. The password is `$env:AMPX_FTP_PASS` in that shell only. Plain FTP logs in and then returns **550**. `deploy-firmware.ps1` is that plain-FTP path. A gateway still on **1.2.3** can use Admin → Check for update. Whether **100007** has installed 1.2.4 was not confirmed after this publish. Admin “OK: update applied (X)” is the manifest version. Trust **Current firmware version** after reboot.
+
+**The same image has the LAN debug page.** The Admin footer links to `GET /debug`. The sidebar does not. The page shows the last 4 KB of `debug()` / `debugln()` and reloads every 2 seconds. USB serial at 115200 still receives those lines. Direct `Serial.println` stays on USB only. `DEBUG 0` empties the macros, so the page stays blank. No file on the FAT partition. The first line can be cut off after the 4 KB buffer wraps. The page was verified earlier the same day on **100009** (`http://energy-gateway-100009.local/debug`): Modbus TCP connection test succeeded, and `postToAmpXPortal2` logged HTTP **201**, `api_version` **3.0**, serial **3423875005**. That check was a USB flash before the 1.2.4 catalog publish.
+
+**Sep 29, 2026 — Gateway web UI stays Connected with no readings.** Confirmed on 100007 (`192.168.2.163`): WebSocket port 81 stays open and sends nothing for 50 s, while HTTP sometimes stalls ~1 s. That stall is `EthernetClient::connect()` timing out on meter port 502. `connected()` is false in `FIN_WAIT`, and `connect()` then drops the W5500 socket index without `socketClose()`. After eight abandoned sockets the chip cannot open 502, so `serviceMeters()` never reaches `handleWebSocket()`.
+
+**Fix flashed and verified 29 Sep 2026 (sketch 1.2.3, USB, gateway 100007):** `modbus_test_connection()` and `modbus_send_request()` call `stop()` before `connect()`. A good sweep no longer `stop()`s. A failed TCP read breaks the register loop instead of reconnecting once per remaining register. `frequency` stays **1074** (Mi550 manual: FreqTotal). Do not use 1024. User confirmed readings are back. That morning the catalog was single-url **1.2.3** (`version.json` Last-Modified 07:31:49 GMT; `.bin` 1,335,392 bytes) and **100007** Admin showed Up to date. The catalog is now **1.2.4**. `targets` is still not parsed.
+
+**Sep 29 morning — catalog was single-url 1.2.3** (bin 1,335,392 bytes, Last-Modified 07:31:49 GMT). It was replaced the same day by **1.2.4**. `fetchFirmwareManifest()` still does not read `targets`. The 28 Sep catalog was **1.2.1** (bin 1,335,296 bytes). A cached **1.0.9** image was flashed that morning while the status line said 1.2.1.
 
 **Not confirmed after that rule:** Admin on gateway **100007** still needs a Check + Update so **Current firmware version** reads **1.2.1**. Two earlier OTAs the same morning reported `OK: update applied (1.2.1)` and then booted **1.0.9**. That status line appends the **manifest** version (`saveOtaStatus` in `doOTAUpdate()`), not the string compiled into the image. Cloudflare was still serving the old `.bin`. Do not treat the field unit as 1.2.1 until Admin says so.
 
@@ -11,26 +61,29 @@
 
 | Key | Address | Words | Type |
 |-----|---------|-------|------|
-| `frequency` | 1024 | 2 | float |
+| `frequency` | 1074 | 2 | float |
 | `power_factor_L1` | 1052 | 2 | float |
 | `power_factor_L2` | 1054 | 2 | float |
 | `power_factor_L3` | 1056 | 2 | float |
 
-Do **not** send `power_factor_tot` (register 1058). API v3 allows only `mN_power_factor_L[1-3]`. One invalid key returns **400** for the whole post. The portal has no total power-factor column. `postToAmpXPortal2()` already forwards every `mN_` key. Local `/meters` still has **no** `meter_frequency` / `meter_power_factor_L*` cells, so those values do not show there. The unit `if` in `web_meters.h` checks `power_factor` before `power` (otherwise the key is labelled kW).
+Do **not** send `power_factor_tot` (register 1058). API v3 allows only `mN_power_factor_L[1-3]`. One invalid key returns **400** for the whole post. The portal has no total power-factor column. `postToAmpXPortal2()` already forwards every `mN_` key. Local `/meters` shows frequency and power factor. The unit `if` in `web_meters.h` checks `power_factor` before `power` (otherwise the key is labelled kW).
 
-**Sep 28, 2026 — TCP Meter Details connects in about 5 seconds (was up to ~40).**
+**Later — meter model from Modbus (do not build in the 1.2.3 flash).** Mi550 equipment parameters: meter model is register **60**, **10** words, **UTF8**. Serial number **70** (already read) is the next field. The sketch only decodes int32, int64, and float, so UTF8 needs a new type. Do not put that string in the API `values` object: v3 accepts only numeric keys, and an unknown key returns **400** for the whole post. Portal **Type: ME537** is hardcoded in `AMPX_Portal_InfluxDB_Detailed::parse_meters_response()`, not read from the gateway.
 
-One Modbus TCP socket stays open for the whole register sweep, and the WebSocket is serviced between registers. Measured on the bench before the per-register `delay(100)` was removed: page status green and values up in ~5 s. That pause is now gone (`modbus_read_response()` already waits up to 2 s), which should take about another 2 s off; not re-timed yet.
+**Sep 28–29, 2026 — TCP socket.** Meter Details went from ~40 s to about 5 s by keeping one port-502 session open and servicing the WebSocket between registers. `delay(100)` per register is gone.
+
+**29 Sep — 1.2.2 stopped all readings.** `connected()` is false while the W5500 socket is still in `FIN_WAIT`. `EthernetClient::connect()` then drops that socket index without `socketClose()`. After eight abandoned sockets the chip cannot open 502. The browser WebSocket stays Connected and sends nothing, and the portal gets no new rows (last good row 28 Sep 09:50:52, serial **3425875001**, 50 Hz from register **1074**). **1.2.3** calls `stop()` before every `connect()`, does not `stop()` after a good sweep, and breaks the register loop when the socket is already closed. USB-flashed on **100007**. User confirmed readings are back. The catalog was still **1.2.1** at that moment. Later the same day it was published as **1.2.3** (bin 1,335,392 bytes), then **1.2.4**.
 
 **Library** `ampx_modbus_tcpip.cpp` (Arduino libraries, not the sketch tree):
-- `modbus_test_connection()` connects to port 502 and **leaves the socket open** (already open → return true). It is still a TCP open, not a Modbus PDU.
-- `modbus_send_request()` reuses that socket and connects only if it dropped.
-- `modbus_read_response()` does **not** `stop()` on a full reply. It closes on a short frame (`bytesRead < 9`) or when the header arrived without the register bytes.
+- `modbus_test_connection()` / `modbus_send_request()`: if not connected, `stop()` then `connect()`. `stop()` frees a `FIN_WAIT` socket. A live socket is reused.
+- A short `write()` (`!= 12`) calls `stop()` and returns false.
+- `modbus_read_response()` does **not** `stop()` on a full reply. It closes on a short frame (`bytesRead < 9`) or a header without the register bytes. While waiting (up to 2 s) it calls `modbusIdleCallback` → `serviceNetworkWhileModbusWaits()` (`handleClient` + `webSocket.loop()`).
 - No `delay(100)` before the read.
 
 **Sketch** `functions_meter.ino`:
 - Inside the register loop, before each read: `server.handleClient()` + `webSocket.loop()`. Do not call `handleWebSocket()` there; the JSON is still broadcast once after the sweep.
-- End of `handlePowerMeter()`, TCP only: `modbusClient.stop()` once.
+- On a failed TCP read, if `!modbusClient.connected()`, **break**. Do not reconnect once per remaining register.
+- Do **not** `modbusClient.stop()` at the end of a good `handlePowerMeter()`.
 - `reconnectMeter()` stays **unhooked**. `initEthernet()` has `delay(2000)` and must not run on the 1 s path.
 
 UI copy in `web_home.h`, `web_meters.h`, and `web_settings.h` now says the initial connection usually takes a few seconds (was “up to 30 seconds”).
@@ -43,11 +96,11 @@ UI copy in `web_home.h`, `web_meters.h`, and `web_settings.h` now says the initi
 3. Then: WiFi provisioning via the AP, API post to `ampx.app/api/v3/`, and finally OTA with `CHIP_OTA_KEY = esp32s3`.
 4. Consider soldering headers for the four SPI lines — dupont on breadboard caused two false "no hardware" failures today.
 
-**Sep 11, 2026 — hardware V3 decisions that need firmware work (not yet written):**
-- **Reset button on GPIO 13**, front panel, recessed pinhole. Function: **hold 3 s → clear saved WiFi credentials → restart → WiFiManager falls into AP mode** (`clearStoredWifi()` + `ESP.restart()` already exist; currently only reachable from the admin web page — which is exactly what a customer cannot reach after changing their router). Short press: reboot, or nothing — undecided.
+**Sep 11, 2026 — hardware V3 reset button. Firmware written and tested Oct 5, 2026 (1.2.5).** See Current Focus. Short press does nothing. WiFi-LED blink in AP mode was not built.
+- **Reset button on GPIO 13**, front panel, recessed pinhole. Hold 3 s clears saved WiFi and restarts into the setup hotspot.
 - GPIO 13 chosen because WROVER-IE has no GPIO 16/17; 5/18/19/23 are the W5500; 12/14/25/26/27 the LEDs; 0/2/15 are strapping (GPIO 0 low at boot = bootloader mode); 21/22 kept for I²C; 32/33 kept for the RS485 variant.
 - Hardware: 10 kΩ pull-up + 100 nF on the **main** board, switch to GND on the front board, `INPUT_PULLUP` also set in firmware so the pin is defined when the ribbon is unplugged.
-- **Firmware still to write:** button handler with (a) LED feedback — flash all five LEDs at the 3 s threshold so the user knows to release; (b) blink the WiFi LED in AP mode to distinguish "waiting for setup" from "not working"; (c) **stuck-button guards — ignore the button for the first 2 s after boot and require a clean high→low→high transition**, otherwise a pinched ribbon wipes credentials on every boot and strands the unit in AP mode permanently.
+- **Done in 1.2.5:** 3 s hold, double flash of all five LEDs, stuck-button guard (ignore 2 s, arm only after the pin is seen high). **Not done:** blink the WiFi LED in AP mode.
 - Also noted: the 24 h auto-reboot in `loop()` is still commented out (`//ESP.restart();`).
 - Front/back boards now joined by one 2×4 IDC ribbon carrying 5 LEDs + button + V + GND. Base board is USB-powered; the front status board is fed from it.
 - Docs: `AmpX Products\AmpX Energy Gateway\AmpX Energy Gateway - Hardware Notes and connections.md` and `...- Prototype Build 5 - Procurement Status.md`.
@@ -71,15 +124,15 @@ UI copy in `web_home.h`, `web_meters.h`, and `web_settings.h` now says the initi
 Plan (pick up later): `memory-bank/plans/2026-08-23-multi-chip-ota.md`  
 Spec: `ampx.app/docs/superpowers/specs/2026-08-23-multi-chip-ota-design.md`
 
-Sketch `FIRMWARE_VERSION` is **"1.2.1"** and `CHIP_OTA_KEY`; `fetchFirmwareManifest()` still uses top-level `version`/`url` and `firmwareURL` fallback. `setup()` prints the version on the serial monitor after the port is ready. Live `version.json` matches **1.2.1** (published 28 Sep 2026).
+Sketch `FIRMWARE_VERSION` is **"1.2.4"** (29 Sep 2026). `CHIP_OTA_KEY` is set. `fetchFirmwareManifest()` still uses top-level `version`/`url` and `firmwareURL` fallback. `setup()` prints the version on the serial monitor after the port is ready. Live `version.json` is **1.2.4** (published 29 Sep 2026, single url). Chip-aware `targets` is still not parsed.
 
 Also today: TCP/IP meter connection test verified. Cable/link is in `functions_meter.ino` (`meterTransportReady` / `Ethernet.linkStatus() == LinkOFF`), not in `ampx_modbus_tcpip`. `loop()` calls `serviceMeters()`.
 
 **Ready for next session:**
-- Confirm gateway **100007** Admin shows **1.2.1** after Check + Update (catalog and `.bin` are already 1.2.1; Cloudflare `/firmware/` bypass is on).
-- Confirm the next portal row for SN **3423875005** has frequency near 50 and power factor on L1–L3. Portal headings still say **W** and **Wh** while the gateway sends **kW** and **kWh**.
-- Add `meter_frequency` and `meter_power_factor_L1`–`L3` cells on the local meters page if those values should show there.
-- Chip-aware OTA (`targets`) is still not parsed. Do not publish an S3 image at the legacy `.bin` URL. Do not publish **1.0.9**.
+- **100007** was USB **1.2.3** on the morning of 29 Sep (Admin Up to date against the 1.2.3 catalog). Last OTA result in NVS was still **OK: update applied (1.2.1)** at **2026-09-28T07:24:06Z**. A USB flash does not change that line. The live catalog is now **1.2.4**. Applying it on 100007 was not confirmed after the publish.
+- Live catalog is single-url **1.2.4**. `targets` is still not parsed. Do not put an S3 image at the legacy `.bin` URL. Do not publish **1.0.9**.
+- Portal Meter Data for serial **3425875001** already showed 50 Hz and per-phase power factor on 28 Sep. Headings still say **W** / **Wh** while the gateway sends **kW** / **kWh**.
+- Chip-aware OTA (`targets`) is still not parsed.
 - Optional: Modbus probe (registers 70–71) in TCP `modbus_test_connection()`; RS485 test is still `return true`.
 
 Previous: multi-chip OTA spec (23 Aug); TCP/IP connection test; live Cloud cutover (1.1.1 USB); firmware local v3; portal InfluxQL; API v3.
@@ -91,7 +144,7 @@ Previous: multi-chip OTA spec (23 Aug); TCP/IP connection test; live Cloud cutov
 
 **Fix (sketch, verified 23 Aug 2026):**
 - `meterTransportReady()` — TCP/IP only: `Ethernet.linkStatus() == LinkOFF` → false; RS485 always true
-- `serviceMeters()` — early returns: no link → LED 2 off, skip Modbus and `initEthernet()`; test fail → LED 2 off, `reconnectMeter()`; success → LED 2 on, `readNextMeter()`
+- `serviceMeters()` — early returns: no link → LED 2 off, skip Modbus and `initEthernet()`; test fail → LED 2 off, **return** (do not call `reconnectMeter()` / `initEthernet()`); success → LED 2 on, `readNextMeter()`. Same-day follow-up: `modbus_read_registers_tcpip()` no longer calls `modbus_test_connection()`.
 - `loop()` interval block only calls `serviceMeters()`
 - Do **not** name it `handleMeters()` — that is the `/meters` HTTP handler
 
@@ -269,7 +322,7 @@ Do **not** ship **1.0.3** (reboot loop), **1.0.4/1.0.5** (Admin/Check WDT), or p
 - `POST /update` sends status page then downloads/flashes; success → NVS + reboot
 - Board: **ESP32 Dev Module**, Flash **8MB**, partition **custom** (`partitions.csv` dual OTA app slots)
 - Host path: `D:\xampp\htdocs\ampx.app\firmware\` + junction `htdocs\firmware` for LAN IP access
-- Deploy helper: `ampx.app/firmware/deploy-firmware.ps1` (needs `AMPX_FTP_PASS`)
+- Deploy helper (current): `D:\xampp\htdocs\firmware\publish-firmware.ps1` (explicit FTP TLS, `AMPX_FTP_PASS`). The older `deploy-firmware.ps1` uses plain FTP and returns 550.
 
 **Verified**:
 - Negative: live URL 404 → Admin `Failed: File Not Found (404)`
@@ -331,16 +384,16 @@ One meter per 1s interval; sub-3s WebSocket connections; progressive UI updates.
 Sidebar UI, meters page, WebSocket architecture, 5-meter expansion — see progress.md / .cursorrules Sessions 1–5.
 
 ## Next Development Opportunities
-1. **Next:** Implement and publish chip-aware OTA **1.2.0** (`targets` only). Plan: `memory-bank/plans/2026-08-23-multi-chip-ota.md`. Do not publish **1.0.9** or single-url **1.1.1**.
+1. **Tomorrow:** Publish **1.2.5** only if asked. Chip-aware `targets` is still unshipped. Plan: `memory-bank/plans/2026-08-23-multi-chip-ota.md`. Do not publish **1.0.9** or an S3 image at the legacy `.bin` URL. Optional: WiFi LED blink while the setup hotspot is up. `TestS3Bringup.ino` still uses the old S3 pin map.
 2. USB-flash 100007 with 1.2.0 **before** live catalog; then migrate remaining `/api/v2/` units
 3. Deploy theme **1.0.9**; then sunset v2 / Influx 2
 4. Optional: 100007 voltage zeros (Modbus); TCP Modbus register probe; RS485 `modbus_test_connection()`; scale HTML meters; Windows mDNS
 
 ## System Health Status
-- **Firmware**: USB **1.1.1** on **100007** (live `/api/v3/`); local sketch **1.2.1** + `CHIP_OTA_KEY` (OTA parse unfinished; TCP sweep socket Sep 28). Do not flash 1.0.3 or 1.0.4/1.0.5
+- **Firmware**: Sketch **1.2.5** (5 Oct 2026). Reset button tested. Live catalog still **1.2.4**. **100007** was USB **1.2.3** on 29 Sep; 1.2.4 OTA apply not confirmed. Do not flash 1.0.3, 1.0.4/1.0.5, or 1.2.2 (W5500 socket leak).
 - **Local + live API v3**: Key enforced; Cloud writes 201 verified
 - **API v2**: Still on Hetzner → Influx 2; live portal does not read it
 - **Influx (portal)**: Cloud Serverless org **Energy Gateway**
-- **Portal**: Plugin **1.1.5** InfluxQL; live + local Meter Data for 100007 / 3423875005
+- **Portal**: Plugin **1.1.5** InfluxQL; live Meter Data for 100007 / **3425875001** (50 Hz and power factor on 28 Sep; uploads resumed after USB 1.2.3 on 29 Sep)
 - **Theme**: 1.0.9 local, **1.0.7** live
-- **OTA hosting**: Live `version.json` **1.0.9**; next publish chip-aware **1.2.0** (not 1.1.1)
+- **OTA hosting**: Live `version.json` **1.2.4** (29 Sep 2026, `.bin` **1,341,696** bytes). Single `url`, no `targets`. Publish via `D:\xampp\htdocs\firmware\publish-firmware.ps1` (explicit FTP TLS).

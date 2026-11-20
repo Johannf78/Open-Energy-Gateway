@@ -121,7 +121,7 @@ open_energy_gateway.ino (main)
 ### Performance Considerations
 - **Real-Time**: Staggered 1-second meter reads with immediate WebSocket broadcast
 - **Critical**: Call `server.handleClient()` and `webSocket.loop()` before each register read inside `handlePowerMeter()`, and around the sweep in `readNextMeter()`. End-of-loop alone is not enough. UI “Connecting…” = waiting on WS port 81. Broadcast JSON only after the sweep (`handleWebSocket()`).
-- **TCP/IP meter interval**: `loop()` → `serviceMeters()`. Cable check is `Ethernet.linkStatus() == LinkOFF` in `meterTransportReady()` (sketch), **not** in `ampx_modbus_tcpip.cpp`. Link off → skip Modbus and do **not** call `initEthernet()` / `reconnectMeter()`. Do not name this `handleMeters()` (that is the web page). TCP: **one socket per sweep** — `modbus_test_connection()` connects and leaves port 502 open; `modbus_read_response()` closes only on a short/incomplete frame; `handlePowerMeter()` calls `modbusClient.stop()` once at the end. No per-register `delay(100)`. RS485 test still `return true`.
+- **TCP/IP meter interval**: `loop()` → `serviceMeters()`. Cable check is `Ethernet.linkStatus() == LinkOFF` in `meterTransportReady()` (sketch), **not** in `ampx_modbus_tcpip.cpp`. Link off → skip Modbus and do **not** call `initEthernet()` / `reconnectMeter()`. Do not name this `handleMeters()` (that is the web page). TCP: **one socket, kept open**. Before `connect()`, call `stop()` — `connected()` is false in `FIN_WAIT`, and `connect()` otherwise leaks the W5500 socket (eight leaks and port 502 never opens; page stays Connected with no readings). `modbus_read_response()` closes only on a short/incomplete frame. Do **not** `stop()` at the end of a good sweep. A failed read breaks the register loop. No per-register `delay(100)`. RS485 test still `return true`. Frequency register is **1074** (FreqTotal), not 1024.
 - **Connection Speed**: TCP Meter Details ~5 s on 28 Sep 2026 before the 100 ms pause was removed (was up to ~40 s with connect/stop per register)
 - **Refresh Cycle**: Each meter reads every 5 seconds (5 meters × 1s interval)
 - **API Batching**: 30-second uploads, could batch multiple meters
@@ -363,9 +363,10 @@ This is a mature, production-ready industrial IoT project with excellent archite
 - Do not OTA **1.0.9** after the portal is on Cloud — that firmware still posts v2
 
 #### Session 19: TCP/IP meter connection test (August 2026)
-- TCP `modbus_test_connection()` is **not** always-true in code (unlike RS485 stub). It only opens TCP 502 then `stop()` — a live meter (or anything accepting 502) still looks “connected”
+- TCP `modbus_test_connection()` is **not** always-true in code (unlike RS485 stub). In this session it opened TCP 502 then `stop()`; from **1.2.3** it leaves the socket open for the sweep (still not a Modbus PDU)
 - Do **not** put `Ethernet.linkStatus()` in `ampx_modbus_tcpip.cpp` — IDE reports undeclared `LinkOFF` / `Ethernet`
-- ✅ Sketch: `meterTransportReady()` + `serviceMeters()` + `readNextMeter()` / `reconnectMeter()` in `functions_meter.ino`
+- ✅ Sketch: `meterTransportReady()` + `serviceMeters()` + `readNextMeter()` in `functions_meter.ino`
+- ✅ Same day: `modbus_read_registers_tcpip()` does **not** call `modbus_test_connection()`. Failed test → LED off, return. Do **not** call `reconnectMeter()` / `initEthernet()` (`delay(2000)` every 1 s). Function stays commented. Do not add link off→on recover until a W5500 stays dead after unplug/replug
 - ✅ `loop()` interval only calls `serviceMeters()`; no nested meter if/else
 - ✅ Hardware verified 23 Aug 2026: cable out → link off, LED 2 off, no read; cable in → test succeeds
 - ⏳ Optional: Modbus register probe (70–71) in the TCP library; implement RS485 `modbus_test_connection()`
@@ -386,16 +387,41 @@ This is a mature, production-ready industrial IoT project with excellent archite
 **Key Learnings**:
 - A full Modbus TCP reply is at least 9 bytes (7-byte MBAP + function code + byte count). Shorter means timeout or a fragment — close the socket or the next register reads the leftover bytes.
 - Do not `stop()` after every successful read. Do not put `Ethernet.linkStatus()` in the TCP library.
+- Do not `stop()` only at the end of the sweep and then `connect()` later. Call `stop()` before `connect()` whenever `connected()` is false, or the W5500 leaks sockets (firmware **1.2.2**).
+
+#### Session 22: W5500 socket leak → firmware 1.2.3 (29 Sep 2026)
+- ❌ **1.2.2**: one socket per sweep, `stop()` at the end of `handlePowerMeter()`, then `connect()` on the next pass with no `stop()` first. `EthernetClient::connect()` drops a `FIN_WAIT` index without `socketClose()`. After eight leaks, port 502 never opens.
+- Symptom: browser WebSocket stays **Connected**, last update stays `--:--:--`, no JSON on port 81. Portal last row **28 Sep 09:50:52** (serial **3425875001**, 50 Hz). HTTP to the gateway still returns in about a second because `connect()` times out at 1 s and `serviceMeters()` returns without `handleWebSocket()`.
+- ✅ **1.2.3**: `stop()` before `connect()` in `modbus_test_connection()` and `modbus_send_request()`. Short write closes the socket. Good sweep does **not** `stop()`. Failed read breaks the register loop. Frequency stays **1074** (Mi550 FreqTotal). Do not use 1024.
+- ✅ USB-flashed on **100007**. User confirmed readings are back. The catalog was still **1.2.1** then. Later the same day it was **1.2.3**, then **1.2.4**. Do not republish **1.2.2**.
 
 #### Session 20: Multi-chip OTA plan saved (August 2026)
 - ✅ Spec + plan written; **not implemented** (except sketch `CHIP_OTA_KEY` + version string `1.2.0`)
 - Spec: `ampx.app/docs/superpowers/specs/2026-08-23-multi-chip-ota-design.md`
 - Plan: `ampx.app/docs/superpowers/plans/2026-08-23-multi-chip-ota.md` and `memory-bank/plans/2026-08-23-multi-chip-ota.md`
-- Chip-aware `targets` still not parsed. Live catalog is single-url **1.2.1** (28 Sep 2026) because that is what `fetchFirmwareManifest()` reads. Do not publish 1.0.9. Never S3 `.bin` at the legacy root URL.
+- Chip-aware `targets` still not parsed. Live catalog is single-url **1.2.4** (29 Sep 2026) because that is what `fetchFirmwareManifest()` reads. Do not publish 1.0.9. Never S3 `.bin` at the legacy root URL.
 
 **Key Learnings**:
 - OTA cannot change silicon (ESP32 vs S3). USB after a chip/PCB swap.
 - 1.1.1 `doOTAUpdate()` falls back to hardcoded `firmwareURL` if the manifest fails — that is the brick path if an S3 image is at the old URL.
+
+#### Session 23: LAN /debug + publish script → firmware 1.2.4 (29 Sep 2026)
+- ✅ `debug()` / `debugln()` copy into a 4 KB RAM ring and still print on USB 115200. `GET /debug` reloads every 2 seconds. Admin footer links to it. Sidebar unchanged. Direct `Serial.println` is USB only. No FAT log.
+- ✅ Verified on **100009** before the catalog publish: Modbus TCP test OK, portal HTTP **201**, `api_version` 3.0, serial **3423875005**.
+- ✅ `D:\xampp\htdocs\firmware\publish-firmware.ps1`: after Export compiled Binary, copies the ESP32 app `.bin`, writes `version.json`, uploads both with explicit FTP over TLS to `public_html/firmware/`. Password is `$env:AMPX_FTP_PASS`. Plain FTP returns **550**. Refuses an `esp32s3` path and a bin that lacks the version string.
+- ✅ Live catalog checked: version **1.2.4**, `.bin` **1,341,696** bytes, Cloudflare **DYNAMIC**. **100007** was still USB **1.2.3**; installing 1.2.4 was not confirmed.
+
+#### Session 24: Front-panel WiFi reset → firmware 1.2.5 (5 Oct 2026)
+- ✅ GPIO **13** button on both pin maps. Hold 3 s flashes all five LEDs twice, then `clearWifiAndRestart()` (same ending as Admin Clear WiFi). Short press does nothing. Stuck-low ribbon stays disarmed until the pin is seen high.
+- ✅ Saved network missing: `WiFi.begin()` retries in STA. Hotspot opens only when `getWiFiIsSaved()` is false.
+- ✅ USB-flashed. User confirmed the button worked. Live catalog still **1.2.4**. Not published.
+- ⏳ WiFi LED blink in AP mode not built. `TestS3Bringup.ino` still has the old S3 pins. GPIO 23/25 do not exist on the S3 die; 26/27 are module flash pins.
+
+#### Session 25: Meter manufacturer + model → firmware 1.3.0 (19 Nov 2026)
+- ✅ Portal post adds top-level `manufacturer` (`METER_MANUFACTURER`) and `meter_model` (register **60**, 10 words, read once per meter, max 3 tries). Portal identifies meters by manufacturer + model + serial
+- ✅ `JsonDoc["m<N>_model"]` feeds the Meters page; `postToAmpXPortal2()` skips `_model` keys in `values` (an unknown key makes API v3 return 400 for the whole post)
+- ✅ TCP and RS485 compile. Not flashed. Not published
+- API defaults old firmware to Meatrol / ME537, so 1.2.x keeps posting 201
 
 ### Current Status
 - **5+ Meters Supported**: Array-based backend; HTML scaled for more meters as configured ✅
@@ -403,15 +429,17 @@ This is a mature, production-ready industrial IoT project with excellent archite
 - **Local API E2E**: Verified against XAMPP + Influx + ampx-app.local portal ✅
 - **Local API Key Auth**: Enforced and Postman-verified (August 2026) ✅
 - **Local Portal Meter Data UX**: Scroll + 1000/30d limits + full-window CSV ✅
-- **Live API v3 + Portal Cloud E2E**: 100007 / 3423875005 on https://ampx.app View Data ✅
-- **Firmware**: Sketch **1.2.1** (TCP/IP 100007, frequency + PF L1–L3). Do not use 1.0.3 / 1.0.4 / 1.0.5 / republish 1.0.9 ✅
-- **Live OTA**: `version.json` **1.2.1** + Cloudflare `/firmware/` bypass. Confirm booted version on 100007. `targets` parse still unshipped ⏳
+- **Live API v3 + Portal Cloud E2E**: 100007 / **3425875001** on https://ampx.app View Data ✅
+- **Firmware**: Sketch **1.3.0** (19 Nov 2026, compiled only; adds manufacturer + model to the post). 1.2.5 (5 Oct 2026) GPIO 13 reset button tested. Frequency **1074**, PF L1–L3. Do not use 1.0.3 / 1.0.4 / 1.0.5 / 1.2.2 / republish 1.0.9 ✅
+- **Live OTA**: `version.json` is still **1.2.4** (`.bin` **1,341,696** bytes). Sketch **1.2.5** is not published. Publish with `publish-firmware.ps1` (explicit FTP TLS) only when asked. `targets` parse still unshipped ⏳
 - **Live API Key**: `/api/v3/` gated 401/201 ✅
 - **Live Portal UX**: Plugin 1.1.5 live; theme 1.0.9 still pending ⏳
 - **Influx Cloud Serverless**: Local + live v3 writes + portal InfluxQL ✅; v2/Influx 2 still on Hetzner ⏳
 - **Ship-mode**: Admin Clear WiFi → AP `energy-gateway-{ID}` ✅
-- **TCP/IP connection test**: `serviceMeters()` + sketch `LinkOFF` check verified Aug 23 2026 ✅
-- **Next project**: Confirm 100007 is running **1.2.1** and portal frequency/PF; then chip-aware `targets` parse. Theme 1.0.9 + sunset v2 still open ⏳
+- **LAN debug page**: `GET /debug` shows the last 4 KB of `debug()` / `debugln()` (USB 115200 unchanged). Admin footer link. Verified 29 Sep 2026 on **100009**. Shipped in catalog **1.2.4** ✅
+- **TCP/IP connection test**: `serviceMeters()` + sketch `LinkOFF` check verified Aug 23 2026. Failed test does not `reconnectMeter()`. Read path does not re-test. ✅
+- **Reset button**: Hold GPIO 13 for 3 s. Tested 5 Oct 2026 in sketch **1.2.5**. A missing saved network does not open the hotspot by itself ✅
+- **Next project**: Publish **1.2.5** when asked. Chip-aware `targets` still unshipped. Theme 1.0.9 + sunset v2 still open ⏳
 - **Modern UI**: Professional sidebar navigation with summary tables
 - **Clean Navigation**: Home shows summaries, Meters page shows details
 - **Admin Features**: Gateway reboot (LEDs off), OTA, Clear WiFi, Gateway ID

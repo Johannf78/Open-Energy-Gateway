@@ -185,7 +185,7 @@ Every upload sends header `X-AmpX-Api-Key` (firmware **1.0.3+**). Full API docs:
 - WordPress `wp-config.php` `AMPX_INFLUXDB_*` → Cloud Serverless; **ORG** = `Energy Gateway` (not AmpX)
 - After editing live `wp-config.php` on Hetzner: flush PHP OPcache
 - Create/assign the gateway in WP Admin; Influx data alone does not register it in the portal list
-- OTA: live `version.json` is **1.0.9** (v2). Next publish is **1.1.1**. Do not publish 1.0.9.
+- OTA: live `version.json` is **1.2.4** (29 Sep 2026). Publish with `D:\xampp\htdocs\firmware\publish-firmware.ps1`. Do not publish 1.0.9.
 
 ## 💻 Usage
 
@@ -265,6 +265,8 @@ Enable debug output by defining:
 #define DEBUG 1
 ```
 
+`debug()` and `debugln()` print to the USB serial monitor (115200) and into a 4 KB buffer. On the same LAN, open Admin and follow **Debug**, or go to `http://energy-gateway-{ID}.local/debug` (or the device IP). The page reloads every 2 seconds. Direct `Serial.println` calls are not on that page. Set `DEBUG` to `0` to compile the macros out. The buffer is RAM only; it is empty after a reboot. This page is in the live **1.2.4** catalog.
+
 ### Web Interface Implementation
 Currently, the web interface is implemented using header files containing HTML templates:
 
@@ -290,7 +292,7 @@ The project includes infrastructure for future SPIFFS implementation:
 - **Active Meters**: Currently configured for 5 meters (backend expandable; HTML rows needed beyond that)
 - **Server URLs**: API and OTA hosts (`ampxportal_server_local` / `_live`, `USE_LOCAL_SERVER`, firmware URLs) require a firmware rebuild
 - **Gateway ID**: Changeable from Admin; stored in NVS (`DEFAULT_GATEWAY_ID` is first-boot only)
-- **OTA Updates**: Admin HTTP pull from `https://ampx.app/firmware/` (Check + Update); first flash USB with 8MB dual-OTA partitions; sketch **1.1.1** (live `/api/v3/`); next OTA publish **1.1.1** — do not publish **1.0.9** (still v2)
+- **OTA Updates**: Admin HTTP pull from `https://ampx.app/firmware/` (Check + Update); first flash USB with 8MB dual-OTA partitions. Sketch and live catalog are **1.2.4**. After Export compiled Binary, run `D:\xampp\htdocs\firmware\publish-firmware.ps1` (explicit FTP over TLS, `$env:AMPX_FTP_PASS`). Do not publish **1.0.9** or an S3 image at that URL.
 - **Admin Interface**: Gateway reboot (LEDs off first) + OTA + Clear WiFi (ship-mode); Gateway ID change with password
 
 ### Shipping a gateway
@@ -321,7 +323,9 @@ The page is served over HTTP (port 80). **Connection status: Connecting…** mea
 
 **Cause:** Modbus reads block the ESP32. The WebSocket on port 81 is only accepted when `webSocket.loop()` runs. On TCP, each register used to open and close port 502, so the first page could sit on Connecting for up to about 40 seconds.
 
-**Current pattern (Sep 2026):** one Modbus TCP socket for the whole sweep, closed once at the end of `handlePowerMeter()`. `server.handleClient()` and `webSocket.loop()` run before every register read, and `handleWebSocket()` sends the JSON once after the sweep. Bench measurement before a leftover 100 ms pause was removed: about 5 seconds. There is no per-register `delay(100)`; `modbus_read_response()` already waits up to 2 seconds for the frame.
+**Current pattern (29 Sep 2026, firmware 1.2.3):** one Modbus TCP socket stays open across sweeps. Before a new `connect()`, the library calls `stop()` so a half-closed W5500 socket is actually freed. `server.handleClient()` and `webSocket.loop()` run before every register read and while a reply is still arriving. `handleWebSocket()` sends the JSON once after the sweep. A failed read that has already closed the socket ends the sweep. There is no per-register `delay(100)`.
+
+**1.2.2 failure:** closing the socket every sweep, then calling `connect()` without `stop()` first, leaked W5500 sockets. After eight leaks the meter port never opened. The page stayed on Connected with last update blank, and the portal received nothing after 28 Sep 09:50:52. USB 1.2.3 restored readings on gateway 100007.
 
 Also keep `server.handleClient()` / `webSocket.loop()` at the end of `loop()`. Do not call `reconnectMeter()` / `initEthernet()` from the 1-second meter path (`initEthernet()` waits 2 seconds and freezes the page).
 
@@ -360,7 +364,7 @@ On first boot (or when no WiFi credentials are saved), the gateway creates an op
 - Serial `rst:0x8 (TG1WDT_SYS_RESET)` after `Fetching firmware manifest:` = old firmware (≤1.0.5) putting `WiFiClientSecure` on the `loop()` stack — USB-flash or OTA **1.0.7+**
 - Opening Admin must not fetch; only **Check for update** starts HTTPS
 - Serial Monitor baud is **115200**
-- Live files: `https://ampx.app/firmware/version.json` and the `.bin` must both be published and versions aligned
+- Live files: `https://ampx.app/firmware/version.json` and the `.bin` must both be published and versions aligned. Catalog on 29 Sep 2026 is **1.2.4** (1,341,696 bytes). Publish script uses explicit FTP TLS into `public_html/firmware/`. Plain FTP returns 550.
 
 **Live portal “critical error” on Meters**
 - Check Debug Log Manager log (path in `WP_DEBUG_LOG`), not only Apache `www_logs`

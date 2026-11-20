@@ -74,6 +74,61 @@ void setupMeterRegisters() {
   }
   
   
+  // One block read on whichever Modbus transport this build uses.
+  // The #if stays inside so callers do not repeat the RS485/TCP split.
+  bool readMeterRegisters(int meterNumber, uint16_t registerNumber, uint16_t count, uint16_t* data) {
+#if MODBUS_TYPE == MODBUS_TYPE_RS485
+    return modbus_read_registers_rs485(meterNumber, registerNumber, count, data);
+#else
+    return modbus_read_registers_tcpip(registerNumber, count, data);
+#endif
+  }
+
+  // Register words to text. Each word holds two characters, high byte first; a NUL ends it.
+  // Only printable ASCII other than '"' and '\' is kept, because the string goes
+  // straight into the hand-built JSON in postToAmpXPortal2().
+  String decodeModbusString(const uint16_t* words, int count) {
+    String text = "";
+    for (int i = 0; i < count; i++) {
+      char pair[2] = { (char)(words[i] >> 8), (char)(words[i] & 0xFF) };
+      for (int j = 0; j < 2; j++) {
+        if (pair[j] == '\0') {
+          text.trim();
+          return text;
+        }
+        if (pair[j] >= 0x20 && pair[j] <= 0x7E && pair[j] != '"' && pair[j] != '\\') {
+          text += pair[j];
+        }
+      }
+    }
+    text.trim();
+    return text;
+  }
+
+  // The model does not change while the gateway runs, so read it once per meter.
+  // A failed read is retried on the next sweeps, three times at most. A meter
+  // without register 60 then posts no meter_model and the portal uses its default.
+  void readMeterModelOnce(int meterNumber) {
+    const uint8_t maxModelAttempts = 3;
+    int index = meterNumber - 1;
+    if (meterModels[index].length() > 0 || meterModelAttempts[index] >= maxModelAttempts) {
+      return;
+    }
+
+    uint16_t words[METER_MODEL_WORDS];
+    if (!readMeterRegisters(meterNumber, METER_MODEL_REGISTER, METER_MODEL_WORDS, words)) {
+      meterModelAttempts[index]++;
+      debugln("Meter " + String(meterNumber) + ": model register " + String(METER_MODEL_REGISTER) + " not read (attempt " + String(meterModelAttempts[index]) + ")");
+      return;
+    }
+
+    meterModels[index] = decodeModbusString(words, METER_MODEL_WORDS);
+    if (meterModels[index].length() == 0) {
+      meterModelAttempts[index] = maxModelAttempts;  // Register answers but is blank; do not ask again.
+    }
+    debugln("Meter " + String(meterNumber) + " model: " + meterModels[index]);
+  }
+
   //JF New combined function for RS485 and TCP
   void handlePowerMeter(int meterNumber = 1) {
     uint16_t registerData[4];
@@ -88,6 +143,13 @@ void setupMeterRegisters() {
     */
     JsonDoc[meterPrefix + "serial_number"] = meterSerialNumbers[meterNumber - 1];
 
+    server.handleClient();
+    webSocket.loop();
+    readMeterModelOnce(meterNumber);
+    // "_model" so the meters page maps it to id meter_model. postToAmpXPortal2()
+    // skips this key; a text value under "values" makes the API reject the post.
+    JsonDoc[meterPrefix + "model"] = meterModels[meterNumber - 1];
+
 
     // Loop through all register definitions in the JSON document
     for (JsonPair kv : MeterRegisterDefs.as<JsonObject>()) {
@@ -95,6 +157,10 @@ void setupMeterRegisters() {
       //Handle WebSocket and HTTP requests, before reading the registers
       server.handleClient();
       webSocket.loop();
+
+      //Check the WiFi Reset Button, this is used to reset the WiFi settings and start the WiFi setup hotspot.
+      //Add it here to make sure the button is checked while the meter is reading.
+      serviceWifiResetButton();
       
       JsonArray registerDef = kv.value().as<JsonArray>();
       
@@ -141,6 +207,13 @@ void setupMeterRegisters() {
         }
       } else {
         Serial.println("Error reading register " + String(registerNumber));
+#if MODBUS_TYPE == MODBUS_TYPE_TCPIP
+        // A short frame or a failed write already stop()s the socket. Do not
+        // open port 502 again for every remaining register in this sweep.
+        if (!modbusClient.connected()) {
+          break;
+        }
+#endif
       }
     }
   
@@ -154,13 +227,10 @@ void setupMeterRegisters() {
     Serial.println();
     */
 
-  #if MODBUS_TYPE == MODBUS_TYPE_TCPIP
-    // One TCP session for the whole sweep. stop() can block while the socket closes,
-    // so do it once here instead of after every register.
-    if (modbusClient.connected()) {
-      modbusClient.stop();
-    }
-  #endif
+  // Leave a good TCP session open. stop() here made the next sweep call
+  // connect() again. If the meter had already half-closed, that connect()
+  // leaked a W5500 socket. The session is closed in the library when a
+  // read or write fails.
 
   }
 
@@ -170,6 +240,9 @@ void setupMeterRegisters() {
 void serviceNetworkWhileModbusWaits() {
   server.handleClient();
   webSocket.loop();
+  //Check the WiFi Reset Button, this is used to reset the WiFi settings and start the WiFi setup hotspot.
+  //Add it here to make sure the button is checked while the meter is reading.
+  serviceWifiResetButton();
 }
 #endif
 

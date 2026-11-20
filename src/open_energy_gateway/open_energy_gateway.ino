@@ -28,12 +28,12 @@
 //NB, Also remember to change the API server from local to live if needed...
 
 // Bump when publishing a new .bin to ampx.app/firmware/
-#define FIRMWARE_VERSION "1.2.2"
+#define FIRMWARE_VERSION "1.3.0"
 //To publish OTA for gateways in the field
 //Bump FIRMWARE_VERSION
 //Use Sketch → Export compiled Binary (not the Upload / play button)
-//FTP Copy that .bin into ampx.app\firmware\ as ampx_open_energy_gateway.bin
-//Update version.json in that same folder and deploy
+//Then run D:\xampp\htdocs\firmware\publish-firmware.ps1
+//It copies the app .bin, writes version.json, and uploads both over explicit FTP TLS.
 
 // OTA catalog key must match targets.<chip> in firmware/version.json.
 // Derived from the board you compiled for so an ESP32 build never downloads an S3 image (and the reverse).
@@ -158,6 +158,23 @@ SET_LOOP_TASK_STACK_SIZE(16384);
 #include "meter_registers.h"
 
 
+//This is used to view the debug information on the /debug page on the local web page.
+// Fixed copy of debug() / debugln() text for the /debug page.
+// USB still prints. When the 4 KB fills, the oldest characters are overwritten.
+static char dbgBuf[4096];
+static size_t dbgPos = 0;
+// Copy one string into the fixed buffer. Called only from the macros below.
+static void dbgWrite(const char* s) {
+  if (s == nullptr) {
+    return;
+  }
+  while (*s) {
+    dbgBuf[dbgPos++] = *s++;
+    if (dbgPos >= sizeof(dbgBuf)) {
+      dbgPos = 0;
+    }
+  }
+}
 
 
 
@@ -166,8 +183,19 @@ SET_LOOP_TASK_STACK_SIZE(16384);
 #define DEBUG 1
 
 #if DEBUG == 1
-  #define debug(x) Serial.print(x)
-  #define debugln(x) Serial.println(x)
+
+  // String(x) accepts the same numbers and text the macros already print.
+  // dbgWrite copies the characters before that temporary String is destroyed.
+  // debug(x) does two things with the same value:
+  // Serial.print(x) sends it to the USB port, so the serial monitor still shows it.
+  // dbgWrite(String(x).c_str()) copies those same characters into dbgBuf, the 4 KB block the /debug page reads.
+
+  #define debug(x)   do { Serial.print(x);   dbgWrite(String(x).c_str()); } while (0)
+  #define debugln(x) do { Serial.println(x); dbgWrite(String(x).c_str()); dbgWrite("\n"); } while (0)
+
+  //#define debug(x) Serial.print(x)
+  //#define debugln(x) Serial.println(x)
+
 #else
   #define debug(x)
   #define debugln(x)
@@ -186,22 +214,24 @@ SET_LOOP_TASK_STACK_SIZE(16384);
   // ESP32-S3-DevKitC-1U. Avoid: 0/3/45/46 (strapping), 19/20 (USB), 26-32 (flash),
   // 35/36/37 (octal PSRAM on N8R8/N16R8), 38 and 48 (on-board RGB LED on v1.1 / v1.0), 43/44 (UART0).
   // Status LEDs - all on the J1 header side, contiguous, so one 6-way ribbon (5 LED + GND) reaches the front board.
-  #define LED_1_POWER     4
-  #define LED_2_METER     5
-  #define LED_3_WIFI      6
-  #define LED_4_INTERNET  7
-  #define LED_5_SERVER    15
+  #define LED_1_POWER     12
+  #define LED_2_METER     14
+  #define LED_3_WIFI      27
+  #define LED_4_INTERNET  26
+  #define LED_5_SERVER    25
+  //WIFI Reset Button Pin
+  #define WIFI_RESET_BUTTON_PIN 13
   // W5500 / W5500-Lite on FSPI (the S3 default SPI pins: SCK 12, MISO 13, MOSI 11, SS 10)
-  #define ETH_SPI_SCK_PIN   12  // Yellow
-  #define ETH_SPI_MISO_PIN  13  // Orange
-  #define ETH_SPI_MOSI_PIN  11  // Blue
-  #define ETH_SPI_SCS_PIN   10  // Green  (nSS on the module)
+  #define ETH_SPI_SCK_PIN   18  // Yellow
+  #define ETH_SPI_MISO_PIN  19  // Orange
+  #define ETH_SPI_MOSI_PIN  23  // Blue
+  #define ETH_SPI_SCS_PIN   5  // Green  (nSS on the module)
   //#define ETH_SPI_RST_PIN 14  // Optional: module RST. Leave COMMENTED OUT unless RST is physically wired -
                                 // defining it makes initEthernet() pulse the pin. The W5500 has its own pull-up.
   // RS485 (MAX485) - UART1. Reserved now so the combined RS485+Ethernet board needs no re-pinning.
-  #define MAX485_DE       16  // White
-  #define MAX485_RE_NEG   16
-  #define RX_PIN          18  // RO Orange
+  #define MAX485_DE       4  // White
+  #define MAX485_RE_NEG   4
+  #define RX_PIN          16  // RO Orange
   #define TX_PIN          17  // DI Yellow
 #else
   // Classic ESP32 (ESP32-WROOM-32U / WROVER DevKitC) - unchanged field pin map.
@@ -210,6 +240,8 @@ SET_LOOP_TASK_STACK_SIZE(16384);
   #define LED_3_WIFI      27 //Indicates WiFi is connected
   #define LED_4_INTERNET  26 //Indicates Internet is connected, this is the green LED
   #define LED_5_SERVER    25 //Indicates succesfull communication with the Server
+  //WIFI Reset Button Pin
+  #define WIFI_RESET_BUTTON_PIN 13
   // W5500 on VSPI (hardware SPI default pins: SCK 18, MISO 19, MOSI 23)
   #define ETH_SPI_SCK_PIN   18  // Yellow
   #define ETH_SPI_MISO_PIN  19  // Orange
@@ -284,6 +316,8 @@ String m4_serial_number = "";
 int numberOfMeters = 0;  // Number of meters connected, this will automatically be updated based on the number of meters detected
 const int maxNumberOfMeters = 10;  // Maximum number of meters supported, this is used to limit the number of meters that can be displayed on the web page.
 String meterSerialNumbers[maxNumberOfMeters]; // Array to store the serial numbers of the meters.
+String meterModels[maxNumberOfMeters];         // Model from register 60. Empty until read; the portal then uses its default.
+uint8_t meterModelAttempts[maxNumberOfMeters]; // Failed model reads per meter. Capped so a meter without register 60 costs no time every sweep.
 int currentMeterIndex = 1;  // Track which meter to read next (for staggered reading)
 
 
@@ -385,7 +419,8 @@ void serviceMeters();
 #if MODBUS_TYPE == MODBUS_TYPE_TCPIP
 void serviceNetworkWhileModbusWaits();
 #endif
-
+void serviceWifiResetButton();
+void clearWifiAndRestart();
 
 void setup() {
   // initialize LED status pins as outputs.
@@ -394,6 +429,7 @@ void setup() {
   pinMode(LED_3_WIFI, OUTPUT);
   pinMode(LED_4_INTERNET, OUTPUT);
   pinMode(LED_5_SERVER, OUTPUT);
+  pinMode(WIFI_RESET_BUTTON_PIN, INPUT_PULLUP);
 
   //Indicate that the power is on with a LED
   digitalWrite(LED_1_POWER, HIGH);
@@ -515,6 +551,9 @@ void loop() {
   //These functions must run continuesly, so one can not include a delay in the main loop.
   server.handleClient();  //Handle webserver requests from client
   webSocket.loop();       //Handle websocket requests from client
+
+  //Check the WiFi Reset Button, this is used to reset the WiFi settings and start the WiFi setup hotspot.
+  serviceWifiResetButton();
 }
 
 

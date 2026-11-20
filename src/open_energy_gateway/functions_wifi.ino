@@ -3,6 +3,11 @@
 void initWiFi() {
   
   debugln("Inside initWiFi function. Top of function");
+
+  //Initialize the WiFi Reset Button Pin
+  //The pull-up keeps the pin high when the front ribbon is unplugged. 
+  // initWiFi() can sit in the saved-network wait for a long time, so the pin has to be ready before that wait.
+  pinMode(WIFI_RESET_BUTTON_PIN, INPUT_PULLUP);
   
   //Create hostname string and convert to C-style string
   String hostname = "energy-gateway-" + String(GATEWAY_ID);
@@ -39,6 +44,27 @@ void initWiFi() {
   Uncomment this if you want to force it to delete your old WiFi details.*/
   //wifiManager.resetSettings();
 
+  //New code added after adding a reset button
+  // No saved network: first boot, admin Clear WiFi, or the reset button.
+  if (!wifiManager.getWiFiIsSaved()) {
+    debugln("No saved WiFi. Starting setup hotspot.");
+    wifiManager.autoConnect(hostname.c_str(), "");
+  } else {
+    // Router missing or still booting. Stay on the saved network.
+    // A failed try must not start the hotspot.
+    debugln("Waiting for saved WiFi.");
+    WiFi.mode(WIFI_STA);
+    WiFi.begin();
+    while (WiFi.status() != WL_CONNECTED) {
+      serviceWifiResetButton();
+      delay(200);
+    }
+  }
+  //Turns on the WiFi LED once either path has a connection.
+  //Indicate that Wifi is successfully connected by putting on LED 3
+  digitalWrite(LED_3_WIFI, HIGH);
+  
+
 
   //Non blocking mode
   //wifiManager.setConfigPortalBlocking(true);
@@ -50,6 +76,7 @@ void initWiFi() {
   /*Tries to connect to last known WiFi details
   if it does not connect it starts an access point with the specified name
   here  "AutoConnectAP"and goes into a blocking loop awaiting configuration*/
+  /*
   if (!wifiManager.autoConnect(hostname.c_str(), "")) {
     debugln("Failed to connect and hit timeout...");
     //reset and try again, or maybe put it to deep sleep
@@ -57,8 +84,7 @@ void initWiFi() {
     delay(1000);
     //TODO: JF: Fix endless loop if no signal...
   }
-  //Indicate that Wifi is successfully connected by putting on LED 3
-  digitalWrite(LED_3_WIFI, HIGH);
+  */
 
   debugln("");
   debugln("Connected to Wi-Fi");
@@ -83,6 +109,69 @@ void initWiFi() {
     wifiManager.resetSettings();
   }
 
+  // LEDs must be driven low before ESP.restart(). A high pin stays high across the restart.
+void turnStatusLedsOff() {
+  digitalWrite(LED_1_POWER, LOW);
+  digitalWrite(LED_2_METER, LOW);
+  digitalWrite(LED_3_WIFI, LOW);
+  digitalWrite(LED_4_INTERNET, LOW);
+  digitalWrite(LED_5_SERVER, LOW);
+}
+
+// Same ending as Admin Clear WiFi. Gateway ID, meter names, and OTA data stay in NVS.
+void clearWifiAndRestart() {
+  debugln("Clearing stored WiFi and rebooting into AP mode...");
+  clearStoredWifi();
+  turnStatusLedsOff();
+  delay(300);
+  ESP.restart();
+}
+
+// All five LEDs are already on while the gateway is running, so turning them on
+// would not show that the hold was accepted. Two off/on cycles are the confirmation.
+// delay() is allowed here only because the next step is a restart.
+void flashStatusLedsTwice() {
+  for (int flash = 0; flash < 2; flash++) {
+    turnStatusLedsOff();
+    delay(200);
+    digitalWrite(LED_1_POWER, HIGH);
+    digitalWrite(LED_2_METER, HIGH);
+    digitalWrite(LED_3_WIFI, HIGH);
+    digitalWrite(LED_4_INTERNET, HIGH);
+    digitalWrite(LED_5_SERVER, HIGH);
+    delay(200);
+  }
+}
+
+// Sampled from the WiFi wait in setup() and from loop(). A short tap can fall
+// inside one Modbus read, so the pin has to stay low for 3 seconds.
+// A ribbon stuck low at boot stays disarmed until the pin is seen high once.
+void serviceWifiResetButton() {
+  if (millis() < 2000) {
+    return;
+  }
+  static bool armed = false;
+  static bool holding = false;
+  static unsigned long lowSince = 0;
+  if (digitalRead(WIFI_RESET_BUTTON_PIN) == HIGH) {
+    armed = true;
+    holding = false;
+    return;
+  }
+  if (!armed) {
+    return;
+  }
+  if (!holding) {
+    holding = true;
+    lowSince = millis();
+    return;
+  }
+  if (millis() - lowSince < 3000) {
+    return;
+  }
+  flashStatusLedsTwice();
+  clearWifiAndRestart();
+}
 
 //Initialize mDNS service for .local domain access
 void initmDNS() {

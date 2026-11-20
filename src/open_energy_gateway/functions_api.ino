@@ -53,6 +53,12 @@ void postToAmpXPortal2(int meterNumber = 1) {
     httpRequestData += "\"gateway_id\":\"" + String(GATEWAY_ID) + "\",";
     httpRequestData += "\"meter_id\":\"" + String(meterNumber) + "\",";
     httpRequestData += "\"serial_number\":\"" + serialNumber + "\",";
+    // The portal identifies a meter by manufacturer + model + serial. Top-level, not in
+    // "values". An unread model is left out so the API uses its default (Meatrol ME537).
+    httpRequestData += "\"manufacturer\":\"" + String(METER_MANUFACTURER) + "\",";
+    if (meterModels[meterNumber - 1].length() > 0) {
+      httpRequestData += "\"meter_model\":\"" + meterModels[meterNumber - 1] + "\",";
+    }
     httpRequestData += "\"timestamp\":\"" + timestamp + "\",";
     httpRequestData += "\"values\":{";
     
@@ -62,7 +68,7 @@ void postToAmpXPortal2(int meterNumber = 1) {
       String key = kv.key().c_str();
       // Only include readings for this meter (starts with correct prefix)
       if (key.startsWith(meterPrefix)) {
-        if (key.endsWith("_name") || key.endsWith("_serial_number")) {
+        if (key.endsWith("_name") || key.endsWith("_serial_number") || key.endsWith("_model")) {
           continue;
         }
         String value = kv.value().as<String>();

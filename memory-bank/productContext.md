@@ -23,17 +23,18 @@ Industrial and commercial facilities need comprehensive energy monitoring across
 1. **Cost-Effective**: Open-source solution using affordable ESP32 hardware
 2. **Scalable**: Monitor up to 32 meters from single gateway
 3. **Flexible**: Support for both RS485 and TCP/IP communication
-4. **Real-Time**: Live web interface with WebSocket updates. TCP uses one Modbus socket per sweep and services the WebSocket between registers (Meter Details ~5 s on 28 Sep 2026, down from ~40 s)
-5. **Cloud-Ready**: Automatic data upload to AmpX Portal API (local XAMPP or live `ampx.app`) with shared `X-AmpX-Api-Key`; firmware **1.2.1** posts `/api/v3/` (frequency and per-phase power factor included; not `power_factor_tot`); portal Meters/View Data read Cloud Serverless via InfluxQL (Influx 2 remains on `/api/v2/` until sunset)
+4. **Real-Time**: Live web interface with WebSocket updates. TCP keeps one Modbus socket open and services the WebSocket between registers (Meter Details ~5 s on 28 Sep 2026, down from ~40 s). Firmware **1.2.3** closes a half-dead W5500 socket before opening another so readings do not stop after a few sweeps.
+5. **Cloud-Ready**: Automatic data upload to AmpX Portal API (local XAMPP or live `ampx.app`) with shared `X-AmpX-Api-Key`; firmware posts `/api/v3/` (frequency register **1074**, per-phase power factor; not `power_factor_tot`); portal Meters/View Data read Cloud Serverless via InfluxQL. Live OTA catalog is **1.2.4** (29 Sep 2026, single url). **100007** was USB **1.2.3** that morning. Influx 2 remains on `/api/v2/` until sunset.
 
 ### User Experience Goals
-- **Plug-and-Play Setup**: WiFiManager for easy network configuration; Admin Clear WiFi (ship-mode) so a boxed unit boots AP at the customer site
+- **Plug-and-Play Setup**: WiFiManager for easy network configuration. Admin Clear WiFi (ship-mode) and the GPIO 13 button (hold 3 s, firmware **1.2.5**) erase saved WiFi and boot the setup hotspot. A missing saved network is retried and does not open the hotspot by itself.
 - **Auto-Discovery**: Automatic meter detection and configuration
 - **Intuitive Interface**: Clean web dashboard showing all meter data
 - **Portal Meter Data**: Scrollable wide tables; clear 1000-row / 30-day display limits; CSV export of full 30-day window
 - **Field firmware updates**: Admin Check for update + HTTP OTA from `ampx.app/firmware/` (no USB after first flash)
 - **Mobile-Friendly**: Responsive design for smartphone/tablet access
 - **Status Visibility**: LED indicators for system health monitoring; LEDs off immediately before Admin reboot / Clear WiFi restart
+- **LAN debug**: Admin has a Debug link. On the same network, `http://energy-gateway-{ID}.local/debug` shows the latest `debugln()` lines (USB serial still works). Shipped in catalog **1.2.4**.
 
 ## Data Flow Architecture
 ```

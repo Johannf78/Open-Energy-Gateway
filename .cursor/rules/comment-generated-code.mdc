@@ -1,0 +1,18 @@
+---
+description: Comment generated code so the next reader can see why it exists
+alwaysApply: true
+---
+
+# Comment generated code
+
+Every function, class, and non-obvious block in code you generate gets a comment that says why it is there, what constraint it respects, and what breaks if it moves.
+
+- Comment the purpose, the hardware or timing limit, and the order dependency.
+- Do not restate the next line (`// increment i` above `i++`).
+- Keep comments next to the code they explain.
+
+```cpp
+// Address of the real USB UART, captured before "#define Serial GwDebug".
+// After that rename, Serial.write inside write() would recurse.
+static HardwareSerial* gwUsb = &Serial;
+```

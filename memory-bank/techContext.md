@@ -18,7 +18,7 @@
 ### Build Configuration
 - **Partition Scheme**: "Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)" or "Huge APP (3MB No OTA/1MB SPIFFS)"
 - **Serial Baud Rate**: 115200 (sketch `Serial.begin(115200)`)
-- **Debug Level**: Configurable via `#define DEBUG 1`
+- **Debug Level**: `#define DEBUG 1` copies `debug()` / `debugln()` to USB and to `GET /debug` (4 KB RAM, LAN only). Admin footer links to that page. `DEBUG 0` compiles those calls out. Direct `Serial.println` stays on USB only. No FAT log.
 
 ## Hardware Specifications
 
@@ -78,7 +78,7 @@ IPAddress meter_ip(192, 168, 1, 55);
 - **Repository**: [AmpXModbus](https://github.com/Johannf78/AmpXModbus)
 - **RS485 Variant**: `ampx_modbus_rs485.h` (custom AmpX library)
 - **TCP/IP Variant**: `ampx_modbus_tcpip.h` (custom AmpX library at `Documents/Arduino/libraries/ampx_modbus_tcpip`)
-- **TCP socket (Sep 2026)**: one connection per sweep. `modbus_test_connection()` is `connect(meter_ip, 502)` and **leaves it open** (not a Modbus PDU). `modbus_send_request()` reuses it. `modbus_read_response()` `stop()`s only on a short frame (`< 9` bytes) or a header without register bytes. Sketch `handlePowerMeter()` closes once at the end. No per-register `delay(100)`.
+- **TCP socket (1.2.3, 29 Sep 2026)**: one port-502 session stays open across sweeps. `modbus_read_registers_tcpip()` does **not** call `modbus_test_connection()` (Aug 23). Before `connect()`, `stop()` so a `FIN_WAIT` socket is closed (otherwise `EthernetClient::connect()` leaks it; eight leaks and 502 never opens). `modbus_read_response()` `stop()`s only on a short frame (`< 9` bytes) or a header without register bytes. The sketch does **not** `stop()` after a good sweep; a failed read breaks the loop. No per-register `delay(100)`. Frequency is register **1074** (FreqTotal), not 1024. Failed `modbus_test_connection()` in `serviceMeters()` must not call `initEthernet()`.
 - **Ethernet link check**: `Ethernet.linkStatus() == LinkOFF` in sketch `meterTransportReady()` (`functions_meter.ino`), not in the TCP library (IDE cannot see `Ethernet` / `LinkOFF` there)
 - **Installation**: Clone repository and copy to `Documents/Arduino/libraries/` folder
 
@@ -190,12 +190,12 @@ const unsigned long REBOOT_INTERVAL = 86400000;         // 24 hours
 
 ### Flash / OTA (August 2026)
 - Target: **8MB** modules — Arduino IDE **ESP32 Dev Module**, Flash **8MB**, Partition **custom** (`src/open_energy_gateway/partitions.csv` dual OTA apps) or **8M with spiffs**
-- Sketch string is **`FIRMWARE_VERSION` 1.2.1**. Live `version.json` is **1.2.1** with top-level `url` (published 28 Sep 2026). `fetchFirmwareManifest()` does not read `targets` yet. Cloudflare cache rule bypasses `/firmware/`. Confirm the booted image on **100007** (a cached 1.0.9 bin was flashed once while the status line said 1.2.1). Never an S3 `.bin` at the legacy URL. Do not ship 1.0.3, 1.0.4/1.0.5, or put **1.0.9** back. Plan for chip-aware catalogs: `memory-bank/plans/2026-08-23-multi-chip-ota.md`.
+- Sketch string is **`FIRMWARE_VERSION` 1.2.5** (5 Oct 2026, reset button, USB-tested). Live `version.json` is still **1.2.4** (`.bin` **1,341,696** bytes). Do not treat the catalog as 1.2.5 until `publish-firmware.ps1` is run. **100007** was USB **1.2.3** on 29 Sep; installing 1.2.4 was not confirmed. `fetchFirmwareManifest()` still does not read `targets`. Cloudflare cache rule bypasses `/firmware/`. Never an S3 `.bin` at the legacy URL. Do not ship 1.0.3, 1.0.4/1.0.5, 1.2.2, or put **1.0.9** back. Plan: `memory-bank/plans/2026-08-23-multi-chip-ota.md`.
 - `SET_LOOP_TASK_STACK_SIZE(16384)` — default 8KB `loop()` stack overflows during HTTPS TLS
 - Admin HTTP pull: `https://ampx.app/firmware/ampx_open_energy_gateway.bin` via `HTTPUpdate` + **static** `WiFiClientSecure`
 - Manifest check: `serviceOtaManifestCheck()` from **`loop()` only** after **Check for update**; no FreeRTOS OTA task; no Admin-load or boot-time HTTPS fetch
 - Local hosting: `D:\xampp\htdocs\ampx.app\firmware\` + junction `D:\xampp\htdocs\firmware` for LAN IP downloads
-- Deploy live: `firmware/deploy-firmware.ps1` with `AMPX_FTP_PASS` (Hetzner `ampxapp`)
+- Deploy live: `D:\xampp\htdocs\firmware\publish-firmware.ps1` with `AMPX_FTP_PASS`. Explicit FTP over TLS to `public_html/firmware/` as `ampxapp`. Plain FTP and `deploy-firmware.ps1` return **550**.
 - First install still requires USB flash with OTA partitions; thereafter Admin Update Firmware
 - ArduinoOTA intentionally disabled (flash size / unused for field updates)
 

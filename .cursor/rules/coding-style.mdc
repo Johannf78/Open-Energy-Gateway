@@ -1,11 +1,21 @@
 ---
-description: Preferred firmware coding style — simple functions, early returns, no nested if/else
+description: Preferred firmware coding style — minimal changes, simple functions, early returns
 alwaysApply: true
 ---
 
 # Coding style (AmpX firmware)
 
 Prefer **clear, logical, simple**. If a block is hard to read, extract functions. Do not clever-nest.
+
+## Keep it minimal
+- Implement the smallest change that does what was asked. Stop there.
+- Extend an existing function, macro, or page before adding a class, a new file, or a library.
+- Do not add locks, extra routes, buffers, or abstraction for cases the request did not mention.
+
+```cpp
+// The existing debug macros copy into a fixed buffer. One page prints that buffer.
+#define debugln(x) do { Serial.println(x); dbgWrite(String(x).c_str()); dbgWrite("\n"); } while (0)
+```
 
 ## Control flow
 - **Early return** on failure. Do not nest success work inside `else`.

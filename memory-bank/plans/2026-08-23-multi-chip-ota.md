@@ -1,7 +1,7 @@
 # Multi-chip OTA — saved for later
 
 **Date:** 2026-08-23  
-**Status:** Designed; not implemented (except `CHIP_OTA_KEY` + `FIRMWARE_VERSION` `"1.2.0"` in the sketch)
+**Status:** Designed; chip-aware `targets` still not parsed. Live catalog on 29 Sep 2026 is single-url **1.2.4** because `fetchFirmwareManifest()` reads only top-level `version` and `url`. Sketch `FIRMWARE_VERSION` is **1.2.4**. `CHIP_OTA_KEY` is set. Do not treat “USB-flash 1.2.0 first” below as the next publish step.
 
 Canonical copies (same decision):
 

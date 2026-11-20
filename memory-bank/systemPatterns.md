@@ -75,13 +75,16 @@ Also keep `server.handleClient()` / `webSocket.loop()` at the end of `loop()`. U
 ### One Modbus TCP socket per sweep (September 2026)
 About 20 Meatrol values used to each `connect()` + `stop()` on port 502, plus a fixed `delay(100)` and a test connection that also closed the socket. The WebSocket handshake waited on that, so Meter Details stayed on Connecting for up to ~40 s.
 
-Current TCP library (`ampx_modbus_tcpip.cpp`):
+Current TCP library (`ampx_modbus_tcpip.cpp`), firmware **1.2.3**:
 - `modbus_test_connection()` opens port 502 and **leaves it open** (already connected → return true). Still not a Modbus PDU.
-- `modbus_send_request()` writes on that socket; connects only if it dropped.
-- `modbus_read_response()` keeps the socket on a full reply. `stop()` only when `bytesRead < 9` (7-byte MBAP + function code + byte count) or the header arrived without the register bytes.
-- No `delay(100)` before the read. The response function already polls for up to 2 s and returns when the frame arrives.
+- If `connected()` is false, call `stop()` **before** `connect()`. `connected()` is false in `FIN_WAIT`, and `EthernetClient::connect()` then forgets the socket index without `socketClose()`. Eight leaks and the W5500 cannot open 502. The page stays Connected with no readings, and portal posts stop.
+- `modbus_send_request()` reuses a live socket. A short write (`!= 12`) calls `stop()` and returns false.
+- `modbus_read_response()` keeps the socket on a full reply. `stop()` only when `bytesRead < 9` (7-byte MBAP + function code + byte count) or the header arrived without the register bytes. The wait (up to 2 s) calls the idle callback so HTTP/WebSocket still run.
+- No `delay(100)` before the read.
 
-Sketch closes once, at the end of `handlePowerMeter()` (`#if MODBUS_TYPE_TCPIP`). RS485 `modbus_test_connection()` is still `return true`.
+The sketch does **not** `stop()` at the end of a good `handlePowerMeter()`. If a read fails and the socket is already closed, the register loop **breaks**. RS485 `modbus_test_connection()` is still `return true`.
+
+**1.2.2** closed the socket at the end of every sweep and called `connect()` without `stop()` first. That leaked sockets. **100007** stopped posting after 28 Sep 09:50:52 and showed no local readings on 29 Sep until USB **1.2.3**.
 
 Bench (28 Sep 2026), before removing `delay(100)`: about **5 seconds** to Connected plus values. Do not go back to connect/stop per register.
 
@@ -114,13 +117,13 @@ Do **not** call `Ethernet.linkStatus()` from `ampx_modbus_tcpip.cpp` (Cursor/cla
 - Local = XAMPP API on LAN IP port 80 `/api/v3/`; live = `https://ampx.app/api/v3/` (key gate verified 401/201 Aug 22). v2 URLs still work for Influx 2 writes.
 - Portal reads Cloud via plugin InfluxQL (`class-ampx-portal-influxdb-detailed.php`); UI at `/meters/?gateway_id=` and `/meter-data/?meter_sn=&gateway_id=`
 
-### HTTP OTA Pattern (live catalog **1.2.1** since 28 Sep 2026)
+### HTTP OTA Pattern (live catalog **1.2.4** since 29 Sep 2026)
 
 **Live catalog** is still top-level `version` + `url` (not `targets`). Chip-keyed `targets.esp32` / `targets.esp32s3` remains a plan: `ampx.app/docs/superpowers/specs/2026-08-23-multi-chip-ota-design.md`. This firmware reads `doc["version"]` and `doc["url"]` only.
 
 **Cloudflare:** `ampx.app` is proxied. Cache rule **Bypass firmware OTA** (URI Path starts with `/firmware/`) must stay on. Without it the gateway can flash a cached older `.bin` while `version.json` is already newer. `OK: update applied (X)` stores the manifest version, then reboots; **Current firmware version** is the string inside the image that booted.
 
-**Publish:** ESP32 Dev Module (not S3) → Export Compiled Binary → `open_energy_gateway.ino.bin` renamed to `public_html/firmware/ampx_open_energy_gateway.bin`, plus `version.json` with the same `FIRMWARE_VERSION`. Export the application `.bin`, not the merged or bootloader file.
+**Publish:** ESP32 Dev Module (not S3) → Sketch → Export Compiled Binary → `D:\xampp\htdocs\firmware\publish-firmware.ps1`. The script reads `FIRMWARE_VERSION`, copies `open_energy_gateway.ino.bin` (not merged, bootloader, or partitions) to `ampx_open_energy_gateway.bin`, writes `version.json`, and uploads both with **explicit FTP over TLS** (`curl --ssl-reqd`, passive) to `public_html/firmware/` as user `ampxapp`. It refuses an `esp32s3` path and a bin that does not contain the version string. Set `AMPX_FTP_PASS` in that PowerShell first. Plain FTP (and `deploy-firmware.ps1`) logs in and returns **550**. The XAMPP folder is only the local copy. Field gateways fetch `https://ampx.app/firmware/`.
 - Admin HTML must **not** call outbound `HTTPClient` in web handlers — that caused `ERR_CONNECTION_RESET` / hangs
 - Flow: **Check for update** → `GET /ota_status?refresh=1` sets `otaManifestCheckRequested` → `loop()` runs `serviceOtaManifestCheck()` → fills `otaStatusCache` → JS polls `/ota_status` (no `refresh`). Opening `/admin` does **not** start TLS
 - **Never** fetch the manifest from a FreeRTOS side task: 1.0.3 used `otaManifestTask` on core 0 with boot-time HTTPS → LoadProhibited reboot loop (**1.0.4** moved check to `loop()`)
@@ -131,6 +134,13 @@ Do **not** call `Ethernet.linkStatus()` from `ampx_modbus_tcpip.cpp` (Cursor/cla
 - `POST /update` re-checks; refuses if server is not newer; download URL from manifest `url` (local mode forces `firmwareURL`); flash via `HTTPUpdate`
 - Host both `ampx_open_energy_gateway.bin` and `version.json` under `/firmware/` (keep in sync on publish)
 - ArduinoOTA not used; first flash via USB with dual OTA partitions, then field updates via Admin
+
+### Front-panel WiFi reset (October 2026, firmware 1.2.5)
+- GPIO **13**, `INPUT_PULLUP`, switch to GND. Defined on both chip maps. `serviceWifiResetButton()` in `functions_wifi.ino`.
+- 3 s hold (`millis()`). First 2 s ignored. Disarmed until the pin is seen high. Shorter press does nothing.
+- At 3 s: flash all five LEDs twice, then `clearWifiAndRestart()` (same ending as Admin Clear WiFi after that page is sent).
+- Call it from the `initWiFi()` saved-network wait, the bottom of `loop()`, the register loop in `handlePowerMeter()`, and `serviceNetworkWhileModbusWaits()`.
+- Saved SSID missing: stay in STA and keep retrying. Do not start the hotspot. Hotspot only when `getWiFiIsSaved()` is false.
 
 ### Ship-mode / Clear WiFi (August 2026)
 - Admin **Clear WiFi (Ship Mode)** → `POST /clear_wifi` with `ADMIN_PASSWORD` (same as Gateway ID)
@@ -169,11 +179,13 @@ LED_5_SERVER    // Successful API communication
 ## Memory Management Patterns
 
 ### Debug Output Control
+`DEBUG 1` prints to USB and copies the same characters into `dbgBuf` (4 KB, wraps). `GET /debug` (`handleDebug` in `functions_web.ino`) prints that buffer and reloads every 2 seconds. The Admin page footer links to it. The sidebar does not. `DEBUG 0` removes the macros. Direct `Serial.println` is not copied. No FAT log file. Shipped in catalog **1.2.4**.
+
 ```cpp
 #define DEBUG 1
 #if DEBUG == 1
-  #define debug(x) Serial.print(x)
-  #define debugln(x) Serial.println(x)
+  #define debug(x)   do { Serial.print(x);   dbgWrite(String(x).c_str()); } while (0)
+  #define debugln(x) do { Serial.println(x); dbgWrite(String(x).c_str()); dbgWrite("\n"); } while (0)
 #else
   #define debug(x)
   #define debugln(x)
